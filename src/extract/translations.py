@@ -58,16 +58,6 @@ TRANSLATION_REGISTRY: dict[str, Translation] = {
         license="Public Domain",
         source_api="bible-api.com",
     ),
-    # ── bible-api.com (Portuguese) ────────────────────────────────────────
-    "almeida": Translation(
-        translation_id="almeida",
-        language="pt",
-        name="João Ferreira de Almeida",
-        full_name="João Ferreira de Almeida",
-        year=1819,
-        license="Public Domain",
-        source_api="bible-api.com",
-    ),
     # ── bible-api.com (Latin) ─────────────────────────────────────────────
     "clementine": Translation(
         translation_id="clementine",
@@ -119,7 +109,7 @@ TRANSLATION_REGISTRY: dict[str, Translation] = {
 
 # ─── Source groupings ─────────────────────────────────────────────────────────
 
-BIBLE_API_COM_TRANSLATIONS = {"kjv", "asv", "bbe", "web", "darby", "almeida", "clementine"}
+BIBLE_API_COM_TRANSLATIONS = {"kjv", "asv", "bbe", "web", "darby", "clementine"}
 ABIBLIA_DIGITAL_TRANSLATIONS = {"nvi", "ra", "acf", "rvr"}
 
 
