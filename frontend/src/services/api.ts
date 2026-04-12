@@ -1,0 +1,127 @@
+const BASE = "/api/v1";
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`API error: ${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
+export interface Book {
+  book_id: string;
+  book_name: string;
+  testament: string;
+  category: string;
+  book_position: number;
+  total_chapters: number;
+  total_verses: number;
+  total_words: number;
+  avg_sentiment: number;
+}
+
+export interface Arc {
+  source_book_id: string;
+  target_book_id: string;
+  source_book_position: number;
+  target_book_position: number;
+  connection_count: number;
+  avg_distance: number;
+  total_votes: number;
+}
+
+export interface ArcsResponse {
+  arcs: Arc[];
+  metadata: {
+    total_crossrefs: number;
+    filtered_arcs: number;
+    color_scheme: string;
+  };
+}
+
+export interface SearchResult {
+  verse_id: string;
+  reference: string;
+  text: string;
+  book_id: string;
+  chapter: number;
+  verse: number;
+  word_count: number;
+  sentiment_polarity: number;
+  sentiment_label: string;
+}
+
+export interface SearchResponse {
+  query: string;
+  translation: string;
+  total_results: number;
+  results: SearchResult[];
+}
+
+export interface SentimentGroup {
+  testament?: string;
+  book_id?: string;
+  book_name?: string;
+  category?: string;
+  book_position?: number;
+  verses: number;
+  avg_sentiment: number;
+  positive: number;
+  negative: number;
+  neutral: number;
+}
+
+export interface SentimentResponse {
+  group_by: string;
+  translation: string;
+  total_groups: number;
+  data: SentimentGroup[];
+}
+
+export interface TranslationStat {
+  translation_id: string;
+  language: string;
+  books: number;
+  verses: number;
+  total_words: number;
+  avg_sentiment: number;
+}
+
+// ── API calls ────────────────────────────────────────────────────────────────
+
+export function fetchBooks(translation = "kjv") {
+  return fetchJson<Book[]>(`${BASE}/books?translation=${translation}`);
+}
+
+export function fetchArcs(
+  sourceBook?: string,
+  minConnections = 1,
+  colorBy = "distance"
+) {
+  const params = new URLSearchParams({ min_connections: String(minConnections), color_by: colorBy });
+  if (sourceBook) params.set("source_book", sourceBook);
+  return fetchJson<ArcsResponse>(`${BASE}/crossrefs/arcs?${params}`);
+}
+
+export function fetchSentiment(groupBy = "testament", translation = "kjv") {
+  return fetchJson<SentimentResponse>(
+    `${BASE}/analytics/sentiment?group_by=${groupBy}&translation=${translation}`
+  );
+}
+
+export function fetchTranslationStats() {
+  return fetchJson<{ translations: TranslationStat[] }>(
+    `${BASE}/analytics/translations`
+  );
+}
+
+export function searchVerses(
+  q: string,
+  translation = "kjv",
+  book?: string,
+  limit = 50
+) {
+  const params = new URLSearchParams({ q, translation, limit: String(limit) });
+  if (book) params.set("book", book);
+  return fetchJson<SearchResponse>(`${BASE}/verses/search?${params}`);
+}

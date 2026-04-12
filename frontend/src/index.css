@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --color-parchment: #f5f0e8;
+  --color-ink: #2c1810;
+  --color-gold: #b8860b;
+  --color-old-testament: #4a7c59;
+  --color-new-testament: #6b4c9a;
+  --color-law: #2e5090;
+  --color-history: #8b6914;
+  --color-poetry: #9b2335;
+  --color-prophets: #5c4033;
+  --color-gospels: #c5a55a;
+  --color-epistles: #4682b4;
+  --color-apocalyptic: #8b0000;
+}
+
+body {
+  margin: 0;
+  font-family: "Georgia", "Times New Roman", serif;
+  background-color: var(--color-parchment);
+  color: var(--color-ink);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+}

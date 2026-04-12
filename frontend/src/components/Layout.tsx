@@ -1,0 +1,43 @@
+import { NavLink, Outlet } from "react-router-dom";
+
+const NAV_ITEMS = [
+  { to: "/", label: "Home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4" },
+  { to: "/arc-diagram", label: "Arc Diagram", icon: "M4 19a8 8 0 0116 0M12 3v8m-4 4h8" },
+  { to: "/search", label: "Search", icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" },
+];
+
+export default function Layout() {
+  return (
+    <div className="flex min-h-screen w-full">
+      {/* Sidebar */}
+      <nav className="w-56 shrink-0 bg-[var(--color-ink)] text-[var(--color-parchment)] flex flex-col p-4 gap-1">
+        <h1 className="text-lg font-bold mb-6 tracking-wide text-[var(--color-gold)]">
+          Bible Data Pipeline
+        </h1>
+        {NAV_ITEMS.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors ${
+                isActive
+                  ? "bg-[var(--color-gold)]/20 text-[var(--color-gold)]"
+                  : "hover:bg-white/10"
+              }`
+            }
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+            </svg>
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Main content */}
+      <main className="flex-1 overflow-auto p-6">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
