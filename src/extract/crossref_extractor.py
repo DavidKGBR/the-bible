@@ -18,86 +18,146 @@ from src.models.schemas import BOOK_CATALOG, RawCrossReference
 logger = logging.getLogger(__name__)
 
 CROSSREF_URL = "https://a.openbible.info/data/cross-references.zip"
-CROSSREF_FILENAME = "cross_references.txt"
 
-# Build position (1-66) → book_id mapping from BOOK_CATALOG
-_POSITION_TO_BOOK_ID: dict[int, str] = {b["pos"]: b["id"] for b in BOOK_CATALOG}
+# OpenBible book abbreviations → our book IDs
+# OpenBible uses: Gen, Exod, Lev, Num, Deut, Josh, Judg, Ruth, 1Sam, 2Sam, etc.
+_OPENBIBLE_TO_BOOK_ID: dict[str, str] = {
+    "Gen": "GEN",
+    "Exod": "EXO",
+    "Lev": "LEV",
+    "Num": "NUM",
+    "Deut": "DEU",
+    "Josh": "JOS",
+    "Judg": "JDG",
+    "Ruth": "RUT",
+    "1Sam": "1SA",
+    "2Sam": "2SA",
+    "1Kgs": "1KI",
+    "2Kgs": "2KI",
+    "1Chr": "1CH",
+    "2Chr": "2CH",
+    "Ezra": "EZR",
+    "Neh": "NEH",
+    "Esth": "EST",
+    "Job": "JOB",
+    "Ps": "PSA",
+    "Prov": "PRO",
+    "Eccl": "ECC",
+    "Song": "SNG",
+    "Isa": "ISA",
+    "Jer": "JER",
+    "Lam": "LAM",
+    "Ezek": "EZK",
+    "Dan": "DAN",
+    "Hos": "HOS",
+    "Joel": "JOL",
+    "Amos": "AMO",
+    "Obad": "OBA",
+    "Jonah": "JON",
+    "Mic": "MIC",
+    "Nah": "NAM",
+    "Hab": "HAB",
+    "Zeph": "ZEP",
+    "Hag": "HAG",
+    "Zech": "ZEC",
+    "Mal": "MAL",
+    "Matt": "MAT",
+    "Mark": "MRK",
+    "Luke": "LUK",
+    "John": "JHN",
+    "Acts": "ACT",
+    "Rom": "ROM",
+    "1Cor": "1CO",
+    "2Cor": "2CO",
+    "Gal": "GAL",
+    "Eph": "EPH",
+    "Phil": "PHP",
+    "Col": "COL",
+    "1Thess": "1TH",
+    "2Thess": "2TH",
+    "1Tim": "1TI",
+    "2Tim": "2TI",
+    "Titus": "TIT",
+    "Phlm": "PHM",
+    "Heb": "HEB",
+    "Jas": "JAS",
+    "1Pet": "1PE",
+    "2Pet": "2PE",
+    "1John": "1JN",
+    "2John": "2JN",
+    "3John": "3JN",
+    "Jude": "JUD",
+    "Rev": "REV",
+}
 
 
-def numeric_to_verse_id(numeric: int) -> tuple[str, int, int] | None:
-    """Convert OpenBible numeric format (BBCCCVVV) to (book_id, chapter, verse).
+def parse_openbible_ref(ref: str) -> str | None:
+    """Convert OpenBible verse reference to our format.
 
-    Args:
-        numeric: 8-digit number, e.g. 1001001 = Genesis 1:1, 43003016 = John 3:16
+    OpenBible format: 'Gen.1.1', 'Matt.11.25', 'Col.1.16-Col.1.17' (ranges)
+    Our format: 'GEN.1.1'
 
-    Returns:
-        Tuple of (book_id, chapter, verse) or None if invalid.
+    For ranges, uses the start verse only.
     """
-    book_num = numeric // 1_000_000
-    chapter = (numeric % 1_000_000) // 1_000
-    verse = numeric % 1_000
+    # Handle ranges — take the first verse
+    if "-" in ref:
+        ref = ref.split("-")[0]
 
-    if book_num < 1 or book_num > 66 or chapter < 1 or verse < 1:
+    parts = ref.split(".")
+    if len(parts) != 3:
         return None
 
-    book_id = _POSITION_TO_BOOK_ID.get(book_num)
+    book_abbrev, chapter_str, verse_str = parts
+
+    book_id = _OPENBIBLE_TO_BOOK_ID.get(book_abbrev)
     if not book_id:
         return None
 
-    return book_id, chapter, verse
+    try:
+        chapter = int(chapter_str)
+        verse = int(verse_str)
+        if chapter < 1 or verse < 1:
+            return None
+        return f"{book_id}.{chapter}.{verse}"
+    except ValueError:
+        return None
 
 
 def parse_crossref_line(line: str) -> RawCrossReference | None:
     """Parse a single line from the OpenBible cross-references TSV.
 
-    Format: "from_verse\\tvotes\\tto_verse"
-    Example: "01001001\\t5\\t43003016"
+    Format: "From Verse\\tTo Verse\\tVotes"
+    Example: "Gen.1.1\\tMatt.11.25\\t13"
     """
     line = line.strip()
-    if not line or line.startswith("#"):
+    if not line or line.startswith("#") or line.startswith("From"):
         return None
 
     parts = line.split("\t")
     if len(parts) < 2:
         return None
 
-    try:
-        from_str = parts[0].strip()
-        to_str = parts[-1].strip()
+    from_ref = parts[0].strip()
+    to_ref = parts[1].strip()
 
-        # Handle "From Verse\tVotes\tTo Verse" header
-        if not from_str.isdigit():
-            return None
+    source = parse_openbible_ref(from_ref)
+    target = parse_openbible_ref(to_ref)
 
-        from_numeric = int(from_str)
-        to_numeric = int(to_str)
-
-        # Votes is middle column (default 1 if missing/invalid)
-        votes = 1
-        if len(parts) >= 3:
-            try:
-                votes = int(parts[1].strip())
-            except ValueError:
-                votes = 1
-
-        source = numeric_to_verse_id(from_numeric)
-        target = numeric_to_verse_id(to_numeric)
-
-        if not source or not target:
-            return None
-
-        source_id = f"{source[0]}.{source[1]}.{source[2]}"
-        target_id = f"{target[0]}.{target[1]}.{target[2]}"
-
-        return RawCrossReference(
-            source_verse_id=source_id,
-            target_verse_id=target_id,
-            votes=votes,
-        )
-
-    except (ValueError, IndexError) as e:
-        logger.debug(f"Skipping malformed line: {line!r} ({e})")
+    if not source or not target:
         return None
+
+    votes = 1
+    if len(parts) >= 3:
+        try:
+            votes = int(parts[2].strip())
+        except ValueError:
+            votes = 1
+
+    return RawCrossReference(
+        source_verse_id=source,
+        target_verse_id=target,
+        votes=votes,
+    )
 
 
 class CrossRefExtractor:
@@ -111,23 +171,19 @@ class CrossRefExtractor:
 
         Tries cache first, then downloads from OpenBible.info.
         """
-        # Try cache
         if self.cache_dir:
             cached = self._load_from_cache()
             if cached:
                 return cached
 
-        # Download
         logger.info("🌐 Downloading cross-references from OpenBible.info...")
         tsv_content = self._download()
         if not tsv_content:
             logger.error("Failed to download cross-references")
             return []
 
-        # Parse
         refs = self._parse_tsv(tsv_content)
 
-        # Cache raw data
         if self.cache_dir and refs:
             self._save_to_cache(refs)
 
@@ -141,7 +197,6 @@ class CrossRefExtractor:
 
             with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
                 names = zf.namelist()
-                # Find the TSV file in the ZIP
                 tsv_name = None
                 for name in names:
                     if name.endswith(".txt") or name.endswith(".tsv"):
@@ -170,7 +225,7 @@ class CrossRefExtractor:
             ref = parse_crossref_line(line)
             if ref:
                 refs.append(ref)
-            elif line.strip() and not line.startswith("#"):
+            elif line.strip() and not line.startswith("From") and not line.startswith("#"):
                 skipped += 1
 
         if skipped > 0:

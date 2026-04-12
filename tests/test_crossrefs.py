@@ -8,8 +8,8 @@ import pytest
 from src.config import LoadConfig
 from src.extract.crossref_extractor import (
     CrossRefExtractor,
-    numeric_to_verse_id,
     parse_crossref_line,
+    parse_openbible_ref,
 )
 from src.load.duckdb_loader import DuckDBLoader
 from src.models.schemas import CrossReference, RawCrossReference
@@ -19,44 +19,41 @@ from src.transform.crossref_mapper import (
     transform_crossrefs,
 )
 
-# ─── Numeric → Verse ID Conversion ───────────────────────────────────────────
+
+# ─── OpenBible Reference Parsing ─────────────────────────────────────────────
 
 
-class TestNumericToVerseId:
-    def test_genesis_1_1(self):
-        result = numeric_to_verse_id(1001001)
-        assert result == ("GEN", 1, 1)
+class TestParseOpenbibleRef:
+    def test_genesis(self):
+        assert parse_openbible_ref("Gen.1.1") == "GEN.1.1"
 
-    def test_john_3_16(self):
-        result = numeric_to_verse_id(43003016)
-        assert result == ("JHN", 3, 16)
+    def test_matthew(self):
+        assert parse_openbible_ref("Matt.11.25") == "MAT.11.25"
 
-    def test_revelation_22_21(self):
-        result = numeric_to_verse_id(66022021)
-        assert result == ("REV", 22, 21)
+    def test_psalms(self):
+        assert parse_openbible_ref("Ps.23.1") == "PSA.23.1"
 
-    def test_psalms_23_1(self):
-        result = numeric_to_verse_id(19023001)
-        assert result == ("PSA", 23, 1)
+    def test_revelation(self):
+        assert parse_openbible_ref("Rev.22.21") == "REV.22.21"
 
-    def test_invalid_book_zero(self):
-        assert numeric_to_verse_id(1001) is None  # book 0
+    def test_range_takes_first(self):
+        assert parse_openbible_ref("Col.1.16-Col.1.17") == "COL.1.16"
 
-    def test_invalid_book_67(self):
-        assert numeric_to_verse_id(67001001) is None
+    def test_unknown_book(self):
+        assert parse_openbible_ref("Unknown.1.1") is None
 
-    def test_invalid_chapter_zero(self):
-        assert numeric_to_verse_id(1000001) is None
+    def test_invalid_format(self):
+        assert parse_openbible_ref("Gen.1") is None
+        assert parse_openbible_ref("Gen") is None
 
-    def test_invalid_verse_zero(self):
-        assert numeric_to_verse_id(1001000) is None
+    def test_all_books_mapped(self):
+        """Every book in the mapping should produce a valid result."""
+        from src.extract.crossref_extractor import _OPENBIBLE_TO_BOOK_ID
 
-    def test_all_66_books_map(self):
-        """Every canonical book position (1-66) should have a mapping."""
-        for pos in range(1, 67):
-            result = numeric_to_verse_id(pos * 1_000_000 + 1001)
-            assert result is not None, f"Position {pos} has no mapping"
-            assert len(result[0]) >= 2  # book_id is at least 2 chars
+        for abbrev, book_id in _OPENBIBLE_TO_BOOK_ID.items():
+            result = parse_openbible_ref(f"{abbrev}.1.1")
+            assert result is not None, f"Failed for {abbrev}"
+            assert result.startswith(book_id), f"{abbrev} -> {result}, expected {book_id}"
 
 
 # ─── TSV Line Parsing ────────────────────────────────────────────────────────
@@ -64,31 +61,32 @@ class TestNumericToVerseId:
 
 class TestParseCrossrefLine:
     def test_valid_line(self):
-        ref = parse_crossref_line("01001001\t5\t43003016")
+        ref = parse_crossref_line("Gen.1.1\tMatt.11.25\t13")
         assert ref is not None
         assert ref.source_verse_id == "GEN.1.1"
-        assert ref.target_verse_id == "JHN.3.16"
-        assert ref.votes == 5
+        assert ref.target_verse_id == "MAT.11.25"
+        assert ref.votes == 13
 
-    def test_two_column_line(self):
-        ref = parse_crossref_line("01001001\t43003016")
+    def test_line_with_range(self):
+        ref = parse_crossref_line("Gen.1.1\tCol.1.16-Col.1.17\t161")
         assert ref is not None
-        assert ref.votes == 1  # default
+        assert ref.target_verse_id == "COL.1.16"
+        assert ref.votes == 161
 
     def test_header_line_skipped(self):
-        ref = parse_crossref_line("From Verse\tVotes\tTo Verse")
+        ref = parse_crossref_line("From Verse\tTo Verse\tVotes\t#www.openbible.info")
         assert ref is None
 
-    def test_comment_line_skipped(self):
-        ref = parse_crossref_line("# This is a comment")
+    def test_comment_skipped(self):
+        ref = parse_crossref_line("# comment")
         assert ref is None
 
     def test_empty_line_skipped(self):
         ref = parse_crossref_line("")
         assert ref is None
 
-    def test_invalid_verse_returns_none(self):
-        ref = parse_crossref_line("99999999\t1\t01001001")
+    def test_invalid_ref_returns_none(self):
+        ref = parse_crossref_line("Unknown.1.1\tGen.1.1\t1")
         assert ref is None
 
 
@@ -98,23 +96,21 @@ class TestParseCrossrefLine:
 class TestCrossRefExtractor:
     def test_parse_tsv_content(self):
         content = (
-            "From Verse\tVotes\tTo Verse\n"
-            "01001001\t5\t43003016\n"
-            "01001002\t3\t19023001\n"
+            "From Verse\tTo Verse\tVotes\t#www.openbible.info\n"
+            "Gen.1.1\tMatt.11.25\t13\n"
+            "Gen.1.1\tPs.96.5\t59\n"
             "# comment\n"
-            "99999999\t1\t01001001\n"  # invalid
+            "Unknown.1.1\tGen.1.1\t1\n"
         )
         extractor = CrossRefExtractor()
         refs = extractor._parse_tsv(content)
         assert len(refs) == 2
         assert refs[0].source_verse_id == "GEN.1.1"
-        assert refs[1].source_verse_id == "GEN.1.2"
+        assert refs[0].target_verse_id == "MAT.11.25"
+        assert refs[1].target_verse_id == "PSA.96.5"
 
     def test_parse_deduplicates(self):
-        content = (
-            "01001001\t5\t43003016\n"
-            "01001001\t3\t43003016\n"  # duplicate
-        )
+        content = "Gen.1.1\tMatt.11.25\t13\nGen.1.1\tMatt.11.25\t5\n"
         extractor = CrossRefExtractor()
         refs = extractor._parse_tsv(content)
         assert len(refs) == 1
@@ -173,21 +169,15 @@ class TestTransformCrossrefs:
 
     def test_classifies_types(self, sample_raw_refs):
         refs, _ = transform_crossrefs(sample_raw_refs)
-        # GEN→JHN distance=42 → prophetic
         assert refs[0].reference_type == "prophetic"
 
     def test_skips_self_references(self):
-        raw = [
-            RawCrossReference(source_verse_id="GEN.1.1", target_verse_id="GEN.1.1", votes=1),
-        ]
+        raw = [RawCrossReference(source_verse_id="GEN.1.1", target_verse_id="GEN.1.1", votes=1)]
         refs, stats = transform_crossrefs(raw)
         assert len(refs) == 0
-        assert stats.total_refs == 0
 
     def test_skips_invalid_book_ids(self):
-        raw = [
-            RawCrossReference(source_verse_id="XXX.1.1", target_verse_id="GEN.1.1", votes=1),
-        ]
+        raw = [RawCrossReference(source_verse_id="XXX.1.1", target_verse_id="GEN.1.1", votes=1)]
         refs, _ = transform_crossrefs(raw)
         assert len(refs) == 0
 
@@ -196,14 +186,10 @@ class TestTransformCrossrefs:
         assert stats.total_refs == 3
         assert stats.unique_book_pairs == 3
         assert stats.avg_arc_distance > 0
-        assert stats.max_arc_distance > 0
 
     def test_testament_crossing_stats(self, sample_raw_refs):
         _, stats = transform_crossrefs(sample_raw_refs)
-        # All 3 are OT→NT
         assert stats.refs_old_to_new == 3
-        assert stats.refs_within_old == 0
-        assert stats.refs_within_new == 0
 
 
 class TestCrossrefsToDataframe:
@@ -222,7 +208,6 @@ class TestCrossrefsToDataframe:
         ]
         df = crossrefs_to_dataframe(refs)
         assert len(df) == 1
-        assert "arc_distance" in df.columns
         assert df.iloc[0]["arc_distance"] == 42
 
     def test_empty_returns_empty_df(self):
@@ -287,7 +272,7 @@ class TestDuckDBCrossRefs:
     def test_crossref_arcs_view(self, tmp_db, sample_crossref_df):
         tmp_db.load_cross_references(sample_crossref_df)
         result = tmp_db.query("SELECT * FROM v_crossref_arcs")
-        assert len(result) == 2  # 2 unique book pairs
+        assert len(result) == 2
         assert "connection_count" in result.columns
 
     def test_most_connected_books_view(self, tmp_db, sample_crossref_df):

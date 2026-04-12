@@ -129,8 +129,9 @@ class DuckDBLoader:
             );
         """)
 
+        self.conn.execute("DROP TABLE IF EXISTS pipeline_runs;")
         self.conn.execute("""
-            CREATE TABLE IF NOT EXISTS pipeline_runs (
+            CREATE TABLE pipeline_runs (
                 run_id          VARCHAR PRIMARY KEY,
                 started_at      TIMESTAMP NOT NULL,
                 completed_at    TIMESTAMP,
