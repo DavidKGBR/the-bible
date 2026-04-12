@@ -16,12 +16,15 @@ from rich.table import Table
 from src.config import PipelineConfig
 from src.extract.bible_api import BibleExtractor
 from src.extract.bible_sources import create_source
+from src.extract.crossref_extractor import CrossRefExtractor
 from src.extract.translations import get_translation
 from src.load.duckdb_loader import DuckDBLoader
 from src.load.gcs_loader import GCSLoader
 from src.models.schemas import PipelineMetrics, RawVerse
 from src.transform.cleaning import clean_verses, verses_to_dataframe
+from src.transform.crossref_mapper import crossrefs_to_dataframe, transform_crossrefs
 from src.transform.enrichment import compute_book_stats, compute_chapter_stats, enrich_dataframe
+from src.transform.multilang_aligner import compute_coverage_report
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -50,6 +53,7 @@ class BiblePipeline:
         translations: list[str] | None = None,
         use_cache: bool = True,
         skip_gcp: bool = False,
+        skip_crossrefs: bool = False,
     ) -> PipelineMetrics:
         """
         Execute the full ETL pipeline.
@@ -59,6 +63,7 @@ class BiblePipeline:
             translations: List of translation IDs to process (default: ["kjv"]).
             use_cache: If True, try to load from local cache before fetching API.
             skip_gcp: If True, skip GCP upload even if configured.
+            skip_crossrefs: If True, skip cross-reference extraction.
 
         Returns:
             PipelineMetrics with run statistics.
@@ -89,14 +94,37 @@ class BiblePipeline:
             self.metrics.total_verses_transformed = len(enriched_df)
             self.metrics.total_books = enriched_df["book_id"].nunique()
             self.metrics.total_chapters = enriched_df.groupby(["book_id", "chapter"]).ngroups
-            console.print(f"  Transformed: [green]{len(enriched_df)}[/green] verses\n")
+            console.print(f"  Transformed: [green]{len(enriched_df)}[/green] verses")
 
-            # ── Phase 3: LOAD ─────────────────────────────────────────────
-            console.rule("[yellow]📤 Phase 3: LOAD[/yellow]")
+            # Coverage report for multi-translation runs
+            if len(translations) > 1 and "verse_id" in enriched_df.columns:
+                coverage = compute_coverage_report(enriched_df)
+                if not coverage.empty:
+                    console.print("  📊 Translation coverage:")
+                    for _, row in coverage.iterrows():
+                        console.print(
+                            f"    {row['translation_id'].upper()}: "
+                            f"{row['total_verses']:,} verses, "
+                            f"{row['coverage_pct']}% coverage"
+                        )
+            console.print()
+
+            # ── Phase 3: CROSS-REFERENCES (optional) ─────────────────────
+            crossref_df = None
+            if not skip_crossrefs:
+                console.rule("[yellow]🔗 Phase 3: CROSS-REFERENCES[/yellow]")
+                crossref_df = self._extract_crossrefs(use_cache=use_cache)
+                if crossref_df is not None:
+                    self.metrics.total_crossrefs_loaded = len(crossref_df)
+                    console.print(f"  Cross-references: [green]{len(crossref_df):,}[/green]\n")
+
+            # ── Phase 4: LOAD ─────────────────────────────────────────────
+            console.rule("[yellow]📤 Phase 4: LOAD[/yellow]")
             loaded = self._load(
                 enriched_df,
                 book_stats_df,
                 chapter_stats_df,
+                crossref_df=crossref_df,
                 translations=translations,
                 skip_gcp=skip_gcp,
             )
@@ -200,11 +228,32 @@ class BiblePipeline:
 
         return enriched_df, book_stats, chapter_stats
 
+    def _extract_crossrefs(self, use_cache: bool = True) -> pd.DataFrame | None:
+        """Extract and transform cross-references from OpenBible.info."""
+        cache_dir = self.config.raw_data_dir.parent / "crossrefs"
+
+        extractor = CrossRefExtractor(cache_dir=cache_dir if use_cache else None)
+        raw_refs = extractor.fetch_all()
+
+        if not raw_refs:
+            logger.warning("No cross-references extracted")
+            return None
+
+        enriched_refs, stats = transform_crossrefs(raw_refs)
+        console.print(
+            f"  📊 {stats.total_refs:,} refs, "
+            f"{stats.unique_book_pairs} book pairs, "
+            f"avg distance: {stats.avg_arc_distance:.1f}"
+        )
+
+        return crossrefs_to_dataframe(enriched_refs)
+
     def _load(
         self,
         enriched_df: pd.DataFrame,
         book_stats_df: pd.DataFrame,
         chapter_stats_df: pd.DataFrame,
+        crossref_df: pd.DataFrame | None = None,
         translations: list[str] | None = None,
         skip_gcp: bool = False,
     ) -> int:
@@ -223,6 +272,10 @@ class BiblePipeline:
             count = loader.load_verses(enriched_df, translation_ids=translations)
             loader.load_book_stats(book_stats_df, translation_ids=translations)
             loader.load_chapter_stats(chapter_stats_df, translation_ids=translations)
+
+            # Load cross-references
+            if crossref_df is not None and not crossref_df.empty:
+                loader.load_cross_references(crossref_df)
 
             # Log pipeline run
             loader.log_pipeline_run(
@@ -270,6 +323,8 @@ class BiblePipeline:
         table.add_row("Chapters", str(self.metrics.total_chapters))
         table.add_row("Verses extracted", f"{self.metrics.total_verses_extracted:,}")
         table.add_row("Verses loaded", f"{self.metrics.total_verses_loaded:,}")
+        if self.metrics.total_crossrefs_loaded > 0:
+            table.add_row("Cross-references", f"{self.metrics.total_crossrefs_loaded:,}")
         table.add_row(
             "Duration",
             f"{self.metrics.duration_seconds:.1f}s" if self.metrics.duration_seconds else "N/A",

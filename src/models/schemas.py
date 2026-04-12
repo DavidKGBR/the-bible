@@ -117,6 +117,7 @@ class PipelineMetrics(BaseModel):
     total_verses_extracted: int = 0
     total_verses_transformed: int = 0
     total_verses_loaded: int = 0
+    total_crossrefs_loaded: int = 0
     translations_processed: list[str] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
 
@@ -133,6 +134,47 @@ class PipelineMetrics(BaseModel):
         if self.total_verses_extracted == 0:
             return 0.0
         return self.total_verses_loaded / self.total_verses_extracted
+
+
+# ─── Cross-References ────────────────────────────────────────────────────────
+
+
+class RawCrossReference(BaseModel):
+    """Raw cross-reference pair as extracted from OpenBible data."""
+
+    source_verse_id: str = Field(..., description="Source verse (e.g., 'GEN.1.1')")
+    target_verse_id: str = Field(..., description="Target verse (e.g., 'JHN.1.1')")
+    votes: int = Field(1, ge=0, description="Confidence votes from OpenBible")
+
+
+class CrossReference(BaseModel):
+    """Enriched cross-reference with book metadata for arc diagram."""
+
+    source_verse_id: str
+    target_verse_id: str
+    source_book_id: str
+    target_book_id: str
+    source_book_position: int = Field(..., ge=1, le=66)
+    target_book_position: int = Field(..., ge=1, le=66)
+    votes: int = Field(1, ge=0)
+    reference_type: str = Field("general", description="direct, thematic, or prophetic")
+
+    @computed_field
+    @property
+    def arc_distance(self) -> int:
+        return abs(self.target_book_position - self.source_book_position)
+
+
+class CrossRefStats(BaseModel):
+    """Aggregated statistics for cross-references."""
+
+    total_refs: int = 0
+    unique_book_pairs: int = 0
+    avg_arc_distance: float = 0.0
+    max_arc_distance: int = 0
+    refs_old_to_new: int = 0
+    refs_within_old: int = 0
+    refs_within_new: int = 0
 
 
 # ─── Book catalog (canonical order) ───────────────────────────────────────────

@@ -47,6 +47,7 @@ class DuckDBLoader:
         logger.info("🏗️  Creating DuckDB schema...")
 
         # Drop and recreate to handle schema evolution
+        self.conn.execute("DROP TABLE IF EXISTS cross_references;")
         self.conn.execute("DROP TABLE IF EXISTS verses;")
         self.conn.execute("DROP TABLE IF EXISTS book_stats;")
         self.conn.execute("DROP TABLE IF EXISTS chapter_stats;")
@@ -137,6 +138,21 @@ class DuckDBLoader:
                 total_verses    INTEGER,
                 duration_seconds DOUBLE,
                 translations    VARCHAR
+            );
+        """)
+
+        self.conn.execute("""
+            CREATE TABLE cross_references (
+                source_verse_id     VARCHAR NOT NULL,
+                target_verse_id     VARCHAR NOT NULL,
+                source_book_id      VARCHAR NOT NULL,
+                target_book_id      VARCHAR NOT NULL,
+                source_book_position INTEGER NOT NULL,
+                target_book_position INTEGER NOT NULL,
+                votes               INTEGER DEFAULT 1,
+                reference_type      VARCHAR DEFAULT 'general',
+                arc_distance        INTEGER NOT NULL,
+                PRIMARY KEY (source_verse_id, target_verse_id)
             );
         """)
 
@@ -235,6 +251,44 @@ class DuckDBLoader:
                 translation_id, language, text, sentiment_polarity
             FROM verses
             ORDER BY verse_id, translation_id;
+        """)
+
+        # ── Cross-reference views ─────────────────────────────────────
+        self.conn.execute("""
+            CREATE OR REPLACE VIEW v_crossref_arcs AS
+            SELECT
+                source_book_id,
+                target_book_id,
+                source_book_position,
+                target_book_position,
+                COUNT(*) AS connection_count,
+                ROUND(AVG(arc_distance), 2) AS avg_distance,
+                SUM(votes) AS total_votes
+            FROM cross_references
+            GROUP BY source_book_id, target_book_id,
+                     source_book_position, target_book_position
+            ORDER BY connection_count DESC;
+        """)
+
+        self.conn.execute("""
+            CREATE OR REPLACE VIEW v_most_connected_books AS
+            SELECT
+                book_id,
+                (outgoing + incoming) AS total_connections,
+                outgoing,
+                incoming
+            FROM (
+                SELECT
+                    book_id,
+                    (SELECT COUNT(*) FROM cross_references
+                     WHERE source_book_id = book_id) AS outgoing,
+                    (SELECT COUNT(*) FROM cross_references
+                     WHERE target_book_id = book_id) AS incoming
+                FROM (SELECT DISTINCT source_book_id AS book_id FROM cross_references
+                      UNION
+                      SELECT DISTINCT target_book_id FROM cross_references)
+            )
+            ORDER BY total_connections DESC;
         """)
 
     def load_translations(self, translations: list[dict]) -> int:
@@ -355,6 +409,31 @@ class DuckDBLoader:
         logger.info(f"📊 Loaded {count} chapter stats")
         return count
 
+    def load_cross_references(self, df: pd.DataFrame) -> int:
+        """Load cross-references into the database."""
+        if df.empty:
+            return 0
+
+        logger.info(f"🔗 Loading {len(df)} cross-references into DuckDB...")
+        self.conn.execute("DELETE FROM cross_references;")
+        self.conn.execute("""
+            INSERT INTO cross_references (
+                source_verse_id, target_verse_id,
+                source_book_id, target_book_id,
+                source_book_position, target_book_position,
+                votes, reference_type, arc_distance
+            )
+            SELECT
+                source_verse_id, target_verse_id,
+                source_book_id, target_book_id,
+                source_book_position, target_book_position,
+                votes, reference_type, arc_distance
+            FROM df
+        """)
+        count = self.conn.execute("SELECT COUNT(*) FROM cross_references").fetchone()[0]
+        logger.info(f"✅ Loaded {count} cross-references")
+        return count
+
     def log_pipeline_run(
         self,
         run_id: str,
@@ -404,5 +483,8 @@ class DuckDBLoader:
 
         row = self.conn.execute("SELECT ROUND(AVG(sentiment_polarity), 4) FROM verses").fetchone()
         result["avg_sentiment"] = row[0] if row else 0
+
+        row = self.conn.execute("SELECT COUNT(*) FROM cross_references").fetchone()
+        result["total_crossrefs"] = row[0] if row else 0
 
         return result

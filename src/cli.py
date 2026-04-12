@@ -59,6 +59,11 @@ def run(
         "--skip-gcp",
         help="Skip GCP upload even if configured.",
     ),
+    skip_crossrefs: bool = typer.Option(
+        False,
+        "--skip-crossrefs",
+        help="Skip cross-reference extraction from OpenBible.info.",
+    ),
     log_level: str = typer.Option(
         "INFO",
         "--log-level",
@@ -84,6 +89,7 @@ def run(
             translations=translation_list,
             use_cache=not no_cache,
             skip_gcp=skip_gcp,
+            skip_crossrefs=skip_crossrefs,
         )
         sys.exit(0 if metrics.status == "success" else 1)
     except Exception:
