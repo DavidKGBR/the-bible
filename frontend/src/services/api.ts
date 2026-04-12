@@ -125,3 +125,64 @@ export function searchVerses(
   if (book) params.set("book", book);
   return fetchJson<SearchResponse>(`${BASE}/verses/search?${params}`);
 }
+
+// ── Reader ───────────────────────────────────────────────────────────────────
+
+export interface ReaderVerse {
+  verse: number;
+  text: string;
+  reference: string;
+  verse_id: string;
+  word_count: number;
+  sentiment_polarity: number;
+  sentiment_label: string;
+}
+
+export interface ReaderPage {
+  book_id: string;
+  book_name: string;
+  chapter: number;
+  translation: string;
+  testament: string;
+  category: string;
+  total_chapters: number;
+  verse_count: number;
+  has_previous: boolean;
+  has_next: boolean;
+  verses: ReaderVerse[];
+}
+
+export interface ParallelVerse {
+  verse: number;
+  left_text: string | null;
+  right_text: string | null;
+  left_sentiment: string | null;
+  right_sentiment: string | null;
+}
+
+export interface ParallelPage {
+  book_id: string;
+  book_name: string;
+  chapter: number;
+  left_translation: string;
+  right_translation: string;
+  verse_count: number;
+  verses: ParallelVerse[];
+}
+
+export function fetchReaderPage(book: string, chapter: number, translation = "kjv") {
+  return fetchJson<ReaderPage>(
+    `${BASE}/reader/page?book=${book}&chapter=${chapter}&translation=${translation}`
+  );
+}
+
+export function fetchParallelPage(
+  book: string,
+  chapter: number,
+  left = "kjv",
+  right = "nvi"
+) {
+  return fetchJson<ParallelPage>(
+    `${BASE}/reader/parallel?book=${book}&chapter=${chapter}&left=${left}&right=${right}`
+  );
+}

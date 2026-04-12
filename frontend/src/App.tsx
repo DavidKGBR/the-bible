@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import ArcDiagramPage from "./pages/ArcDiagramPage";
+import ReaderPage from "./pages/ReaderPage";
 import SearchPage from "./pages/SearchPage";
 
 export default function App() {
@@ -9,6 +10,7 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/reader" element={<ReaderPage />} />
         <Route path="/arc-diagram" element={<ArcDiagramPage />} />
         <Route path="/search" element={<SearchPage />} />
       </Route>
