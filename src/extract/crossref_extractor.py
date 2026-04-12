@@ -13,7 +13,7 @@ from pathlib import Path
 
 import httpx
 
-from src.models.schemas import BOOK_CATALOG, RawCrossReference
+from src.models.schemas import RawCrossReference
 
 logger = logging.getLogger(__name__)
 

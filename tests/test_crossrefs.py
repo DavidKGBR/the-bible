@@ -19,7 +19,6 @@ from src.transform.crossref_mapper import (
     transform_crossrefs,
 )
 
-
 # ─── OpenBible Reference Parsing ─────────────────────────────────────────────
 
 

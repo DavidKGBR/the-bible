@@ -196,7 +196,6 @@ class BibleExtractor:
             catalog = [b for b in catalog if b["id"] in books]
 
         all_verses: list[RawVerse] = []
-        total_chapters = sum(self.CHAPTERS_PER_BOOK.get(b["name"], 0) for b in catalog)
 
         with Progress(
             SpinnerColumn(),

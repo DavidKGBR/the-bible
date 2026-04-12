@@ -3,14 +3,12 @@
 """
 
 import json
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from src.ai.gemini_client import GeminiClient
 from src.ai.passage_explainer import PassageExplainer
-
 
 # ─── GeminiClient Tests ──────────────────────────────────────────────────────
 

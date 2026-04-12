@@ -12,7 +12,7 @@ from src.api.routers import ai_insights, analytics, books, crossrefs, search
 
 app = FastAPI(
     title="Bible Data Pipeline API",
-    description="REST API for Biblical text analytics — multi-translation, NLP sentiment, cross-references",
+    description="REST API for Biblical text analytics",
     version="2.0.0",
 )
 

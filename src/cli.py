@@ -152,7 +152,8 @@ def sample(
     with DuckDBLoader(config.load) as loader:
         try:
             df = loader.query(f"""
-                SELECT reference, translation_id, text, word_count, sentiment_label, sentiment_polarity
+                SELECT reference, translation_id, text,
+                       word_count, sentiment_label, sentiment_polarity
                 FROM verses
                 WHERE book_id = '{book.upper()}'
                   AND chapter = {chapter}

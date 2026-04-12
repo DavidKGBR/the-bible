@@ -99,7 +99,7 @@ Built as a showcase of modern data engineering practices applied to one of the w
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/bible-data-pipeline.git
+git clone https://github.com/DavidKGBR/the-bible.git
 cd bible-data-pipeline
 
 # Install dependencies
