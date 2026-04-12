@@ -167,6 +167,12 @@ class BiblePipeline:
 
         all_verses: list[RawVerse] = []
 
+        from src.models.schemas import BOOK_CATALOG
+
+        target_book_ids = set(b["id"] for b in BOOK_CATALOG)
+        if books:
+            target_book_ids = set(books) & target_book_ids
+
         for translation_id in translations:
             cache_dir = self.config.raw_data_dir / translation_id
 
@@ -175,11 +181,31 @@ class BiblePipeline:
                 console.print(f"  📂 Loading [cyan]{translation_id.upper()}[/cyan] from cache...")
                 source = create_source(translation_id, self.config.extract)
                 verses = source.load_from_cache(cache_dir)
+                source.close()
+
                 if verses:
                     if books:
                         verses = [v for v in verses if v.book_id in books]
+                    cached_book_ids = {v.book_id for v in verses}
+                    missing_books = target_book_ids - cached_book_ids
+
+                    # Fetch missing books from API
+                    if missing_books:
+                        console.print(
+                            f"  🌐 Fetching {len(missing_books)} missing books "
+                            f"for [cyan]{translation_id.upper()}[/cyan]..."
+                        )
+                        source = create_source(translation_id, self.config.extract)
+                        try:
+                            extra = source.fetch_all(
+                                output_dir=cache_dir,
+                                books=sorted(missing_books),
+                            )
+                            verses.extend(extra)
+                        finally:
+                            source.close()
+
                     all_verses.extend(verses)
-                    source.close()
                     continue
 
             # Also check legacy flat cache (data/raw/*.json) for KJV backward compat
