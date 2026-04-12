@@ -144,7 +144,7 @@ class RawCrossReference(BaseModel):
 
     source_verse_id: str = Field(..., description="Source verse (e.g., 'GEN.1.1')")
     target_verse_id: str = Field(..., description="Target verse (e.g., 'JHN.1.1')")
-    votes: int = Field(1, ge=0, description="Confidence votes from OpenBible")
+    votes: int = Field(1, description="Confidence votes from OpenBible (can be negative)")
 
 
 class CrossReference(BaseModel):
@@ -156,7 +156,7 @@ class CrossReference(BaseModel):
     target_book_id: str
     source_book_position: int = Field(..., ge=1, le=66)
     target_book_position: int = Field(..., ge=1, le=66)
-    votes: int = Field(1, ge=0)
+    votes: int = Field(1)
     reference_type: str = Field("general", description="direct, thematic, or prophetic")
 
     @computed_field
