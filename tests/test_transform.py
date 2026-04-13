@@ -83,6 +83,14 @@ class TestNormalizeText:
         text = "The LORD is my shepherd."
         assert normalize_text(text) == text
 
+    def test_decodes_numeric_entity(self):
+        assert normalize_text("serpent&#x27;s") == "serpent's"
+
+    def test_decodes_named_entities(self):
+        assert normalize_text("Alpha &amp; Omega") == "Alpha & Omega"
+        assert normalize_text("2 &lt; 3") == "2 < 3"
+        assert normalize_text("she said &quot;hi&quot;") == 'she said "hi"'
+
 
 class TestRemoveDuplicates:
     def test_removes_exact_duplicates(self):

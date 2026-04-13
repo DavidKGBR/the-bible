@@ -189,11 +189,13 @@ export default function BibleReader() {
                       <button
                         onClick={() => openVerse(v.verse, "crossrefs")}
                         title={`${xrefCount} cross-references`}
-                        className="text-[10px] shrink-0 px-1.5 py-0.5 rounded mt-0.5
-                                   text-[var(--color-gold-dark)] opacity-40 hover:opacity-100
-                                   hover:bg-[var(--color-gold)]/10 transition"
+                        aria-label={`${xrefCount} cross-references`}
+                        className="text-[11px] font-mono tabular-nums shrink-0 pt-1 pr-1
+                                   text-[var(--color-gold-dark)] opacity-25 hover:opacity-60
+                                   transition-opacity focus:outline-none focus:ring-1
+                                   focus:ring-[var(--color-gold)]/40 rounded"
                       >
-                        🔗 {xrefCount}
+                        ·{xrefCount}
                       </button>
                     )}
                   </div>

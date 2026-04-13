@@ -1,7 +1,56 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { searchVerses, type SearchResult } from "../services/api";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+
+const KEYWORD_SUGGESTIONS = [
+  "love",
+  "faith",
+  "hope",
+  "grace",
+  "peace",
+  "wisdom",
+  "Jesus",
+  "David",
+  "Moses",
+  "beginning",
+  "light",
+];
+
+interface PopularVerse {
+  ref: string;
+  verse_id: string;
+  preview: string;
+}
+
+const POPULAR_VERSES: PopularVerse[] = [
+  {
+    ref: "John 3:16",
+    verse_id: "JHN.3.16",
+    preview: "For God so loved the world...",
+  },
+  {
+    ref: "Psalm 23:1",
+    verse_id: "PSA.23.1",
+    preview: "The LORD is my shepherd...",
+  },
+  {
+    ref: "Romans 8:28",
+    verse_id: "ROM.8.28",
+    preview: "And we know that all things work together for good...",
+  },
+  {
+    ref: "Philippians 4:13",
+    verse_id: "PHP.4.13",
+    preview: "I can do all things through Christ which strengtheneth me.",
+  },
+];
+
+function verseIdToReaderLink(verseId: string): string {
+  const parts = verseId.split(".");
+  if (parts.length !== 3) return "/reader";
+  return `/reader?book=${parts[0]}&chapter=${parts[1]}&verse=${parts[2]}`;
+}
 
 export default function SearchPage() {
   const navigate = useNavigate();
@@ -11,21 +60,32 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (!query.trim()) return;
-
+  async function runSearch(q: string) {
+    const trimmed = q.trim();
+    if (!trimmed) return;
     setLoading(true);
     try {
-      const data = await searchVerses(query.trim());
+      const data = await searchVerses(trimmed);
       setResults(data.results);
       setTotalResults(data.total_results);
       setSearched(true);
     } catch {
       setResults([]);
+      setTotalResults(0);
+      setSearched(true);
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    void runSearch(query);
+  }
+
+  function handleTagClick(tag: string) {
+    setQuery(tag);
+    void runSearch(tag);
   }
 
   function highlightMatch(text: string): string {
@@ -39,28 +99,85 @@ export default function SearchPage() {
   }
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4 text-[var(--color-ink)]">
-        Verse Search
-      </h2>
+    <div className="max-w-3xl mx-auto">
+      <h2 className="page-title text-3xl mb-4">Verse Search</h2>
 
-      <form onSubmit={handleSearch} className="flex gap-3 mb-6">
+      <form onSubmit={handleSubmit} className="flex gap-3 mb-6">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search verses (e.g., love, beginning, faith)..."
-          className="flex-1 border rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/50 focus:border-[var(--color-gold)]/60"
+          className="flex-1 border rounded-lg px-4 py-2 bg-white focus:outline-none
+                     focus:ring-2 focus:ring-[var(--color-gold)]/50
+                     focus:border-[var(--color-gold)]/60"
         />
         <button
           type="submit"
-          className="bg-[var(--color-gold)] text-white px-6 py-2 rounded-lg font-bold hover:opacity-90 transition"
+          className="bg-[var(--color-gold)] text-white px-6 py-2 rounded-lg font-bold
+                     hover:opacity-90 transition focus:outline-none
+                     focus:ring-2 focus:ring-[var(--color-gold)]/60"
         >
           Search
         </button>
       </form>
 
       {loading && <LoadingSpinner text="Searching..." />}
+
+      {/* Empty state: suggestions + popular verses */}
+      {!searched && !loading && (
+        <div className="space-y-8 fade-in">
+          <section>
+            <h3 className="text-xs uppercase tracking-[0.2em] opacity-50 mb-3 font-display">
+              Try searching for
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {KEYWORD_SUGGESTIONS.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => handleTagClick(tag)}
+                  className="px-3 py-1 rounded-full border border-[var(--color-gold)]/40
+                             text-sm bg-white hover:bg-[var(--color-gold)]/10
+                             hover:border-[var(--color-gold)] transition
+                             focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <h3 className="text-xs uppercase tracking-[0.2em] opacity-50 mb-3 font-display">
+              Popular verses
+            </h3>
+            <div className="space-y-2">
+              {POPULAR_VERSES.map((v) => (
+                <Link
+                  key={v.verse_id}
+                  to={verseIdToReaderLink(v.verse_id)}
+                  className="flex items-baseline gap-3 bg-white border rounded-lg
+                             px-4 py-3 hover:border-[var(--color-gold)]/50
+                             hover:shadow-sm transition group
+                             focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40"
+                >
+                  <span className="font-display font-bold text-sm text-[var(--color-gold)]
+                                   shrink-0 w-28 group-hover:text-[var(--color-gold-dark)] transition">
+                    {v.ref}
+                  </span>
+                  <span className="verse-text text-sm opacity-70 truncate">
+                    {v.preview}
+                  </span>
+                  <span className="ml-auto text-[var(--color-gold)] opacity-0
+                                   group-hover:opacity-100 transition shrink-0">
+                    →
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
 
       {searched && !loading && (
         <p className="text-sm opacity-60 mb-4">

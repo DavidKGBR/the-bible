@@ -88,13 +88,12 @@ export default function ArcDiagramPage() {
       {loading ? (
         <LoadingSpinner text="Loading cross-references..." />
       ) : (
-        <div className="flex flex-col lg:flex-row border rounded bg-white overflow-hidden">
-          <div className="flex-1 overflow-x-auto">
+        <div className="flex flex-col lg:flex-row border rounded bg-white overflow-hidden lg:h-[480px]">
+          <div className="flex-1 min-w-0 overflow-x-auto">
             <ArcDiagram
               books={books}
               arcs={arcs}
               colorBy={filters.colorBy}
-              width={selectedArc ? 900 : 1200}
               height={480}
               onArcClick={handleArcClick}
             />

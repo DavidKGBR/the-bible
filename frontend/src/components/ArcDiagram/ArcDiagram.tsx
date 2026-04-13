@@ -1,8 +1,7 @@
-import { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo, useEffect, useCallback } from "react";
 import type { Book, Arc } from "../../services/api";
 import {
   computeBookPositions,
-  arcPath,
   categoryColor,
   distanceColorScale,
   testamentArcColor,
@@ -20,18 +19,23 @@ interface Props {
 }
 
 const BOOK_BAR_HEIGHT = 20;
-const LABEL_HEIGHT = 50;
-const BASELINE_Y_OFFSET = 30;
+const LABEL_HEIGHT = 34;
+const BASELINE_Y_OFFSET = 8;
+const ARC_TOP_PADDING = 8; // keep arc peaks off the absolute top edge
+const HIT_TOLERANCE = 4; // px from arc ring
+const MIN_WIDTH = 720;   // below this, container scrolls horizontally
 
 export default function ArcDiagram({
   books,
   arcs,
   colorBy,
-  width = 1200,
+  width: widthProp,
   height = 500,
   onArcClick,
 }: Props) {
-  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [measuredWidth, setMeasuredWidth] = useState(widthProp ?? MIN_WIDTH);
   const [hoveredBook, setHoveredBook] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{
     x: number;
@@ -39,6 +43,25 @@ export default function ArcDiagram({
     text: string;
   } | null>(null);
 
+  // Observe container width — if explicit width not given, fill available space
+  useEffect(() => {
+    if (widthProp) {
+      setMeasuredWidth(widthProp);
+      return;
+    }
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => {
+      const w = Math.max(MIN_WIDTH, el.clientWidth);
+      setMeasuredWidth(w);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [widthProp]);
+
+  const width = measuredWidth;
   const baseline = height - BOOK_BAR_HEIGHT - LABEL_HEIGHT - BASELINE_Y_OFFSET;
 
   const positions = useMemo(
@@ -58,50 +81,202 @@ export default function ArcDiagram({
   );
 
   const maxDistance = useMemo(
-    () => Math.max(1, ...arcs.map((a) => Math.abs(a.target_book_position - a.source_book_position))),
+    () =>
+      Math.max(
+        1,
+        ...arcs.map((a) =>
+          Math.abs(a.target_book_position - a.source_book_position)
+        )
+      ),
     [arcs]
   );
 
   const distColor = useMemo(() => distanceColorScale(maxDistance), [maxDistance]);
 
-  // Get arc color based on colorBy mode
-  function getArcColor(arc: Arc): string {
-    if (colorBy === "testament") return testamentArcColor(arc, posMap);
-    if (colorBy === "category") {
-      const source = posMap.get(arc.source_book_id);
-      return source ? categoryColor(source.book.category) : "#999";
-    }
-    const dist = Math.abs(arc.target_book_position - arc.source_book_position);
-    return distColor(dist);
+  // Color selector
+  const getArcColor = useCallback(
+    (arc: Arc): string => {
+      if (colorBy === "testament") return testamentArcColor(arc, posMap);
+      if (colorBy === "category") {
+        const source = posMap.get(arc.source_book_id);
+        return source ? categoryColor(source.book.category) : "#999";
+      }
+      const dist = Math.abs(
+        arc.target_book_position - arc.source_book_position
+      );
+      return distColor(dist);
+    },
+    [colorBy, posMap, distColor]
+  );
+
+  // Precompute arc geometry once per render
+  interface ArcGeom {
+    arc: Arc;
+    cx: number;
+    rx: number;
+    ry: number; // may be less than rx when the arc would exceed vertical space
+    color: string;
+    baseOpacity: number;
+    lineWidth: number;
   }
 
-  // Is arc connected to hovered book?
-  function isConnected(arc: Arc): boolean {
-    if (!hoveredBook) return true;
-    return (
-      arc.source_book_id === hoveredBook || arc.target_book_id === hoveredBook
-    );
+  const maxArcHeight = height - BOOK_BAR_HEIGHT - LABEL_HEIGHT - BASELINE_Y_OFFSET - ARC_TOP_PADDING;
+
+  const geoms = useMemo<ArcGeom[]>(() => {
+    const out: ArcGeom[] = [];
+    for (const arc of arcs) {
+      const s = posMap.get(arc.source_book_id);
+      const t = posMap.get(arc.target_book_id);
+      if (!s || !t) continue;
+      const x1 = s.x + s.width / 2;
+      const x2 = t.x + t.width / 2;
+      const rx = Math.abs(x2 - x1) / 2;
+      out.push({
+        arc,
+        cx: (x1 + x2) / 2,
+        rx,
+        ry: Math.min(rx, maxArcHeight),
+        color: getArcColor(arc),
+        baseOpacity: opacityScale(arc.connection_count, maxWeight),
+        lineWidth: Math.max(0.5, Math.min(3, arc.connection_count / 20)),
+      });
+    }
+    // Sort by connection_count asc so heavy arcs paint last (on top)
+    out.sort((a, b) => a.arc.connection_count - b.arc.connection_count);
+    return out;
+  }, [arcs, posMap, getArcColor, maxWeight, maxArcHeight]);
+
+  // Canvas drawing — internal coordinate system uses `width`;
+  // the canvas element stretches to fit its container via CSS (w-full/h-full).
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    // Backing store sized to (width * dpr) so coords stay crisp;
+    // CSS stretches canvas to parent width regardless.
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+
+    const raf = requestAnimationFrame(() => {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+
+      for (const g of geoms) {
+        const connected =
+          !hoveredBook ||
+          g.arc.source_book_id === hoveredBook ||
+          g.arc.target_book_id === hoveredBook;
+        ctx.beginPath();
+        ctx.strokeStyle = g.color;
+        ctx.globalAlpha = connected ? g.baseOpacity : 0.03;
+        ctx.lineWidth = g.lineWidth;
+        // Elliptical upper-half arc: flattens to fit vertical space while preserving width
+        ctx.ellipse(g.cx, baseline, g.rx, g.ry, 0, Math.PI, 0);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [geoms, hoveredBook, baseline, width, height]);
+
+  // Hit-testing: return topmost arc at (x, y) in canvas coords.
+  // An ellipse centered at (cx, baseline) with radii (rx, ry) satisfies
+  // ((x-cx)/rx)² + ((y-baseline)/ry)² = 1.
+  // Approximate "near the ellipse" by converting the normalised distance back
+  // to pixel units via the local gradient scale.
+  const hitTest = useCallback(
+    (x: number, y: number): ArcGeom | null => {
+      const dy = y - baseline;
+      if (dy > HIT_TOLERANCE) return null; // below baseline
+      for (let i = geoms.length - 1; i >= 0; i--) {
+        const g = geoms[i];
+        const nx = (x - g.cx) / g.rx;
+        const ny = dy / g.ry;
+        const normDist = Math.sqrt(nx * nx + ny * ny);
+        // Scale normalised residual back to pixels using the smaller radius
+        // (so tolerance stays tight even for flattened arcs).
+        const pixelResidual = Math.abs(normDist - 1) * Math.min(g.rx, g.ry);
+        if (pixelResidual < HIT_TOLERANCE && dy <= HIT_TOLERANCE) {
+          return g;
+        }
+      }
+      return null;
+    },
+    [geoms, baseline]
+  );
+
+  function toInternalCoords(
+    e: React.MouseEvent<HTMLCanvasElement>
+  ): { x: number; y: number } {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const scaleX = rect.width > 0 ? width / rect.width : 1;
+    const scaleY = rect.height > 0 ? height / rect.height : 1;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  }
+
+  function handleCanvasMove(e: React.MouseEvent<HTMLCanvasElement>) {
+    const { x, y } = toInternalCoords(e);
+    const hit = hitTest(x, y);
+    if (hit) {
+      setTooltip({
+        x: e.clientX,
+        y: e.clientY,
+        text: `${hit.arc.source_book_id} → ${hit.arc.target_book_id}: ${hit.arc.connection_count} refs (click for details)`,
+      });
+      e.currentTarget.style.cursor = "pointer";
+    } else {
+      setTooltip(null);
+      e.currentTarget.style.cursor = "default";
+    }
+  }
+
+  function handleCanvasClick(e: React.MouseEvent<HTMLCanvasElement>) {
+    const { x, y } = toInternalCoords(e);
+    const hit = hitTest(x, y);
+    if (hit && onArcClick) {
+      onArcClick(
+        hit.arc.source_book_id,
+        hit.arc.target_book_id,
+        hit.arc.connection_count
+      );
+    }
   }
 
   // OT/NT divider position
   const otNtDivider = useMemo(() => {
-    const lastOT = positions.find(
-      (p) => p.book.book_position === 39
-    ); // Malachi
-    const firstNT = positions.find(
-      (p) => p.book.book_position === 40
-    ); // Matthew
+    const lastOT = positions.find((p) => p.book.book_position === 39);
+    const firstNT = positions.find((p) => p.book.book_position === 40);
     if (lastOT && firstNT) return (lastOT.x + lastOT.width + firstNT.x) / 2;
     return null;
   }, [positions]);
 
   return (
-    <div className="relative">
+    <div
+      ref={containerRef}
+      className="relative bg-[var(--color-parchment)] w-full"
+      style={{ height, minWidth: MIN_WIDTH }}
+    >
+      {/* Canvas layer: arcs only — stretches to container via CSS */}
+      <canvas
+        ref={canvasRef}
+        onMouseMove={handleCanvasMove}
+        onMouseLeave={() => setTooltip(null)}
+        onClick={handleCanvasClick}
+        className="absolute inset-0 w-full h-full block"
+      />
+
+      {/* SVG overlay: book bars, labels, divider — uses viewBox so coords align with canvas */}
       <svg
-        ref={svgRef}
-        width={width}
-        height={height}
-        className="bg-[var(--color-parchment)]"
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        className="absolute inset-0 w-full h-full pointer-events-none"
       >
         {/* Testament divider */}
         {otNtDivider && (
@@ -117,47 +292,9 @@ export default function ArcDiagram({
           />
         )}
 
-        {/* Arcs */}
-        {arcs.map((arc, i) => {
-          const source = posMap.get(arc.source_book_id);
-          const target = posMap.get(arc.target_book_id);
-          if (!source || !target) return null;
-
-          const x1 = source.x + source.width / 2;
-          const x2 = target.x + target.width / 2;
-          const connected = isConnected(arc);
-
-          return (
-            <path
-              key={i}
-              d={arcPath(x1, x2, baseline)}
-              fill="none"
-              stroke={getArcColor(arc)}
-              strokeWidth={Math.max(0.5, Math.min(3, arc.connection_count / 20))}
-              opacity={
-                connected
-                  ? opacityScale(arc.connection_count, maxWeight)
-                  : 0.03
-              }
-              className="transition-opacity duration-200 cursor-pointer"
-              onMouseEnter={(e) =>
-                setTooltip({
-                  x: e.clientX,
-                  y: e.clientY,
-                  text: `${arc.source_book_id} → ${arc.target_book_id}: ${arc.connection_count} refs (click for details)`,
-                })
-              }
-              onMouseLeave={() => setTooltip(null)}
-              onClick={() =>
-                onArcClick?.(arc.source_book_id, arc.target_book_id, arc.connection_count)
-              }
-            />
-          );
-        })}
-
-        {/* Book bars */}
+        {/* Book bars (clickable for hover state) */}
         {positions.map((pos) => (
-          <g key={pos.book.book_id}>
+          <g key={pos.book.book_id} className="pointer-events-auto">
             <rect
               x={pos.x}
               y={baseline}
@@ -175,8 +312,9 @@ export default function ArcDiagram({
               className="cursor-pointer transition-opacity duration-200"
               onMouseEnter={() => setHoveredBook(pos.book.book_id)}
               onMouseLeave={() => setHoveredBook(null)}
-            />
-            {/* Book labels (only show if wide enough) */}
+            >
+              <title>{pos.book.book_name}</title>
+            </rect>
             {pos.width > 12 && (
               <text
                 x={pos.x + pos.width / 2}
@@ -185,7 +323,7 @@ export default function ArcDiagram({
                 fontSize={pos.width > 20 ? 8 : 6}
                 fill="var(--color-ink)"
                 opacity={0.7}
-                className="select-none"
+                className="select-none pointer-events-none"
               >
                 {pos.book.book_id}
               </text>

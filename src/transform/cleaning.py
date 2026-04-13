@@ -5,6 +5,7 @@ Text normalization, deduplication, and data quality checks.
 
 from __future__ import annotations
 
+import html
 import logging
 import re
 
@@ -16,7 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 def normalize_text(text: str) -> str:
-    """Normalize verse text: fix whitespace, encoding artifacts, etc."""
+    """Normalize verse text: fix whitespace, encoding artifacts, HTML entities."""
+    # Decode HTML entities first: &#x27; → '   &amp; → &   &lt; → <
+    text = html.unescape(text)
     # Collapse multiple whitespace
     text = re.sub(r"\s+", " ", text)
     # Remove leading/trailing whitespace
