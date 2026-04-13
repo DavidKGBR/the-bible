@@ -15,6 +15,7 @@ router = APIRouter()
 @router.get("/crossrefs/arcs")
 def get_arcs(
     source_book: str | None = Query(None, description="Filter by source book ID"),
+    target_book: str | None = Query(None, description="Filter by target book ID"),
     min_connections: int = Query(1, ge=1, description="Minimum connections per book pair"),
     color_by: str = Query("distance", description="Color scheme: distance, testament, type"),
 ) -> dict:
@@ -22,15 +23,17 @@ def get_arcs(
     conn = get_db()
     try:
         params: list = []
-        where_clause = ""
-        having_clause = ""
+        where_parts: list[str] = []
 
         if source_book:
-            where_clause = "WHERE source_book_id = ?"
+            where_parts.append("source_book_id = ?")
             params.append(source_book.upper())
+        if target_book:
+            where_parts.append("target_book_id = ?")
+            params.append(target_book.upper())
 
-        if min_connections > 1:
-            having_clause = f"HAVING COUNT(*) >= {min_connections}"
+        where_clause = f"WHERE {' AND '.join(where_parts)}" if where_parts else ""
+        having_clause = f"HAVING COUNT(*) >= {min_connections}" if min_connections > 1 else ""
 
         df = conn.execute(
             f"""

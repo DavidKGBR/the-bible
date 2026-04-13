@@ -8,6 +8,8 @@ import {
 } from "../../services/api";
 import OrnateCorner from "./OrnateCorner";
 import DropCap from "./DropCap";
+import { useTranslatorNotes } from "../../hooks/useTranslatorNotes";
+import { parseKjvAnnotations } from "../reader/kjvAnnotations";
 
 const VERSES_PER_PAGE = 15;
 const TRANSLATIONS = ["kjv", "bbe", "nvi", "ra", "acf", "rvr", "apee", "asv", "web", "darby"];
@@ -23,7 +25,27 @@ export default function ImmersiveReader() {
   const [translation, setTranslation] = useState("kjv");
   const [spreadIndex, setSpreadIndex] = useState(0);
   const [flipDir, setFlipDir] = useState<FlipDirection>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const { notesOn, toggle: toggleNotes } = useTranslatorNotes();
   const flipKey = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isKjv = translation === "kjv";
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      setIsFullscreen(document.fullscreenElement === containerRef.current);
+    };
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
 
   useEffect(() => {
     fetchBooks(translation).then(setBooks).catch(() => {});
@@ -81,34 +103,77 @@ export default function ImmersiveReader() {
   // Keyboard navigation
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
+      // Don't hijack keys when a form field is focused
+      const active = document.activeElement;
+      const tag = active?.tagName;
+      if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+
       if (e.key === "ArrowLeft") prev();
-      if (e.key === "ArrowRight") next();
+      else if (e.key === "ArrowRight") next();
+      else if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        toggleFullscreen();
+      }
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [prev, next]);
+  }, [prev, next, toggleFullscreen]);
 
   // Drop cap is only applied to the very first verse of the whole chapter
   // (spreadIndex 0, first verse of left page)
   const showDropCap = spreadIndex === 0;
-  const firstVerse = leftVerses[0];
-  const firstLetter = showDropCap ? firstVerse?.text?.[0] || "" : "";
+
+  function verseBody(v: ReaderVerse, pageFootnotes: string[]): React.ReactNode {
+    if (!(isKjv && notesOn)) return v.text_clean ?? v.text;
+    const parsed = parseKjvAnnotations(v.text);
+    const noteOffsets: number[] = [];
+    for (const n of parsed.notes) {
+      pageFootnotes.push(n);
+      noteOffsets.push(pageFootnotes.length);
+    }
+    return parsed.segments.map((seg, i) => {
+      if (seg.kind === "text") return <span key={i}>{seg.content}</span>;
+      if (seg.kind === "added")
+        return (
+          <span key={i} className="italic opacity-60">
+            {seg.content}
+          </span>
+        );
+      const globalIdx = noteOffsets[seg.index - 1];
+      return (
+        <sup key={i} className="text-[var(--color-gold-dark)] font-bold mx-0.5">
+          {globalIdx}
+        </sup>
+      );
+    });
+  }
 
   function renderVerses(verses: ReaderVerse[], withDropCap: boolean) {
     if (verses.length === 0) {
       return <p className="opacity-40 italic text-center pt-10">· · ·</p>;
     }
+    // Footnotes accumulated per-page (left and right have independent counters)
+    const pageFootnotes: string[] = [];
+    const firstBody = verses[0];
+    const firstText = isKjv && notesOn
+      ? null // handled by verseBody segments
+      : (firstBody.text_clean ?? firstBody.text);
+
     return (
       <div className="font-body text-[var(--color-ink)] text-[17px] leading-[1.85]">
         {verses.map((v, i) => {
           if (withDropCap && i === 0) {
+            // Drop-cap: use clean text for the letter + rest to keep the visual
+            const body = firstText ?? "";
             return (
               <span key={v.verse}>
-                <DropCap letter={firstLetter} />
+                <DropCap letter={body[0] || firstBody.text[0] || ""} />
                 <sup className="text-[var(--color-gold-dark)] text-[10px] font-bold mr-1 align-super">
                   {v.verse}
                 </sup>
-                {v.text.slice(1)}{" "}
+                {isKjv && notesOn
+                  ? verseBody(v, pageFootnotes)
+                  : body.slice(1)}{" "}
               </span>
             );
           }
@@ -117,10 +182,23 @@ export default function ImmersiveReader() {
               <sup className="text-[var(--color-gold-dark)] text-[10px] font-bold mr-1 align-super">
                 {v.verse}
               </sup>
-              {v.text}{" "}
+              {verseBody(v, pageFootnotes)}{" "}
             </span>
           );
         })}
+
+        {pageFootnotes.length > 0 && (
+          <div className="mt-5 pt-2 border-t border-dashed border-[var(--color-gold-dark)]/30">
+            <ol className="space-y-0.5 text-[11px] text-[var(--color-gold-dark)]/90 leading-snug">
+              {pageFootnotes.map((note, i) => (
+                <li key={i}>
+                  <sup className="font-bold mr-1">{i + 1}</sup>
+                  {note}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
       </div>
     );
   }
@@ -134,7 +212,8 @@ export default function ImmersiveReader() {
 
   return (
     <div
-      className="min-h-[80vh] rounded-xl p-4 md:p-8 relative book-ambient-glow"
+      ref={containerRef}
+      className={`relative book-ambient-glow ${isFullscreen ? "w-screen h-screen overflow-auto p-8" : "min-h-[80vh] rounded-xl p-4 md:p-8"}`}
       style={{
         backgroundColor: "var(--bg-void)",
         boxShadow: "inset 0 0 120px rgba(196, 162, 101, 0.06)",
@@ -187,9 +266,44 @@ export default function ImmersiveReader() {
           ))}
         </select>
 
-        <span className="ml-auto text-xs opacity-40 text-[var(--color-parchment)] hidden sm:inline">
-          ← → to turn pages
+        {isKjv && (
+          <button
+            onClick={toggleNotes}
+            className={`text-xs px-3 py-1.5 rounded border transition
+                        focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40 ${
+                          notesOn
+                            ? "bg-[var(--color-gold)]/20 border-[var(--color-gold)] text-[var(--color-gold)]"
+                            : "border-[var(--color-gold-dark)]/30 text-[var(--color-parchment)]/70 hover:bg-[var(--color-gold)]/10"
+                        }`}
+            title="Show KJV translator annotations"
+          >
+            Notes: {notesOn ? "on" : "off"}
+          </button>
+        )}
+
+        <span className="ml-auto text-xs opacity-40 text-[var(--color-parchment)] hidden md:inline">
+          ← → to turn · F for fullscreen
         </span>
+
+        <button
+          onClick={toggleFullscreen}
+          title={isFullscreen ? "Exit fullscreen (F)" : "Enter fullscreen (F)"}
+          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          className="ml-auto md:ml-0 shrink-0 border border-[var(--color-gold-dark)]/40
+                     rounded px-2 py-1.5 text-[var(--color-gold)]
+                     hover:bg-[var(--color-gold)]/10 transition
+                     focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40"
+        >
+          {isFullscreen ? (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4m0 5H4m11 0V4m0 5h5M9 15v5m0-5H4m11 0v5m0-5h5" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4" />
+            </svg>
+          )}
+        </button>
       </div>
 
       {loading ? (

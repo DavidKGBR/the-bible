@@ -8,6 +8,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Query
 
 from src.api.dependencies import get_db
+from src.transform.kjv_annotations import strip_kjv_annotations
 
 router = APIRouter()
 
@@ -60,12 +61,19 @@ def get_chapter(
                 detail=f"No data for {book_id.upper()} chapter {chapter} ({translation})",
             )
 
+        translation_lower = translation.lower()
+        verses = df.to_dict(orient="records")
+        for v in verses:
+            v["text_clean"] = (
+                strip_kjv_annotations(v["text"]) if translation_lower == "kjv" else v["text"]
+            )
+
         return {
             "book_id": book_id.upper(),
             "chapter": chapter,
-            "translation": translation.lower(),
+            "translation": translation_lower,
             "verse_count": len(df),
-            "verses": df.to_dict(orient="records"),
+            "verses": verses,
         }
     finally:
         conn.close()

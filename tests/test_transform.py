@@ -19,6 +19,7 @@ from src.transform.enrichment import (
     compute_text_metrics,
     enrich_dataframe,
 )
+from src.transform.kjv_annotations import strip_kjv_annotations
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -90,6 +91,35 @@ class TestNormalizeText:
         assert normalize_text("Alpha &amp; Omega") == "Alpha & Omega"
         assert normalize_text("2 &lt; 3") == "2 < 3"
         assert normalize_text("she said &quot;hi&quot;") == 'she said "hi"'
+
+
+class TestStripKjvAnnotations:
+    def test_strip_kjv_added_words(self):
+        out = strip_kjv_annotations(
+            "and God said, Let there be light: and there {was} light."
+        )
+        assert out == "and God said, Let there be light: and there was light."
+
+    def test_strip_kjv_marginal_notes(self):
+        out = strip_kjv_annotations(
+            "And God divided the light from the darkness. "
+            "{the light from...: Heb. between the light and between the darkness}"
+        )
+        assert out == "And God divided the light from the darkness."
+
+    def test_strip_kjv_noop_on_clean_text(self):
+        plain = "The LORD is my shepherd; I shall not want."
+        assert strip_kjv_annotations(plain) == plain
+
+    def test_strip_kjv_mixed_short_long(self):
+        out = strip_kjv_annotations(
+            "And God saw the light, that {it was} good: and God divided the light "
+            "from the darkness. {the light from...: Heb. between the light}"
+        )
+        assert out == (
+            "And God saw the light, that it was good: "
+            "and God divided the light from the darkness."
+        )
 
 
 class TestRemoveDuplicates:

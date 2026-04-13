@@ -111,7 +111,9 @@ export default function ParallelView() {
                     {page.left_translation.toUpperCase()}
                   </span>
                   <p className="text-sm leading-relaxed">
-                    {v.left_text || <span className="opacity-30 italic">missing</span>}
+                    {(v.left_text_clean ?? v.left_text) || (
+                      <span className="opacity-30 italic">missing</span>
+                    )}
                   </p>
                 </div>
                 <div className="md:col-start-3 col-start-2 pt-2 md:pt-0 border-t md:border-t-0 border-dashed">
@@ -119,7 +121,9 @@ export default function ParallelView() {
                     {page.right_translation.toUpperCase()}
                   </span>
                   <p className="text-sm leading-relaxed">
-                    {v.right_text || <span className="opacity-30 italic">missing</span>}
+                    {(v.right_text_clean ?? v.right_text) || (
+                      <span className="opacity-30 italic">missing</span>
+                    )}
                   </p>
                 </div>
               </div>

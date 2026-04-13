@@ -8,8 +8,16 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Query
 
 from src.api.dependencies import get_db
+from src.transform.kjv_annotations import strip_kjv_annotations
 
 router = APIRouter()
+
+
+def _clean_for(translation: str, text: str) -> str:
+    """Return reader-friendly text — strips KJV braces, no-op for others."""
+    if translation == "kjv":
+        return strip_kjv_annotations(text)
+    return text
 
 
 @router.get("/reader/page")
@@ -59,6 +67,10 @@ def reader_page(
         category = book_row.iloc[0]["category"] if not book_row.empty else ""
         total_chapters = int(book_row.iloc[0]["total_chapters"]) if not book_row.empty else 1
 
+        verses = verses_df.to_dict(orient="records")
+        for v in verses:
+            v["text_clean"] = _clean_for(translation_lower, v["text"])
+
         return {
             "book_id": book_upper,
             "book_name": book_name,
@@ -70,7 +82,7 @@ def reader_page(
             "verse_count": len(verses_df),
             "has_previous": chapter > 1,
             "has_next": chapter < total_chapters,
-            "verses": verses_df.to_dict(orient="records"),
+            "verses": verses,
         }
     finally:
         conn.close()
@@ -127,15 +139,25 @@ def reader_parallel(
         left_map = {r["verse"]: r for _, r in left_df.iterrows()}
         right_map = {r["verse"]: r for _, r in right_df.iterrows()}
 
+        left_key = left.lower()
+        right_key = right.lower()
         aligned = []
         for v in all_verses:
             l_row = left_map.get(v)
             r_row = right_map.get(v)
+            l_text = l_row["text"] if l_row is not None else None
+            r_text = r_row["text"] if r_row is not None else None
             aligned.append(
                 {
                     "verse": v,
-                    "left_text": l_row["text"] if l_row is not None else None,
-                    "right_text": r_row["text"] if r_row is not None else None,
+                    "left_text": l_text,
+                    "right_text": r_text,
+                    "left_text_clean": (
+                        _clean_for(left_key, l_text) if l_text is not None else None
+                    ),
+                    "right_text_clean": (
+                        _clean_for(right_key, r_text) if r_text is not None else None
+                    ),
                     "left_sentiment": l_row["sentiment_label"] if l_row is not None else None,
                     "right_sentiment": r_row["sentiment_label"] if r_row is not None else None,
                 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useArcData } from "../hooks/useArcData";
 import ArcDiagram from "../components/ArcDiagram/ArcDiagram";
 import ArcDetailPanel from "../components/ArcDiagram/ArcDetailPanel";
@@ -14,10 +14,30 @@ export default function ArcDiagramPage() {
   const { books, arcs, totalCrossrefs, loading, error, filters, setFilters } =
     useArcData();
   const [selectedArc, setSelectedArc] = useState<SelectedArc | null>(null);
+  const lastAutoPair = useRef<string>("");
 
   function handleArcClick(sourceBook: string, targetBook: string, count: number) {
     setSelectedArc({ sourceBook, targetBook, connectionCount: count });
   }
+
+  function openPairPanel(src: string, tgt: string) {
+    const match = arcs.find(
+      (a) => a.source_book_id === src && a.target_book_id === tgt
+    );
+    handleArcClick(src, tgt, match?.connection_count ?? 0);
+  }
+
+  // Auto-open the detail panel when both source and target are explicitly
+  // selected. `lastAutoPair` prevents re-opening after the user closes it.
+  useEffect(() => {
+    const { sourceBook, targetBook } = filters;
+    if (!sourceBook || !targetBook) return;
+    const pairKey = `${sourceBook}→${targetBook}`;
+    if (lastAutoPair.current === pairKey) return;
+    lastAutoPair.current = pairKey;
+    openPairPanel(sourceBook, targetBook);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.sourceBook, filters.targetBook, arcs]);
 
   return (
     <div>
@@ -36,7 +56,7 @@ export default function ArcDiagramPage() {
           <select
             value={filters.sourceBook}
             onChange={(e) => setFilters({ sourceBook: e.target.value })}
-            className="border rounded px-2 py-1 bg-white text-sm"
+            className="border rounded px-2 py-1 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40"
           >
             <option value="">All books</option>
             {books.map((b) => (
@@ -46,6 +66,33 @@ export default function ArcDiagramPage() {
             ))}
           </select>
         </label>
+
+        <label className="flex items-center gap-2 text-sm">
+          Target book:
+          <select
+            value={filters.targetBook}
+            onChange={(e) => setFilters({ targetBook: e.target.value })}
+            className="border rounded px-2 py-1 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40"
+          >
+            <option value="">All books</option>
+            {books.map((b) => (
+              <option key={b.book_id} value={b.book_id}>
+                {b.book_name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {filters.sourceBook && filters.targetBook && (
+          <button
+            onClick={() => openPairPanel(filters.sourceBook, filters.targetBook)}
+            className="text-sm px-3 py-1 rounded bg-[var(--color-gold)] text-white
+                       hover:opacity-90 transition focus:outline-none
+                       focus:ring-2 focus:ring-[var(--color-gold)]/60"
+          >
+            Show connections →
+          </button>
+        )}
 
         <label className="flex items-center gap-2 text-sm">
           Color by:
@@ -88,13 +135,13 @@ export default function ArcDiagramPage() {
       {loading ? (
         <LoadingSpinner text="Loading cross-references..." />
       ) : (
-        <div className="flex flex-col lg:flex-row border rounded bg-white overflow-hidden lg:h-[480px]">
-          <div className="flex-1 min-w-0 overflow-x-auto">
+        <div className="flex flex-col lg:flex-row border rounded bg-white overflow-hidden"
+             style={{ height: "calc(100vh - 200px)", minHeight: 500 }}>
+          <div className="flex-1 min-w-0 overflow-hidden">
             <ArcDiagram
               books={books}
               arcs={arcs}
               colorBy={filters.colorBy}
-              height={480}
               onArcClick={handleArcClick}
             />
           </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   fetchBooks,
@@ -10,6 +10,8 @@ import {
 import LoadingSpinner from "./common/LoadingSpinner";
 import VerseActions from "./VerseActions";
 import { useReadingHistory } from "../hooks/useReadingHistory";
+import { useTranslatorNotes } from "../hooks/useTranslatorNotes";
+import { parseKjvAnnotations } from "./reader/kjvAnnotations";
 
 const TRANSLATIONS = ["kjv", "bbe", "nvi", "ra", "acf", "rvr", "apee", "asv", "web", "darby"];
 
@@ -27,8 +29,10 @@ export default function BibleReader() {
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<InitialTab>("none");
   const [crossrefCounts, setCrossrefCounts] = useState<Record<string, number>>({});
+  const { notesOn, toggle: toggleNotes } = useTranslatorNotes();
   const highlightVerse = Number(searchParams.get("verse")) || null;
   const verseRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const isKjv = translation === "kjv";
 
   // Load book list
   useEffect(() => {
@@ -111,6 +115,61 @@ export default function BibleReader() {
 
   const totalChapters = page?.total_chapters || 1;
 
+  // Build per-verse rendering info when KJV + notes ON; otherwise a clean string.
+  // Also accumulates chapter-level footnotes with global numbering.
+  const kjvRender = useMemo(() => {
+    const footnotes: string[] = [];
+    if (!page) return { verseParts: new Map<number, React.ReactNode>(), footnotes };
+
+    const verseParts = new Map<number, React.ReactNode>();
+
+    if (isKjv && notesOn) {
+      for (const v of page.verses) {
+        const parsed = parseKjvAnnotations(v.text);
+        // Map local note-ref indices (1..n for this verse) to global indices
+        const noteOffsets: number[] = [];
+        for (const n of parsed.notes) {
+          footnotes.push(n);
+          noteOffsets.push(footnotes.length);
+        }
+        verseParts.set(
+          v.verse,
+          <>
+            {parsed.segments.map((seg, i) => {
+              if (seg.kind === "text") return <span key={i}>{seg.content}</span>;
+              if (seg.kind === "added")
+                return (
+                  <span key={i} className="italic opacity-60">
+                    {seg.content}
+                  </span>
+                );
+              // note-ref: map local index (1-based) → global footnote number
+              const globalIdx = noteOffsets[seg.index - 1];
+              return (
+                <sup
+                  key={i}
+                  className="text-[var(--color-gold-dark)] font-bold mx-0.5"
+                >
+                  {globalIdx}
+                </sup>
+              );
+            })}
+          </>
+        );
+      }
+    }
+
+    return { verseParts, footnotes };
+  }, [page, isKjv, notesOn]);
+
+  function renderVerseText(v: { verse: number; text: string; text_clean?: string }) {
+    if (isKjv && notesOn) {
+      const node = kjvRender.verseParts.get(v.verse);
+      if (node) return node;
+    }
+    return v.text_clean ?? v.text;
+  }
+
   return (
     <div className="max-w-3xl mx-auto">
       {/* Controls */}
@@ -144,6 +203,21 @@ export default function BibleReader() {
             <option key={t} value={t}>{t.toUpperCase()}</option>
           ))}
         </select>
+
+        {isKjv && (
+          <button
+            onClick={toggleNotes}
+            className={`text-xs px-3 py-1.5 rounded border transition
+                        focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40 ${
+                          notesOn
+                            ? "bg-[var(--color-gold)]/10 border-[var(--color-gold)] text-[var(--color-gold-dark)]"
+                            : "bg-white hover:bg-gray-50"
+                        }`}
+            title="Show KJV translator annotations"
+          >
+            Translator notes: {notesOn ? "on" : "off"}
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -184,7 +258,7 @@ export default function BibleReader() {
                     >
                       {v.verse}
                     </span>
-                    <p className="verse-text flex-1">{v.text}</p>
+                    <p className="verse-text flex-1">{renderVerseText(v)}</p>
                     {xrefCount > 0 && (
                       <button
                         onClick={() => openVerse(v.verse, "crossrefs")}
@@ -213,6 +287,23 @@ export default function BibleReader() {
               );
             })}
           </div>
+
+          {/* KJV footnotes — only shown when translator notes toggle is on */}
+          {isKjv && notesOn && kjvRender.footnotes.length > 0 && (
+            <div className="mt-6 pt-3 border-t border-dashed border-[var(--color-gold-dark)]/30">
+              <p className="text-[11px] uppercase tracking-[0.25em] opacity-50 mb-2 font-display">
+                Translator notes
+              </p>
+              <ol className="space-y-1 text-xs text-[var(--color-gold-dark)]/90">
+                {kjvRender.footnotes.map((note, i) => (
+                  <li key={i} className="leading-relaxed">
+                    <sup className="font-bold mr-1">{i + 1}</sup>
+                    {note}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
 
           {/* Navigation */}
           <div className="flex justify-between mt-8 pt-4 border-t">

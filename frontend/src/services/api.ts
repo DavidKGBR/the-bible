@@ -96,10 +96,12 @@ export function fetchBooks(translation = "kjv") {
 export function fetchArcs(
   sourceBook?: string,
   minConnections = 1,
-  colorBy = "distance"
+  colorBy = "distance",
+  targetBook?: string
 ) {
   const params = new URLSearchParams({ min_connections: String(minConnections), color_by: colorBy });
   if (sourceBook) params.set("source_book", sourceBook);
+  if (targetBook) params.set("target_book", targetBook);
   return fetchJson<ArcsResponse>(`${BASE}/crossrefs/arcs?${params}`);
 }
 
@@ -131,6 +133,7 @@ export function searchVerses(
 export interface ReaderVerse {
   verse: number;
   text: string;
+  text_clean?: string;
   reference: string;
   verse_id: string;
   word_count: number;
@@ -156,6 +159,8 @@ export interface ParallelVerse {
   verse: number;
   left_text: string | null;
   right_text: string | null;
+  left_text_clean?: string | null;
+  right_text_clean?: string | null;
   left_sentiment: string | null;
   right_sentiment: string | null;
 }

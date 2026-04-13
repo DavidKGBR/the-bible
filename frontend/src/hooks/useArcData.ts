@@ -3,6 +3,7 @@ import { fetchBooks, fetchArcs, type Book, type Arc } from "../services/api";
 
 export interface ArcFilters {
   sourceBook: string;
+  targetBook: string;
   minConnections: number;
   colorBy: "distance" | "testament" | "category";
 }
@@ -19,6 +20,7 @@ export interface ArcData {
 
 const DEFAULT_FILTERS: ArcFilters = {
   sourceBook: "",
+  targetBook: "",
   minConnections: 3,
   colorBy: "distance",
 };
@@ -49,7 +51,8 @@ export function useArcData(): ArcData {
     fetchArcs(
       filters.sourceBook || undefined,
       filters.minConnections,
-      filters.colorBy
+      filters.colorBy,
+      filters.targetBook || undefined
     )
       .then((data) => {
         setArcs(data.arcs);
@@ -57,7 +60,7 @@ export function useArcData(): ArcData {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [filters.sourceBook, filters.minConnections, filters.colorBy]);
+  }, [filters.sourceBook, filters.targetBook, filters.minConnections, filters.colorBy]);
 
   return { books, arcs, totalCrossrefs, loading, error, filters, setFilters };
 }
