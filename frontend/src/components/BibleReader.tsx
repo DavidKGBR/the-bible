@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import {
   fetchBooks,
   fetchReaderPage,
@@ -12,6 +12,8 @@ import VerseActions from "./VerseActions";
 import { useReadingHistory } from "../hooks/useReadingHistory";
 import { useTranslatorNotes } from "../hooks/useTranslatorNotes";
 import { useVerseNotes } from "../hooks/useVerseNotes";
+import { useReadingPlans, recordPlanAutoMark } from "../hooks/useReadingPlans";
+import { getPlanById } from "./plans/plansData";
 import { parseKjvAnnotations } from "./reader/kjvAnnotations";
 
 const TRANSLATIONS = ["kjv", "bbe", "nvi", "ra", "acf", "rvr", "apee", "asv", "web", "darby"];
@@ -32,6 +34,7 @@ export default function BibleReader() {
   const [crossrefCounts, setCrossrefCounts] = useState<Record<string, number>>({});
   const { notesOn, toggle: toggleNotes } = useTranslatorNotes();
   const { notes: verseNotes } = useVerseNotes();
+  const { active: activePlan, todayReading, isCompleted } = useReadingPlans();
   const highlightVerse = Number(searchParams.get("verse")) || null;
   const verseRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const isKjv = translation === "kjv";
@@ -66,10 +69,12 @@ export default function BibleReader() {
           chapter: p.chapter,
           translation: p.translation,
         });
+        // If this chapter belongs to the active plan, tick it off.
+        recordPlanAutoMark(`${p.book_id}.${p.chapter}`, books);
       })
       .catch(() => setPage(null))
       .finally(() => setLoading(false));
-  }, [bookId, chapter, translation, record]);
+  }, [bookId, chapter, translation, record, books]);
 
   // Load cross-ref counts for this chapter
   useEffect(() => {
@@ -236,6 +241,38 @@ export default function BibleReader() {
               {page.translation.toUpperCase()} &middot; {page.verse_count} verses
             </p>
           </div>
+
+          {/* Today's plan banner — only when this chapter is part of an active plan's today */}
+          {(() => {
+            if (!activePlan) return null;
+            const planDef = getPlanById(activePlan.plan_id);
+            if (!planDef || books.length === 0) return null;
+            const today = todayReading(planDef, books);
+            if (!today) return null;
+            const chapterId = `${page.book_id}.${page.chapter}`;
+            const inToday = today.chapters.some((c) => c.chapter_id === chapterId);
+            if (!inToday) return null;
+            const doneToday = today.chapters.filter((c) =>
+              isCompleted(activePlan.plan_id, c.chapter_id)
+            ).length;
+            const total = today.chapters.length;
+            return (
+              <Link
+                to="/plans"
+                className="block mb-5 rounded border border-[var(--color-gold)]/30
+                           bg-[var(--color-gold)]/5 px-4 py-2 text-sm hover:bg-[var(--color-gold)]/10
+                           transition focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40"
+              >
+                <span className="font-display font-bold text-[var(--color-gold-dark)]">
+                  {planDef.emoji} {planDef.title}
+                </span>
+                <span className="opacity-60 ml-2">
+                  · Day {today.day} · {doneToday} / {total} read today
+                  {doneToday === total && total > 0 ? " 🎉" : ""}
+                </span>
+              </Link>
+            );
+          })()}
 
           {/* Verses */}
           <div className="space-y-0.5 fade-in">

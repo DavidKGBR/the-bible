@@ -238,7 +238,7 @@ Competição média-baixa vs Bible Hub (UX terrível).
 | # | Task | Impacto | Status | PR |
 |---|------|---------|--------|-----|
 | 1 | Notas + Highlighting | 🔥🔥🔥🔥 | ✅ Concluído | [branch](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-1-notes-highlighting) |
-| 2 | Streak + Reading Plans | 🔥🔥🔥 | 🔲 Planejado | — |
+| 2 | Streak + Reading Plans | 🔥🔥🔥 | ✅ Concluído | [branch](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-2-streak-plans) |
 | 3 | Extract Strong's + originals | 🔥🔥🔥🔥 | 🔲 Planejado | — |
 | 4 | API endpoints (6 novos) | 🔥🔥🔥 | 🔲 Planejado | — |
 | 5 | Interlinear View | 🔥🔥🔥🔥🔥 | 🔲 Planejado | — |
@@ -305,3 +305,18 @@ entrada lógica — sem depender da memória de conversa.
 - **Push concluído:** branch `feat/verbum-1-notes-highlighting` em github.com/DavidKGBR/verbum. PR a ser criado manualmente (gh CLI indisponível no ambiente). Três commits: `chore: Verbum brand identity`, `fix: ArcDiagram reshape`, `feat: task 1 notes & highlighting`.
 - **Remote atualizado:** de `the-bible.git` → `verbum.git` (redirect oficial no GitHub).
 - **Próxima entrada:** Tarefa #2 — Streak + Reading Plans (Fase 1B). Também 100% frontend + localStorage, complementar à tarefa 1.
+
+### 2026-04-13 — Tarefa #2 concluída: Streak + Reading Plans
+- Segunda tarefa do mesmo dia, cadência mantida. 100% frontend como planejado, zero backend.
+- **`useReadingHistory` refatorada** pro mesmo padrão module-level store + `useSyncExternalStore` que já usávamos em `useVerseNotes`. Isso é pré-requisito pro `useReadingStreak` conseguir reagir a novos reads na mesma aba. API externa preservada.
+- **Streak** (`useReadingStreak` + `StreakBadge`): hook subscreve ao history, fold puro `advanceStreak(prev, today)` calcula gap em dias e decide increment / reset / no-op. `streakStatus` devolve `"alive" | "at-risk" | "broken" | "empty"`. Badge no sidebar adapta ícone e tom: 🔥 alive → 🔥 at-risk (muted) → ❄️ broken ("Start again today?").
+- **Reading Plans** (`plansData.ts` + `useReadingPlans` + `PlanCard` + `PlansPage`): 5 planos pré-definidos (Bible 1-year, NT 90-day, Psalms 30-day, Proverbs 31-day, Gospels 40-day). Schedule gerado algoritmicamente por `chunkChapters` + filtros sobre `Book[]` do `fetchBooks("kjv")` — zero hard-coding de listas.
+- **Auto-mark**: `recordPlanAutoMark(chapter_id, books)` é chamado pelo `BibleReader` quando `fetchReaderPage` completa. Se o capítulo pertence ao plano ativo (qualquer dia do schedule), é marcado como `completed`.
+- **Banner** no `BibleReader` quando o capítulo atual é parte de "today's reading". Link pra `/plans`.
+- **Home quick action** muda pra "Day N — <plan>. X chapters left today" quando há plano ativo com pendências; vira "🎉 Today complete" quando tudo está lido.
+- **Débito técnico pago**: `frontend/src/utils/dateFormat.ts` consolidou 4 duplicações de `formatDate`/`formatRelative` que estavam espalhadas pelas pages/components da tarefa #1. Novas helpers: `localDateKey(ts)` (YYYY-MM-DD em TZ local) e `daysBetween(a, b)` — load-bearing pra streak math.
+- **Arquivos novos (7):** `hooks/useReadingStreak.ts`, `hooks/useReadingPlans.ts`, `components/streak/StreakBadge.tsx`, `components/plans/plansData.ts`, `components/plans/PlanCard.tsx`, `pages/PlansPage.tsx`, `utils/dateFormat.ts`.
+- **Arquivos modificados (9):** `hooks/useReadingHistory.ts` (refactor), `components/Layout.tsx` (badge + nav), `pages/HomePage.tsx` (quick action), `components/BibleReader.tsx` (banner + auto-mark), `App.tsx` (rota), `pages/NotesPage.tsx`, `pages/BookmarksPage.tsx`, `components/notes/NoteEditor.tsx`, `components/notes/notesExport.ts` (limpeza de duplicatas).
+- **Testes E2E via Puppeteer:** ler Genesis 1 → streak 🔥 1 day · Total 1 ch; manipular localStorage pra simular read ontem → read hoje sobe pra 2 days + longest bumps; gap 3+ dias → reset current=1, longest preservado; start Psalms plano → banner no reader com "Day 1 · 1/5 read today" após abrir Psa 1; stale read date + sem leitura hoje → ❄️ "Start again today?" no sidebar.
+- **Type check clean** (`npx tsc --noEmit`). **Build prod** 400KB (130KB gzipped, +5KB vs. task #1).
+- **Próxima entrada:** Tarefa #3 — Extract Strong's + originals (Fase 2A). Muda o perfil do trabalho: agora é ETL Python pesado (parsing TSV/XML do STEPBible, openscriptures/morphhb, scrollmapper). Provável sessão dedicada pra extração + validação de sanidade antes de expor na API (Tarefa #4).

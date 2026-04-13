@@ -3,12 +3,16 @@ import { Link } from "react-router-dom";
 import {
   fetchTranslationStats,
   fetchArcs,
+  fetchBooks,
   type TranslationStat,
+  type Book,
 } from "../services/api";
 import VerseOfTheDay from "../components/VerseOfTheDay";
 import TranslationPreview from "../components/TranslationPreview";
 import VerbumLogo from "../components/common/VerbumLogo";
 import { useReadingHistory } from "../hooks/useReadingHistory";
+import { useReadingPlans } from "../hooks/useReadingPlans";
+import { getPlanById } from "../components/plans/plansData";
 
 interface QuickAction {
   to: string;
@@ -21,7 +25,9 @@ interface QuickAction {
 export default function HomePage() {
   const [translations, setTranslations] = useState<TranslationStat[]>([]);
   const [totalCrossrefs, setTotalCrossrefs] = useState<number | null>(null);
+  const [books, setBooks] = useState<Book[]>([]);
   const { getLastRead } = useReadingHistory();
+  const { active: activePlan, todayReading, isCompleted } = useReadingPlans();
   const last = getLastRead();
 
   useEffect(() => {
@@ -31,14 +37,47 @@ export default function HomePage() {
     fetchArcs(undefined, 1, "distance")
       .then((d) => setTotalCrossrefs(d.metadata.total_crossrefs))
       .catch(() => {});
+    fetchBooks("kjv").then(setBooks).catch(() => {});
   }, []);
+
+  // Build a "Today's Reading" quick action if there's an active plan with a
+  // schedule for today. Falls back to continue-reading / start-reading.
+  const planAction: QuickAction | null = (() => {
+    if (!activePlan) return null;
+    const planDef = getPlanById(activePlan.plan_id);
+    if (!planDef || books.length === 0) return null;
+    const today = todayReading(planDef, books);
+    if (!today || today.chapters.length === 0) return null;
+    const remaining = today.chapters.filter(
+      (c) => !isCompleted(activePlan.plan_id, c.chapter_id)
+    );
+    if (remaining.length === 0) {
+      return {
+        to: "/plans",
+        emoji: "🎉",
+        title: "Today complete",
+        subtitle: `${planDef.title} · Day ${today.day}`,
+        accent: true,
+      };
+    }
+    const nextCh = remaining[0];
+    return {
+      to: `/reader?book=${nextCh.book_id}&chapter=${nextCh.chapter}&translation=kjv`,
+      emoji: "📚",
+      title: `Day ${today.day} — ${planDef.title}`,
+      subtitle: `${remaining.length} chapter${remaining.length === 1 ? "" : "s"} left today`,
+      accent: true,
+    };
+  })();
 
   const totalVerses = translations.reduce((s, t) => s + t.verses, 0);
   const totalTranslations = translations.length;
   const languages = new Set(translations.map((t) => t.language)).size;
 
   const quickActions: QuickAction[] = [
-    last
+    planAction
+      ? planAction
+      : last
       ? {
           to: `/reader?book=${last.book_id}&chapter=${last.chapter}&translation=${last.translation}`,
           emoji: "📖",

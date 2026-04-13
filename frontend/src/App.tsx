@@ -6,6 +6,7 @@ import ReaderPage from "./pages/ReaderPage";
 import SearchPage from "./pages/SearchPage";
 import BookmarksPage from "./pages/BookmarksPage";
 import NotesPage from "./pages/NotesPage";
+import PlansPage from "./pages/PlansPage";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/bookmarks" element={<BookmarksPage />} />
         <Route path="/notes" element={<NotesPage />} />
+        <Route path="/plans" element={<PlansPage />} />
       </Route>
     </Routes>
   );
