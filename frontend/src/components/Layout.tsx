@@ -12,7 +12,7 @@ export default function Layout() {
     <div className="flex min-h-screen w-full">
       {/* Sidebar */}
       <nav className="w-56 shrink-0 bg-[var(--color-ink)] text-[var(--color-parchment)] flex flex-col p-4 gap-1">
-        <h1 className="text-lg font-bold mb-6 tracking-wide text-[var(--color-gold)]">
+        <h1 className="font-display text-xl font-bold mb-6 tracking-wide text-[var(--color-gold)]">
           Bible Data Pipeline
         </h1>
         {NAV_ITEMS.map((item) => (

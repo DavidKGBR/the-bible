@@ -1,11 +1,17 @@
 @import "tailwindcss";
 
 :root {
+  /* ── Base palette (parchment theme) ─────────────────────────── */
   --color-parchment: #f5f0e8;
   --color-ink: #2c1810;
-  --color-gold: #b8860b;
+  --color-gold: #c4a265;
+  --color-gold-dark: #8b7355;
+
+  /* ── Testament colors ───────────────────────────────────────── */
   --color-old-testament: #4a7c59;
   --color-new-testament: #6b4c9a;
+
+  /* ── Category colors ────────────────────────────────────────── */
   --color-law: #2e5090;
   --color-history: #8b6914;
   --color-poetry: #9b2335;
@@ -13,11 +19,20 @@
   --color-gospels: #c5a55a;
   --color-epistles: #4682b4;
   --color-apocalyptic: #8b0000;
+
+  /* ── Immersive mode ─────────────────────────────────────────── */
+  --bg-void: #0d0a07;
+  --bg-ambient: #1a1410;
+
+  /* ── Typography ─────────────────────────────────────────────── */
+  --font-display: "Playfair Display", serif;
+  --font-body: "Cormorant Garamond", serif;
+  --font-ui: system-ui, -apple-system, sans-serif;
 }
 
 body {
   margin: 0;
-  font-family: "Georgia", "Times New Roman", serif;
+  font-family: var(--font-ui);
   background-color: var(--color-parchment);
   color: var(--color-ink);
 }
@@ -25,4 +40,74 @@ body {
 #root {
   min-height: 100vh;
   display: flex;
+}
+
+/* ── Typography classes ─────────────────────────────────────────── */
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* ── Verse text styling ─────────────────────────────────────────── */
+
+.verse-text {
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.75;
+  font-weight: 400;
+}
+
+.verse-number {
+  font-family: var(--font-body);
+  font-weight: 700;
+  color: var(--color-gold);
+}
+
+/* ── Page titles ────────────────────────────────────────────────── */
+
+.page-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+/* ── Transitions ────────────────────────────────────────────────── */
+
+.fade-in {
+  animation: fadeIn 300ms ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-hover {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Verse hover/active ─────────────────────────────────────────── */
+
+.verse-row {
+  transition: background-color 200ms ease, border-color 200ms ease;
+  border-left: 2px solid transparent;
+}
+
+.verse-row:hover {
+  background-color: rgba(196, 162, 101, 0.06);
+  border-left-color: rgba(196, 162, 101, 0.3);
+}
+
+.verse-row-active {
+  background-color: rgba(196, 162, 101, 0.1);
+  border-left-color: var(--color-gold);
 }

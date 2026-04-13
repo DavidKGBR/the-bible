@@ -1,8 +1,15 @@
 import { useState } from "react";
 import BibleReader from "../components/BibleReader";
 import ParallelView from "../components/ParallelView";
+import ImmersiveReader from "../components/ImmersiveReader/ImmersiveReader";
 
-type Mode = "single" | "parallel";
+type Mode = "single" | "parallel" | "immersive";
+
+const MODES: { key: Mode; label: string }[] = [
+  { key: "single", label: "Single" },
+  { key: "parallel", label: "Parallel" },
+  { key: "immersive", label: "Immersive" },
+];
 
 export default function ReaderPage() {
   const [mode, setMode] = useState<Mode>("single");
@@ -10,34 +17,27 @@ export default function ReaderPage() {
   return (
     <div>
       <div className="flex items-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-[var(--color-ink)]">
-          Bible Reader
-        </h2>
+        <h2 className="page-title text-2xl">Bible Reader</h2>
         <div className="flex rounded overflow-hidden border">
-          <button
-            onClick={() => setMode("single")}
-            className={`px-4 py-1.5 text-sm transition ${
-              mode === "single"
-                ? "bg-[var(--color-ink)] text-[var(--color-parchment)]"
-                : "bg-white hover:bg-gray-50"
-            }`}
-          >
-            Single
-          </button>
-          <button
-            onClick={() => setMode("parallel")}
-            className={`px-4 py-1.5 text-sm transition ${
-              mode === "parallel"
-                ? "bg-[var(--color-ink)] text-[var(--color-parchment)]"
-                : "bg-white hover:bg-gray-50"
-            }`}
-          >
-            Parallel
-          </button>
+          {MODES.map((m) => (
+            <button
+              key={m.key}
+              onClick={() => setMode(m.key)}
+              className={`px-4 py-1.5 text-sm transition ${
+                mode === m.key
+                  ? "bg-[var(--color-ink)] text-[var(--color-parchment)]"
+                  : "bg-white hover:bg-gray-50"
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {mode === "single" ? <BibleReader /> : <ParallelView />}
+      {mode === "single" && <BibleReader />}
+      {mode === "parallel" && <ParallelView />}
+      {mode === "immersive" && <ImmersiveReader />}
     </div>
   );
 }

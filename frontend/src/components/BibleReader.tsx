@@ -104,8 +104,8 @@ export default function BibleReader() {
       ) : page ? (
         <div>
           {/* Header */}
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-[var(--color-ink)]">
+          <div className="mb-6 fade-in">
+            <h2 className="page-title text-3xl">
               {page.book_name} {page.chapter}
             </h2>
             <p className="text-xs opacity-50 mt-1">
@@ -115,28 +115,30 @@ export default function BibleReader() {
           </div>
 
           {/* Verses */}
-          <div className="space-y-1">
+          <div className="space-y-0.5 fade-in">
             {page.verses.map((v) => (
               <div
                 key={v.verse}
                 ref={(el) => { if (el) verseRefs.current.set(v.verse, el); }}
-                className={`rounded transition-all duration-200 ${
+                className={`rounded-sm py-1 px-2 ${
                   highlightVerse === v.verse
-                    ? "bg-yellow-100 border-l-4 border-[var(--color-gold)] pl-3"
-                    : "hover:bg-[var(--color-gold)]/5"
+                    ? "verse-row-active"
+                    : activeVerse === v.verse
+                      ? "verse-row-active"
+                      : "verse-row"
                 }`}
               >
-                <div className="flex gap-3 leading-relaxed py-1 px-1">
+                <div className="flex gap-3">
                   <span
                     onClick={() =>
                       setActiveVerse(activeVerse === v.verse ? null : v.verse)
                     }
-                    className="text-xs font-bold text-[var(--color-gold)] pt-1 w-6 shrink-0
+                    className="verse-number text-sm pt-0.5 w-7 shrink-0
                                text-right cursor-pointer hover:text-[var(--color-ink)] transition"
                   >
                     {v.verse}
                   </span>
-                  <p className="text-[15px]">{v.text}</p>
+                  <p className="verse-text">{v.text}</p>
                 </div>
 
                 {activeVerse === v.verse && (

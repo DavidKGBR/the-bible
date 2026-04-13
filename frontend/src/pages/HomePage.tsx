@@ -30,10 +30,10 @@ export default function HomePage() {
 
   return (
     <div>
-      <h2 className="text-3xl font-bold mb-2 text-[var(--color-ink)]">
+      <h2 className="page-title text-4xl mb-2">
         Bible Data Pipeline
       </h2>
-      <p className="text-sm opacity-60 mb-8">
+      <p className="font-body text-lg opacity-60 mb-8">
         Multi-translation biblical analytics with NLP and cross-references
       </p>
 
@@ -47,9 +47,9 @@ export default function HomePage() {
         ].map((kpi) => (
           <div
             key={kpi.label}
-            className="bg-white rounded-lg p-4 shadow-sm border"
+            className="bg-white rounded-lg p-4 shadow-sm border card-hover"
           >
-            <div className="text-2xl font-bold text-[var(--color-gold)]">
+            <div className="font-display text-3xl font-bold text-[var(--color-gold)]">
               {kpi.value}
             </div>
             <div className="text-xs opacity-60 mt-1">{kpi.label}</div>
