@@ -237,7 +237,7 @@ Competição média-baixa vs Bible Hub (UX terrível).
 
 | # | Task | Impacto | Status | PR |
 |---|------|---------|--------|-----|
-| 1 | Notas + Highlighting | 🔥🔥🔥🔥 | ✅ Concluído | _local_ |
+| 1 | Notas + Highlighting | 🔥🔥🔥🔥 | ✅ Concluído | [branch](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-1-notes-highlighting) |
 | 2 | Streak + Reading Plans | 🔥🔥🔥 | 🔲 Planejado | — |
 | 3 | Extract Strong's + originals | 🔥🔥🔥🔥 | 🔲 Planejado | — |
 | 4 | API endpoints (6 novos) | 🔥🔥🔥 | 🔲 Planejado | — |
@@ -302,5 +302,6 @@ entrada lógica — sem depender da memória de conversa.
 - **Arquivos modificados:** `index.css`, `VerseActions.tsx`, `BibleReader.tsx`, `ImmersiveReader/ImmersiveReader.tsx`, `App.tsx`, `Layout.tsx`.
 - Type check clean (`npx tsc --noEmit`). Build de produção OK (`npx vite build` — 384KB bundle gzipped 125KB).
 - Testado E2E via Puppeteer: criar highlight+nota em GEN 1:1 → persistir → página /notes → export Markdown → Immersive reader mostra highlight.
-- **Pendente antes do PR:** commit + push. Usuário pode querer revisar visualmente primeiro.
+- **Push concluído:** branch `feat/verbum-1-notes-highlighting` em github.com/DavidKGBR/verbum. PR a ser criado manualmente (gh CLI indisponível no ambiente). Três commits: `chore: Verbum brand identity`, `fix: ArcDiagram reshape`, `feat: task 1 notes & highlighting`.
+- **Remote atualizado:** de `the-bible.git` → `verbum.git` (redirect oficial no GitHub).
 - **Próxima entrada:** Tarefa #2 — Streak + Reading Plans (Fase 1B). Também 100% frontend + localStorage, complementar à tarefa 1.
