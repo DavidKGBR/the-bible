@@ -5,10 +5,10 @@ interface Props {
 export default function DropCap({ letter }: Props) {
   return (
     <span
-      className="float-left font-display text-6xl leading-none mr-3 mt-1"
+      className="float-left font-display text-[64px] leading-[0.9] mr-2 mt-1"
       style={{
-        color: "var(--color-gold)",
-        textShadow: "0 0 20px rgba(196, 162, 101, 0.3)",
+        color: "var(--color-gold-dark)",
+        textShadow: "1px 2px 0 rgba(196, 162, 101, 0.25)",
       }}
     >
       {letter}

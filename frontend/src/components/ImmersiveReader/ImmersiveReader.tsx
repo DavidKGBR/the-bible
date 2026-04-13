@@ -1,10 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
-import { fetchReaderPage, fetchBooks, type ReaderPage, type Book } from "../../services/api";
+import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  fetchReaderPage,
+  fetchBooks,
+  type ReaderPage,
+  type ReaderVerse,
+  type Book,
+} from "../../services/api";
 import OrnateCorner from "./OrnateCorner";
 import DropCap from "./DropCap";
 
 const VERSES_PER_PAGE = 15;
 const TRANSLATIONS = ["kjv", "bbe", "nvi", "ra", "acf", "rvr", "apee", "asv", "web", "darby"];
+
+type FlipDirection = "next" | "prev" | null;
 
 export default function ImmersiveReader() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -13,7 +21,9 @@ export default function ImmersiveReader() {
   const [bookId, setBookId] = useState("GEN");
   const [chapter, setChapter] = useState(1);
   const [translation, setTranslation] = useState("kjv");
-  const [pageIndex, setPageIndex] = useState(0);
+  const [spreadIndex, setSpreadIndex] = useState(0);
+  const [flipDir, setFlipDir] = useState<FlipDirection>(null);
+  const flipKey = useRef(0);
 
   useEffect(() => {
     fetchBooks(translation).then(setBooks).catch(() => {});
@@ -21,66 +31,131 @@ export default function ImmersiveReader() {
 
   useEffect(() => {
     setLoading(true);
-    setPageIndex(0);
+    setSpreadIndex(0);
     fetchReaderPage(bookId, chapter, translation)
       .then(setData)
       .catch(() => setData(null))
       .finally(() => setLoading(false));
   }, [bookId, chapter, translation]);
 
-  const totalPages = data ? Math.ceil(data.verses.length / VERSES_PER_PAGE) : 0;
-  const pageVerses = data
-    ? data.verses.slice(pageIndex * VERSES_PER_PAGE, (pageIndex + 1) * VERSES_PER_PAGE)
+  // A "spread" = two pages = 2 * VERSES_PER_PAGE verses. On mobile we still
+  // compute spreads the same way but only render one page at a time.
+  const versesPerSpread = VERSES_PER_PAGE * 2;
+  const totalSpreads = data ? Math.max(1, Math.ceil(data.verses.length / versesPerSpread)) : 0;
+
+  const leftVerses: ReaderVerse[] = data
+    ? data.verses.slice(spreadIndex * versesPerSpread, spreadIndex * versesPerSpread + VERSES_PER_PAGE)
+    : [];
+  const rightVerses: ReaderVerse[] = data
+    ? data.verses.slice(
+        spreadIndex * versesPerSpread + VERSES_PER_PAGE,
+        spreadIndex * versesPerSpread + versesPerSpread
+      )
     : [];
 
-  const prevPage = useCallback(() => {
-    if (pageIndex > 0) {
-      setPageIndex(pageIndex - 1);
+  function triggerFlip(dir: FlipDirection) {
+    flipKey.current += 1; // forces re-mount of page content so animation plays
+    setFlipDir(dir);
+  }
+
+  const prev = useCallback(() => {
+    if (spreadIndex > 0) {
+      triggerFlip("prev");
+      setSpreadIndex(spreadIndex - 1);
     } else if (data?.has_previous) {
+      triggerFlip("prev");
       setChapter(chapter - 1);
     }
-  }, [pageIndex, data, chapter]);
+  }, [spreadIndex, data, chapter]);
 
-  const nextPage = useCallback(() => {
-    if (pageIndex < totalPages - 1) {
-      setPageIndex(pageIndex + 1);
+  const next = useCallback(() => {
+    if (spreadIndex < totalSpreads - 1) {
+      triggerFlip("next");
+      setSpreadIndex(spreadIndex + 1);
     } else if (data?.has_next) {
+      triggerFlip("next");
       setChapter(chapter + 1);
     }
-  }, [pageIndex, totalPages, data, chapter]);
+  }, [spreadIndex, totalSpreads, data, chapter]);
 
   // Keyboard navigation
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (e.key === "ArrowLeft") prevPage();
-      if (e.key === "ArrowRight") nextPage();
+      if (e.key === "ArrowLeft") prev();
+      if (e.key === "ArrowRight") next();
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [prevPage, nextPage]);
+  }, [prev, next]);
 
-  const firstVerse = pageVerses[0];
-  const firstLetter = firstVerse?.text?.[0] || "";
-  const firstVerseRest = firstVerse?.text?.slice(1) || "";
+  // Drop cap is only applied to the very first verse of the whole chapter
+  // (spreadIndex 0, first verse of left page)
+  const showDropCap = spreadIndex === 0;
+  const firstVerse = leftVerses[0];
+  const firstLetter = showDropCap ? firstVerse?.text?.[0] || "" : "";
+
+  function renderVerses(verses: ReaderVerse[], withDropCap: boolean) {
+    if (verses.length === 0) {
+      return <p className="opacity-40 italic text-center pt-10">· · ·</p>;
+    }
+    return (
+      <div className="font-body text-[var(--color-ink)] text-[17px] leading-[1.85]">
+        {verses.map((v, i) => {
+          if (withDropCap && i === 0) {
+            return (
+              <span key={v.verse}>
+                <DropCap letter={firstLetter} />
+                <sup className="text-[var(--color-gold-dark)] text-[10px] font-bold mr-1 align-super">
+                  {v.verse}
+                </sup>
+                {v.text.slice(1)}{" "}
+              </span>
+            );
+          }
+          return (
+            <span key={v.verse}>
+              <sup className="text-[var(--color-gold-dark)] text-[10px] font-bold mr-1 align-super">
+                {v.verse}
+              </sup>
+              {v.text}{" "}
+            </span>
+          );
+        })}
+      </div>
+    );
+  }
+
+  const flipClass =
+    flipDir === "next"
+      ? "page-flip-next"
+      : flipDir === "prev"
+        ? "page-flip-prev"
+        : "";
 
   return (
     <div
-      className="min-h-[80vh] rounded-xl p-8 relative"
+      className="min-h-[80vh] rounded-xl p-4 md:p-8 relative book-ambient-glow"
       style={{
         backgroundColor: "var(--bg-void)",
-        boxShadow: "inset 0 0 100px rgba(196, 162, 101, 0.05)",
+        boxShadow: "inset 0 0 120px rgba(196, 162, 101, 0.06)",
       }}
     >
       {/* Controls bar */}
       <div className="flex flex-wrap gap-3 mb-6 items-center">
         <select
           value={bookId}
-          onChange={(e) => { setBookId(e.target.value); setChapter(1); }}
+          onChange={(e) => {
+            setBookId(e.target.value);
+            setChapter(1);
+          }}
           className="border border-[var(--color-gold-dark)]/30 rounded px-3 py-1.5
-                     bg-[var(--bg-ambient)] text-[var(--color-parchment)] text-sm"
+                     bg-[var(--bg-ambient)] text-[var(--color-parchment)] text-sm
+                     focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/50"
         >
           {books.map((b) => (
-            <option key={b.book_id} value={b.book_id}>{b.book_name}</option>
+            <option key={b.book_id} value={b.book_id}>
+              {b.book_name}
+            </option>
           ))}
         </select>
 
@@ -88,10 +163,13 @@ export default function ImmersiveReader() {
           value={chapter}
           onChange={(e) => setChapter(Number(e.target.value))}
           className="border border-[var(--color-gold-dark)]/30 rounded px-3 py-1.5
-                     bg-[var(--bg-ambient)] text-[var(--color-parchment)] text-sm"
+                     bg-[var(--bg-ambient)] text-[var(--color-parchment)] text-sm
+                     focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/50"
         >
           {Array.from({ length: data?.total_chapters || 1 }, (_, i) => i + 1).map((ch) => (
-            <option key={ch} value={ch}>Ch. {ch}</option>
+            <option key={ch} value={ch}>
+              Ch. {ch}
+            </option>
           ))}
         </select>
 
@@ -99,101 +177,148 @@ export default function ImmersiveReader() {
           value={translation}
           onChange={(e) => setTranslation(e.target.value)}
           className="border border-[var(--color-gold-dark)]/30 rounded px-3 py-1.5
-                     bg-[var(--bg-ambient)] text-[var(--color-parchment)] text-sm"
+                     bg-[var(--bg-ambient)] text-[var(--color-parchment)] text-sm
+                     focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/50"
         >
           {TRANSLATIONS.map((t) => (
-            <option key={t} value={t}>{t.toUpperCase()}</option>
+            <option key={t} value={t}>
+              {t.toUpperCase()}
+            </option>
           ))}
         </select>
+
+        <span className="ml-auto text-xs opacity-40 text-[var(--color-parchment)] hidden sm:inline">
+          ← → to turn pages
+        </span>
       </div>
 
-      {/* Book page */}
-      <div
-        className="relative max-w-2xl mx-auto rounded-lg p-10 min-h-[500px]"
-        style={{
-          backgroundColor: "var(--bg-ambient)",
-          border: "1px solid rgba(196, 162, 101, 0.15)",
-          boxShadow: "0 0 60px rgba(196, 162, 101, 0.08)",
-        }}
-      >
-        <OrnateCorner position="top-left" />
-        <OrnateCorner position="top-right" />
-        <OrnateCorner position="bottom-left" />
-        <OrnateCorner position="bottom-right" />
-
-        {loading ? (
-          <p className="text-center text-[var(--color-gold)] opacity-50 py-20 font-body text-lg">
-            Loading...
-          </p>
-        ) : data ? (
-          <div className="fade-in">
-            {/* Chapter title */}
-            <h2
-              className="font-display text-center text-2xl mb-8 tracking-widest"
-              style={{ color: "var(--color-gold)" }}
-            >
-              {data.book_name}
-              <span className="block text-sm tracking-normal opacity-60 mt-1">
-                Chapter {data.chapter}
+      {loading ? (
+        <p className="text-center text-[var(--color-gold)] opacity-50 py-20 font-body text-lg">
+          Loading...
+        </p>
+      ) : !data ? (
+        <p className="text-center text-red-400 py-20">Failed to load.</p>
+      ) : (
+        <div className="book-scene">
+          <div
+            key={flipKey.current}
+            onAnimationEnd={() => setFlipDir(null)}
+            className={`book-spread mx-auto max-w-[1100px] ${flipClass}`}
+          >
+            {/* Chapter title banner (above the spread) */}
+            <div className="text-center mb-4">
+              <h2
+                className="font-display text-2xl tracking-[0.25em]"
+                style={{ color: "var(--color-gold)" }}
+              >
+                {data.book_name}
+              </h2>
+              <span className="block text-xs tracking-[0.4em] opacity-50 mt-1 text-[var(--color-parchment)]">
+                CHAPTER {data.chapter}
               </span>
-            </h2>
-
-            {/* Verses */}
-            <div className="font-body text-[var(--color-parchment)] text-lg leading-[1.9]">
-              {pageVerses.map((v, i) => (
-                <span key={v.verse}>
-                  {i === 0 && pageIndex === 0 ? (
-                    <>
-                      <DropCap letter={firstLetter} />
-                      <sup className="text-[var(--color-gold)] text-xs font-bold mr-1">
-                        {v.verse}
-                      </sup>
-                      {firstVerseRest}{" "}
-                    </>
-                  ) : (
-                    <>
-                      <sup className="text-[var(--color-gold)] text-xs font-bold mr-1">
-                        {v.verse}
-                      </sup>
-                      {v.text}{" "}
-                    </>
-                  )}
-                </span>
-              ))}
             </div>
 
-            {/* Page indicator */}
+            {/* ── The spread: two pages on md+, single page on mobile ── */}
+            <div className="flex justify-center">
+              {/* LEFT PAGE */}
+              <div
+                onClick={prev}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    prev();
+                  }
+                }}
+                className="book-page-left paper-texture
+                           relative w-full md:w-1/2 min-h-[520px]
+                           p-8 md:p-10 cursor-w-resize
+                           focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40"
+                aria-label="Previous page"
+              >
+                <OrnateCorner position="top-left" />
+                <OrnateCorner position="bottom-left" />
+                {renderVerses(leftVerses, showDropCap)}
+                {/* Page number */}
+                <div
+                  className="absolute bottom-3 left-0 right-0 text-center text-xs
+                             font-body tracking-[0.3em] opacity-40"
+                  style={{ color: "var(--color-gold-dark)" }}
+                >
+                  {spreadIndex * 2 + 1}
+                </div>
+              </div>
+
+              {/* SPINE (desktop only) */}
+              <div
+                aria-hidden
+                className="book-spine hidden md:block w-3 min-h-[520px]"
+              />
+
+              {/* RIGHT PAGE (desktop only) */}
+              <div
+                onClick={next}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    next();
+                  }
+                }}
+                className="book-page-right paper-texture
+                           relative w-1/2 min-h-[520px]
+                           p-8 md:p-10 cursor-e-resize
+                           hidden md:block
+                           focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40"
+                aria-label="Next page"
+              >
+                <OrnateCorner position="top-right" />
+                <OrnateCorner position="bottom-right" />
+                {renderVerses(rightVerses, false)}
+                <div
+                  className="absolute bottom-3 left-0 right-0 text-center text-xs
+                             font-body tracking-[0.3em] opacity-40"
+                  style={{ color: "var(--color-gold-dark)" }}
+                >
+                  {spreadIndex * 2 + 2}
+                </div>
+              </div>
+            </div>
+
+            {/* Spread indicator */}
             <div
-              className="text-center mt-8 text-sm font-body tracking-wide"
-              style={{ color: "var(--color-gold-dark)" }}
+              className="text-center mt-4 text-xs font-body tracking-widest"
+              style={{ color: "var(--color-gold-dark)", opacity: 0.7 }}
             >
-              {pageIndex + 1} / {totalPages}
+              Spread {spreadIndex + 1} / {totalSpreads}
             </div>
           </div>
-        ) : (
-          <p className="text-center text-red-400 py-20">Failed to load.</p>
-        )}
-      </div>
 
-      {/* Navigation arrows */}
-      <div className="flex justify-between mt-6 max-w-2xl mx-auto">
-        <button
-          onClick={prevPage}
-          disabled={pageIndex === 0 && !data?.has_previous}
-          className="text-[var(--color-gold)] opacity-60 hover:opacity-100
-                     disabled:opacity-20 transition text-2xl px-4"
-        >
-          &larr;
-        </button>
-        <button
-          onClick={nextPage}
-          disabled={pageIndex >= totalPages - 1 && !data?.has_next}
-          className="text-[var(--color-gold)] opacity-60 hover:opacity-100
-                     disabled:opacity-20 transition text-2xl px-4"
-        >
-          &rarr;
-        </button>
-      </div>
+          {/* Navigation arrows (mobile primary, desktop fallback) */}
+          <div className="flex justify-between mt-4 max-w-[1100px] mx-auto md:hidden">
+            <button
+              onClick={prev}
+              disabled={spreadIndex === 0 && !data.has_previous}
+              className="text-[var(--color-gold)] opacity-60 hover:opacity-100
+                         disabled:opacity-20 transition text-2xl px-4"
+              aria-label="Previous page"
+            >
+              &larr;
+            </button>
+            <button
+              onClick={next}
+              disabled={spreadIndex >= totalSpreads - 1 && !data.has_next}
+              className="text-[var(--color-gold)] opacity-60 hover:opacity-100
+                         disabled:opacity-20 transition text-2xl px-4"
+              aria-label="Next page"
+            >
+              &rarr;
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
