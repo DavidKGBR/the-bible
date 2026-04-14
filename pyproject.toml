@@ -77,7 +77,7 @@ ignore = ["S101", "S603", "S607", "S608", "S108", "RET504", "B027", "B905", "PT0
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = "-v --cov=src --cov-report=term-missing --cov-report=html"
+addopts = "-v --cov=src --cov-report=term-missing --cov-report=html -m 'not integration and not slow'"
 markers = [
     "integration: marks tests as integration tests",
     "slow: marks tests as slow",

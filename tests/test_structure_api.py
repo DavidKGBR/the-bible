@@ -2,14 +2,60 @@
 
 from __future__ import annotations
 
+import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
+from src.api.dependencies import set_db_path
 from src.api.main import app
+from src.config import LoadConfig
+from src.load.duckdb_loader import DuckDBLoader
 
 
 @pytest.fixture(scope="module")
-def client() -> TestClient:
+def seeded_db(tmp_path_factory) -> str:  # type: ignore[no-untyped-def]
+    """Create a temp DuckDB with a PSA verse for chapter-structure query."""
+    db_dir = tmp_path_factory.mktemp("structure_db")
+    db_path = str(db_dir / "structure.duckdb")
+
+    config = LoadConfig(duckdb_path=db_path)
+    loader = DuckDBLoader(config)
+    loader.create_schema()
+
+    loader.load_verses(
+        pd.DataFrame(
+            [
+                {
+                    "verse_id": "PSA.1.1",
+                    "book_id": "PSA",
+                    "book_name": "Psalms",
+                    "chapter": 1,
+                    "verse": 1,
+                    "text": "Blessed is the man that walketh not in the counsel of the ungodly.",
+                    "reference": "Psalms 1:1",
+                    "translation_id": "kjv",
+                    "language": "en",
+                    "testament": "Old Testament",
+                    "category": "Poetry",
+                    "book_position": 19,
+                    "word_count": 13,
+                    "char_count": 66,
+                    "avg_word_length": 4.3,
+                    "sentiment_polarity": 0.0,
+                    "sentiment_subjectivity": 0.0,
+                    "sentiment_label": "neutral",
+                },
+            ]
+        ),
+    )
+
+    loader.close()
+    return db_path
+
+
+@pytest.fixture(scope="module")
+def client(seeded_db: str) -> TestClient:
+    set_db_path(seeded_db)
     return TestClient(app)
 
 
