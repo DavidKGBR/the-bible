@@ -1,0 +1,87 @@
+[
+  {
+    "id": "names-of-god",
+    "title": "Names of God",
+    "description": "Discover God through His names — 7 days exploring who He is",
+    "days": 7,
+    "readings": [
+      {"day": 1, "title": "Elohim — The Creator", "passage": "GEN.1.1-GEN.1.5", "reflection": "What does it mean that God is the origin of everything?"},
+      {"day": 2, "title": "Yahweh — The Self-Existent One", "passage": "EXO.3.13-EXO.3.15", "reflection": "How does God's eternal nature affect your trust in Him?"},
+      {"day": 3, "title": "El Shaddai — God Almighty", "passage": "GEN.17.1-GEN.17.8", "reflection": "Where do you need God's almighty power in your life today?"},
+      {"day": 4, "title": "Jehovah Jireh — The Lord Will Provide", "passage": "GEN.22.9-GEN.22.14", "reflection": "When has God provided for you in an unexpected way?"},
+      {"day": 5, "title": "Jehovah Rapha — The Lord Who Heals", "passage": "EXO.15.22-EXO.15.27", "reflection": "What areas of your life need God's healing touch?"},
+      {"day": 6, "title": "Jehovah Shalom — The Lord Is Peace", "passage": "JDG.6.22-JDG.6.24", "reflection": "How can you experience God's peace in times of anxiety?"},
+      {"day": 7, "title": "Immanuel — God With Us", "passage": "MAT.1.21-MAT.1.23", "reflection": "How does knowing God is present change your perspective today?"}
+    ]
+  },
+  {
+    "id": "psalms-of-comfort",
+    "title": "Psalms of Comfort",
+    "description": "10 days finding peace and strength in the Psalms",
+    "days": 10,
+    "readings": [
+      {"day": 1, "title": "The Lord Is My Shepherd", "passage": "PSA.23.1-PSA.23.6", "reflection": "What does it mean for God to be your shepherd today?"},
+      {"day": 2, "title": "God Is Our Refuge", "passage": "PSA.46.1-PSA.46.11", "reflection": "Where do you run when life feels overwhelming?"},
+      {"day": 3, "title": "Create in Me a Clean Heart", "passage": "PSA.51.1-PSA.51.17", "reflection": "Is there something you need to confess and release to God?"},
+      {"day": 4, "title": "My Soul Finds Rest in God", "passage": "PSA.62.1-PSA.62.12", "reflection": "What is stealing your rest, and can you surrender it?"},
+      {"day": 5, "title": "How Precious Are Your Thoughts", "passage": "PSA.139.1-PSA.139.18", "reflection": "How does it feel to know God knows everything about you and still loves you?"},
+      {"day": 6, "title": "The Lord Is Near the Brokenhearted", "passage": "PSA.34.1-PSA.34.22", "reflection": "Have you experienced God's nearness in a difficult season?"},
+      {"day": 7, "title": "I Will Fear No Evil", "passage": "PSA.27.1-PSA.27.14", "reflection": "What fear can you bring to God today?"},
+      {"day": 8, "title": "Great Is Thy Faithfulness", "passage": "PSA.36.5-PSA.36.12", "reflection": "List three ways God has been faithful to you."},
+      {"day": 9, "title": "He Heals the Brokenhearted", "passage": "PSA.147.1-PSA.147.11", "reflection": "What broken piece of your heart needs God's attention?"},
+      {"day": 10, "title": "Let Everything Praise the Lord", "passage": "PSA.150.1-PSA.150.6", "reflection": "End this journey with gratitude — what will you praise God for today?"}
+    ]
+  },
+  {
+    "id": "parables-of-jesus",
+    "title": "Parables of Jesus",
+    "description": "14 days exploring Jesus' most powerful stories",
+    "days": 14,
+    "readings": [
+      {"day": 1, "title": "The Sower", "passage": "MAT.13.1-MAT.13.9", "reflection": "What kind of soil is your heart right now?"},
+      {"day": 2, "title": "The Mustard Seed", "passage": "MAT.13.31-MAT.13.32", "reflection": "Where have you seen small faith produce big results?"},
+      {"day": 3, "title": "The Good Samaritan", "passage": "LUK.10.25-LUK.10.37", "reflection": "Who is your neighbor that needs help today?"},
+      {"day": 4, "title": "The Prodigal Son", "passage": "LUK.15.11-LUK.15.32", "reflection": "Do you identify more with the younger or older brother?"},
+      {"day": 5, "title": "The Lost Sheep", "passage": "LUK.15.1-LUK.15.7", "reflection": "How does it feel to know God pursues you personally?"},
+      {"day": 6, "title": "The Talents", "passage": "MAT.25.14-MAT.25.30", "reflection": "What has God entrusted to you, and how are you using it?"},
+      {"day": 7, "title": "The Pharisee and Tax Collector", "passage": "LUK.18.9-LUK.18.14", "reflection": "When are you tempted to compare yourself to others spiritually?"},
+      {"day": 8, "title": "The Rich Fool", "passage": "LUK.12.13-LUK.12.21", "reflection": "Are you rich toward God or toward possessions?"},
+      {"day": 9, "title": "The Pearl of Great Price", "passage": "MAT.13.45-MAT.13.46", "reflection": "What would you give up for the Kingdom?"},
+      {"day": 10, "title": "The Wise and Foolish Builders", "passage": "MAT.7.24-MAT.7.27", "reflection": "Is your life built on rock or sand?"},
+      {"day": 11, "title": "The Unforgiving Servant", "passage": "MAT.18.21-MAT.18.35", "reflection": "Is there someone you need to forgive?"},
+      {"day": 12, "title": "The Wedding Feast", "passage": "MAT.22.1-MAT.22.14", "reflection": "Are you living as if you've been invited to the feast?"},
+      {"day": 13, "title": "The Vine and Branches", "passage": "JHN.15.1-JHN.15.11", "reflection": "How connected do you feel to the Vine right now?"},
+      {"day": 14, "title": "The Sheep and Goats", "passage": "MAT.25.31-MAT.25.46", "reflection": "How are you serving 'the least of these' in your community?"}
+    ]
+  },
+  {
+    "id": "women-of-faith",
+    "title": "Women of Faith",
+    "description": "7 days with remarkable women of the Bible",
+    "days": 7,
+    "readings": [
+      {"day": 1, "title": "Sarah — Faith in the Impossible", "passage": "GEN.18.10-GEN.18.14", "reflection": "What promise from God seems impossible in your life?"},
+      {"day": 2, "title": "Ruth — Loyalty and Redemption", "passage": "RUT.1.16-RUT.1.18", "reflection": "What does radical loyalty look like in your relationships?"},
+      {"day": 3, "title": "Esther — Courage for Such a Time", "passage": "EST.4.12-EST.4.17", "reflection": "Where has God placed you 'for such a time as this'?"},
+      {"day": 4, "title": "Mary — Surrendered to God's Plan", "passage": "LUK.1.26-LUK.1.38", "reflection": "Can you say 'let it be to me according to your word' today?"},
+      {"day": 5, "title": "Hannah — Prayer from the Heart", "passage": "1SA.1.9-1SA.1.18", "reflection": "What deep desire have you poured out before God?"},
+      {"day": 6, "title": "Deborah — Leading with Wisdom", "passage": "JDG.4.4-JDG.4.9", "reflection": "How can you lead with courage and wisdom in your sphere?"},
+      {"day": 7, "title": "Mary Magdalene — First Witness", "passage": "JHN.20.11-JHN.20.18", "reflection": "What has your encounter with the risen Christ meant to you?"}
+    ]
+  },
+  {
+    "id": "armor-of-god",
+    "title": "The Armor of God",
+    "description": "7 days studying spiritual warfare from Ephesians 6",
+    "days": 7,
+    "readings": [
+      {"day": 1, "title": "The Battle Is Real", "passage": "EPH.6.10-EPH.6.13", "reflection": "Are you aware of the spiritual battle around you?"},
+      {"day": 2, "title": "Belt of Truth", "passage": "EPH.6.14-EPH.6.14", "reflection": "Where do you need to stand firm in truth today?"},
+      {"day": 3, "title": "Breastplate of Righteousness", "passage": "EPH.6.14-EPH.6.14", "reflection": "How does living righteously protect your heart?"},
+      {"day": 4, "title": "Shoes of the Gospel of Peace", "passage": "EPH.6.15-EPH.6.15", "reflection": "Are you ready to share the peace of Christ with others?"},
+      {"day": 5, "title": "Shield of Faith", "passage": "EPH.6.16-EPH.6.16", "reflection": "What fiery darts has your faith extinguished recently?"},
+      {"day": 6, "title": "Helmet of Salvation", "passage": "EPH.6.17-EPH.6.17", "reflection": "How does the assurance of salvation protect your mind?"},
+      {"day": 7, "title": "Sword of the Spirit", "passage": "EPH.6.17-EPH.6.18", "reflection": "How well do you know God's Word for when you need it most?"}
+    ]
+  }
+]

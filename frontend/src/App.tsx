@@ -16,6 +16,9 @@ import PeoplePage from "./pages/PeoplePage";
 import PlacesPage from "./pages/PlacesPage";
 import MapPage from "./pages/MapPage";
 import TimelinePage from "./pages/TimelinePage";
+import ComparePage from "./pages/ComparePage";
+import TopicsPage from "./pages/TopicsPage";
+import DevotionalPage from "./pages/DevotionalPage";
 
 export default function App() {
   return (
@@ -37,6 +40,9 @@ export default function App() {
         <Route path="/places" element={<PlacesPage />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/timeline" element={<TimelinePage />} />
+        <Route path="/compare" element={<ComparePage />} />
+        <Route path="/topics" element={<TopicsPage />} />
+        <Route path="/devotional" element={<DevotionalPage />} />
       </Route>
     </Routes>
   );

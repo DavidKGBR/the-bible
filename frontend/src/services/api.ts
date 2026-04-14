@@ -6,6 +6,149 @@ async function fetchJson<T>(url: string): Promise<T> {
   return res.json();
 }
 
+// ── Devotional ──────────────────────────────────────────────────────────────
+
+export interface DevotionalPlan {
+  id: string;
+  title: string;
+  description: string;
+  days: number;
+}
+
+export interface DevotionalReading {
+  day: number;
+  title: string;
+  passage: string;
+  reflection: string;
+}
+
+export interface DevotionalPlanFull extends DevotionalPlan {
+  readings: DevotionalReading[];
+}
+
+export interface DevotionalDayReading extends DevotionalReading {
+  plan_id: string;
+  plan_title: string;
+  translation: string;
+  verses: { verse_id: string; book_name: string; chapter: number; verse: number; text: string; reference: string }[];
+}
+
+export async function fetchDevotionalPlans(): Promise<DevotionalPlan[]> {
+  const data = await fetchJson<{ plans: DevotionalPlan[] }>(`${BASE}/devotional/plans`);
+  return data.plans;
+}
+
+export async function fetchDevotionalPlan(planId: string): Promise<DevotionalPlanFull> {
+  return fetchJson<DevotionalPlanFull>(`${BASE}/devotional/plans/${planId}`);
+}
+
+export async function fetchDevotionalDay(
+  planId: string,
+  day: number,
+  translation = "kjv"
+): Promise<DevotionalDayReading> {
+  return fetchJson<DevotionalDayReading>(
+    `${BASE}/devotional/plans/${planId}/day/${day}?translation=${translation}`
+  );
+}
+
+// ── Topics ──────────────────────────────────────────────────────────────────
+
+export interface Topic {
+  topic_id: string;
+  name: string;
+  slug: string;
+  verse_count: number;
+}
+
+export interface TopicVerse {
+  verse_id: string;
+  book_name: string | null;
+  book_id: string | null;
+  chapter: number | null;
+  verse: number | null;
+  text: string | null;
+  reference: string | null;
+}
+
+export interface TopicDetail extends Topic {
+  translation: string;
+  verses: TopicVerse[];
+}
+
+export async function fetchTopics(
+  params?: { q?: string; limit?: number; offset?: number }
+): Promise<{ total: number; results: Topic[] }> {
+  const sp = new URLSearchParams();
+  if (params?.q) sp.set("q", params.q);
+  if (params?.limit) sp.set("limit", String(params.limit));
+  if (params?.offset) sp.set("offset", String(params.offset));
+  const qs = sp.toString();
+  return fetchJson(`${BASE}/topics${qs ? `?${qs}` : ""}`);
+}
+
+export async function fetchPopularTopics(limit = 20): Promise<{ results: Topic[] }> {
+  return fetchJson(`${BASE}/topics/popular?limit=${limit}`);
+}
+
+export async function fetchTopic(slug: string, translation = "kjv"): Promise<TopicDetail> {
+  return fetchJson(`${BASE}/topics/${slug}?translation=${translation}`);
+}
+
+// ── Compare ─────────────────────────────────────────────────────────────────
+
+export interface ComparePreset {
+  id: string;
+  title: string;
+  passage_count: number;
+  labels: string[];
+}
+
+export interface CompareVerse {
+  verse_id: string;
+  book_name: string;
+  chapter: number;
+  verse: number;
+  text: string;
+}
+
+export interface CompareColumn {
+  label: string;
+  range: string;
+  verses: CompareVerse[];
+  verse_count: number;
+}
+
+export interface CompareResult {
+  id?: string;
+  title?: string;
+  translation: string;
+  columns: CompareColumn[];
+}
+
+export async function fetchComparePresets(): Promise<ComparePreset[]> {
+  const data = await fetchJson<{ presets: ComparePreset[] }>(`${BASE}/compare/presets`);
+  return data.presets;
+}
+
+export async function fetchComparePreset(
+  presetId: string,
+  translation = "kjv"
+): Promise<CompareResult> {
+  return fetchJson<CompareResult>(
+    `${BASE}/compare/presets/${presetId}?translation=${translation}`
+  );
+}
+
+export async function fetchCompareCustom(
+  passages: string[],
+  translation = "kjv"
+): Promise<CompareResult> {
+  return fetchJson<CompareResult>(
+    `${BASE}/compare/custom?passages=${passages.join(",")}&translation=${translation}`
+  );
+}
+
 // ── Timeline ────────────────────────────────────────────────────────────────
 
 export interface TimelineEra {

@@ -1,0 +1,137 @@
+[
+  {
+    "id": "birth_of_jesus",
+    "title": "Birth of Jesus",
+    "passages": [
+      {"label": "Matthew", "range": "MAT.1.18-MAT.2.23"},
+      {"label": "Luke", "range": "LUK.1.26-LUK.2.40"}
+    ]
+  },
+  {
+    "id": "baptism_of_jesus",
+    "title": "Baptism of Jesus",
+    "passages": [
+      {"label": "Matthew", "range": "MAT.3.13-MAT.3.17"},
+      {"label": "Mark", "range": "MRK.1.9-MRK.1.11"},
+      {"label": "Luke", "range": "LUK.3.21-LUK.3.22"}
+    ]
+  },
+  {
+    "id": "temptation",
+    "title": "Temptation in the Wilderness",
+    "passages": [
+      {"label": "Matthew", "range": "MAT.4.1-MAT.4.11"},
+      {"label": "Mark", "range": "MRK.1.12-MRK.1.13"},
+      {"label": "Luke", "range": "LUK.4.1-LUK.4.13"}
+    ]
+  },
+  {
+    "id": "sermon_on_mount",
+    "title": "Sermon on the Mount / Plain",
+    "passages": [
+      {"label": "Matthew", "range": "MAT.5.1-MAT.7.29"},
+      {"label": "Luke", "range": "LUK.6.17-LUK.6.49"}
+    ]
+  },
+  {
+    "id": "lords_prayer",
+    "title": "The Lord's Prayer",
+    "passages": [
+      {"label": "Matthew", "range": "MAT.6.9-MAT.6.13"},
+      {"label": "Luke", "range": "LUK.11.2-LUK.11.4"}
+    ]
+  },
+  {
+    "id": "feeding_5000",
+    "title": "Feeding of the 5,000",
+    "passages": [
+      {"label": "Matthew", "range": "MAT.14.13-MAT.14.21"},
+      {"label": "Mark", "range": "MRK.6.30-MRK.6.44"},
+      {"label": "Luke", "range": "LUK.9.10-LUK.9.17"},
+      {"label": "John", "range": "JHN.6.1-JHN.6.14"}
+    ]
+  },
+  {
+    "id": "transfiguration",
+    "title": "The Transfiguration",
+    "passages": [
+      {"label": "Matthew", "range": "MAT.17.1-MAT.17.9"},
+      {"label": "Mark", "range": "MRK.9.2-MRK.9.10"},
+      {"label": "Luke", "range": "LUK.9.28-LUK.9.36"}
+    ]
+  },
+  {
+    "id": "triumphal_entry",
+    "title": "Triumphal Entry into Jerusalem",
+    "passages": [
+      {"label": "Matthew", "range": "MAT.21.1-MAT.21.11"},
+      {"label": "Mark", "range": "MRK.11.1-MRK.11.11"},
+      {"label": "Luke", "range": "LUK.19.28-LUK.19.44"},
+      {"label": "John", "range": "JHN.12.12-JHN.12.19"}
+    ]
+  },
+  {
+    "id": "last_supper",
+    "title": "The Last Supper",
+    "passages": [
+      {"label": "Matthew", "range": "MAT.26.17-MAT.26.30"},
+      {"label": "Mark", "range": "MRK.14.12-MRK.14.26"},
+      {"label": "Luke", "range": "LUK.22.7-LUK.22.23"},
+      {"label": "John", "range": "JHN.13.1-JHN.13.30"}
+    ]
+  },
+  {
+    "id": "crucifixion",
+    "title": "The Crucifixion",
+    "passages": [
+      {"label": "Matthew", "range": "MAT.27.32-MAT.27.56"},
+      {"label": "Mark", "range": "MRK.15.21-MRK.15.41"},
+      {"label": "Luke", "range": "LUK.23.26-LUK.23.49"},
+      {"label": "John", "range": "JHN.19.17-JHN.19.37"}
+    ]
+  },
+  {
+    "id": "resurrection",
+    "title": "The Resurrection",
+    "passages": [
+      {"label": "Matthew", "range": "MAT.28.1-MAT.28.10"},
+      {"label": "Mark", "range": "MRK.16.1-MRK.16.8"},
+      {"label": "Luke", "range": "LUK.24.1-LUK.24.12"},
+      {"label": "John", "range": "JHN.20.1-JHN.20.18"}
+    ]
+  },
+  {
+    "id": "great_commission",
+    "title": "The Great Commission",
+    "passages": [
+      {"label": "Matthew", "range": "MAT.28.16-MAT.28.20"},
+      {"label": "Mark", "range": "MRK.16.14-MRK.16.20"},
+      {"label": "Luke", "range": "LUK.24.44-LUK.24.53"},
+      {"label": "Acts", "range": "ACT.1.6-ACT.1.11"}
+    ]
+  },
+  {
+    "id": "creation",
+    "title": "Creation Accounts",
+    "passages": [
+      {"label": "Genesis 1", "range": "GEN.1.1-GEN.1.31"},
+      {"label": "Genesis 2", "range": "GEN.2.4-GEN.2.25"}
+    ]
+  },
+  {
+    "id": "ten_commandments",
+    "title": "The Ten Commandments",
+    "passages": [
+      {"label": "Exodus", "range": "EXO.20.1-EXO.20.17"},
+      {"label": "Deuteronomy", "range": "DEU.5.6-DEU.5.21"}
+    ]
+  },
+  {
+    "id": "kings_chronicles",
+    "title": "Solomon's Temple (Kings vs Chronicles)",
+    "passages": [
+      {"label": "1 Kings", "range": "1KI.6.1-1KI.6.38"},
+      {"label": "2 Chronicles", "range": "2CH.3.1-2CH.3.17"}
+    ]
+  }
+]

@@ -13,7 +13,9 @@ from src.api.routers import (
     analytics,
     authors,
     books,
+    compare,
     crossrefs,
+    devotional,
     lexicon,
     people,
     places,
@@ -21,6 +23,7 @@ from src.api.routers import (
     search,
     semantic,
     timeline,
+    topics,
 )
 
 app = FastAPI(
@@ -50,6 +53,9 @@ app.include_router(authors.router, prefix="/api/v1", tags=["Authors"])
 app.include_router(people.router, prefix="/api/v1", tags=["People"])
 app.include_router(places.router, prefix="/api/v1", tags=["Places"])
 app.include_router(timeline.router, prefix="/api/v1", tags=["Timeline"])
+app.include_router(compare.router, prefix="/api/v1", tags=["Compare"])
+app.include_router(topics.router, prefix="/api/v1", tags=["Topics"])
+app.include_router(devotional.router, prefix="/api/v1", tags=["Devotional"])
 
 
 @app.get("/health")
