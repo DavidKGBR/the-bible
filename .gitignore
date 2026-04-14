@@ -11,8 +11,8 @@ dist/
 build/
 *.egg
 
-# ─── Data (large files — tracked via DVC or downloaded at runtime) ────────────
-data/raw/*.json
+# ─── Data (large files — downloaded at runtime, cached locally) ───────────────
+data/raw/
 data/processed/*.csv
 data/analytics/*.csv
 data/analytics/*.duckdb

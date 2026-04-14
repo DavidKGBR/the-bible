@@ -257,6 +257,77 @@ export function fetchCrossrefCounts(book: string, chapter: number) {
   );
 }
 
+// ── Lexicon & Interlinear ───────────────────────────────────────────────────
+
+export interface StrongsEntry {
+  strongs_id: string;
+  language: string;
+  original: string;
+  transliteration: string;
+  pronunciation: string;
+  short_definition: string;
+  long_definition: string;
+  part_of_speech: string;
+}
+
+export interface InterlinearWord {
+  verse_id: string;
+  word_position: number;
+  language: 'hebrew' | 'greek';
+  source: string;
+  original_word: string;
+  transliteration: string;
+  english: string;
+  strongs_id: string;
+  strongs_raw: string;
+  grammar: string;
+  lemma: string;
+  gloss: string;
+  semantic_tag: string;
+}
+
+export interface InterlinearChapterResponse {
+  book_id: string;
+  chapter: number;
+  total_words: number;
+  words: InterlinearWord[];
+}
+
+export function fetchInterlinearChapter(book: string, chapter: number) {
+  return fetchJson<InterlinearChapterResponse>(
+    `${BASE}/interlinear/chapter/${book}/${chapter}`
+  );
+}
+
+export function fetchStrongs(strongsId: string) {
+  return fetchJson<StrongsEntry>(`${BASE}/strongs/${strongsId}`);
+}
+
+export function fetchVersesByStrongs(strongsId: string, limit = 5) {
+  return fetchJson<{ strongs_id: string; total_results: number; verses: any[] }>(
+    `${BASE}/words/${strongsId}/verses?limit=${limit}`
+  );
+}
+
+export interface BookFrequency {
+  book_id: string;
+  book_name: string;
+  testament: string;
+  frequency: number;
+}
+
+export interface WordDistribution {
+  strongs_id: string;
+  total_occurrences: number;
+  distribution: BookFrequency[];
+}
+
+export function fetchWordDistribution(strongsId: string) {
+  return fetchJson<WordDistribution>(
+    `${BASE}/words/${strongsId}/distribution`
+  );
+}
+
 // ── AI Insights ─────────────────────────────────────────────────────────────
 
 export interface AIExplanation {

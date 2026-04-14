@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;500;700;900&family=GFS+Didot&display=swap');
 
 :root {
   /* ── Base palette (parchment theme) ─────────────────────────── */
@@ -57,6 +58,15 @@ body {
 
 .font-body {
   font-family: var(--font-body);
+}
+
+.font-hebrew {
+  font-family: 'Frank Ruhl Libre', serif;
+  direction: rtl;
+}
+
+.font-greek {
+  font-family: 'GFS Didot', serif;
 }
 
 /* ── Verse text styling ─────────────────────────────────────────── */

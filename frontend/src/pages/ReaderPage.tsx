@@ -2,13 +2,15 @@ import { useState } from "react";
 import BibleReader from "../components/BibleReader";
 import ParallelView from "../components/ParallelView";
 import ImmersiveReader from "../components/ImmersiveReader/ImmersiveReader";
+import InterlinearView from "../components/reader/InterlinearView";
 
-type Mode = "single" | "parallel" | "immersive";
+type Mode = "single" | "parallel" | "immersive" | "interlinear";
 
 const MODES: { key: Mode; label: string }[] = [
   { key: "single", label: "Single" },
   { key: "parallel", label: "Parallel" },
   { key: "immersive", label: "Immersive" },
+  { key: "interlinear", label: "Interlinear" },
 ];
 
 export default function ReaderPage() {
@@ -38,6 +40,7 @@ export default function ReaderPage() {
       {mode === "single" && <BibleReader />}
       {mode === "parallel" && <ParallelView />}
       {mode === "immersive" && <ImmersiveReader />}
+      {mode === "interlinear" && <InterlinearView />}
     </div>
   );
 }

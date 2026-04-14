@@ -167,6 +167,39 @@ def seeded_db(tmp_path_factory):
         ]
     )
 
+    # Seed strongs
+    loader.load_strongs_entries(pd.DataFrame([{
+        "strongs_id": "H776", "language": "hebrew", "original": "אֶרֶץ", "transliteration": "erets",
+        "pronunciation": "eh'-rets", "short_definition": "earth, land", "long_definition": "earth, land", "part_of_speech": "noun"
+    }, {
+        "strongs_id": "G25", "language": "greek", "original": "ἀγαπάω", "transliteration": "agapao",
+        "pronunciation": "ag-ap-ah'-o", "short_definition": "to love", "long_definition": "to love", "part_of_speech": "verb"
+    }]))
+
+    # Seed original texts
+    loader.load_original_texts(pd.DataFrame([{
+        "verse_id": "GEN.1.1", "book_id": "GEN", "chapter": 1, "verse": 1,
+        "language": "hebrew", "text": "בראשית ברא אלהים את השמים ואת הארץ", "source": "wlc"
+    }]), "hebrew")
+    
+    loader.load_original_texts(pd.DataFrame([{
+        "verse_id": "JHN.3.16", "book_id": "JHN", "chapter": 3, "verse": 16,
+        "language": "greek", "text": "οὕτως γὰρ ἠγάπησεν ὁ θεὸς τὸν κόσμον", "source": "sblgnt"
+    }]), "greek")
+
+    # Seed interlinear
+    loader.load_interlinear(pd.DataFrame([{
+        "verse_id": "GEN.1.1", "word_position": 1, "language": "hebrew", "source": "tahot", 
+        "original_word": "הָאָרֶץ", "transliteration": "ha-arets", "english": "earth", 
+        "strongs_id": "H776", "strongs_raw": "H0776", "grammar": "N", "lemma": "אֶרֶץ", "gloss": "earth", "semantic_tag": "planet"
+    }]), "tahot")
+
+    loader.load_interlinear(pd.DataFrame([{
+        "verse_id": "JHN.3.16", "word_position": 3, "language": "greek", "source": "tagnt", 
+        "original_word": "ἠγάπησεν", "transliteration": "egapesen", "english": "loved", 
+        "strongs_id": "G25", "strongs_raw": "G0025", "grammar": "V", "lemma": "ἀγαπάω", "gloss": "love", "semantic_tag": "affection"
+    }]), "tagnt")
+
     loader.close()
     return db_path
 
@@ -368,3 +401,76 @@ class TestAI:
         )
         assert r.status_code == 503
         assert "Gemini" in r.json()["detail"]
+
+
+# ─── Lexicon & Interlinear ───────────────────────────────────────────────────
+
+
+class TestLexicon:
+    def test_get_strongs(self, client):
+        r = client.get("/api/v1/strongs/H776")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["strongs_id"] == "H776"
+        assert data["original"] == "אֶרֶץ"
+
+    def test_get_strongs_not_found(self, client):
+        r = client.get("/api/v1/strongs/H9999")
+        assert r.status_code == 404
+
+    def test_search_strongs(self, client):
+        r = client.get("/api/v1/strongs/search?q=earth")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["total_results"] == 1
+        assert data["results"][0]["strongs_id"] == "H776"
+
+    def test_search_strongs_with_lang(self, client):
+        r = client.get("/api/v1/strongs/search?q=love&language=greek")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["total_results"] == 1
+        assert data["results"][0]["strongs_id"] == "G25"
+
+    def test_get_original(self, client):
+        r = client.get("/api/v1/original/GEN.1.1")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["verse_id"] == "GEN.1.1"
+        assert len(data["texts"]) == 1
+        assert "בראשית" in data["texts"][0]["text"]
+
+    def test_get_interlinear(self, client):
+        r = client.get("/api/v1/interlinear/JHN.3.16")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["verse_id"] == "JHN.3.16"
+        assert len(data["words"]) == 1
+        assert data["words"][0]["english"] == "loved"
+
+    def test_get_interlinear_chapter(self, client):
+        r = client.get("/api/v1/interlinear/chapter/GEN/1")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["book_id"] == "GEN"
+        assert data["chapter"] == 1
+        assert len(data["words"]) >= 1
+        assert data["words"][0]["english"] == "earth"
+
+    def test_get_verses_by_strongs(self, client):
+        r = client.get("/api/v1/words/H776/verses")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["strongs_id"] == "H776"
+        assert data["total_results"] == 1
+        assert data["verses"][0]["verse_id"] == "GEN.1.1"
+        assert "In the beginning" in data["verses"][0]["verse_text"]
+
+    def test_get_words_frequency(self, client):
+        r = client.get("/api/v1/words/frequency?book=GEN")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["book"] == "GEN"
+        assert len(data["results"]) == 1
+        assert data["results"][0]["strongs_id"] == "H776"
+        assert data["results"][0]["frequency"] == 1

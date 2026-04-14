@@ -7,6 +7,7 @@ import SearchPage from "./pages/SearchPage";
 import BookmarksPage from "./pages/BookmarksPage";
 import NotesPage from "./pages/NotesPage";
 import PlansPage from "./pages/PlansPage";
+import WordStudyPage from "./pages/WordStudyPage";
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/bookmarks" element={<BookmarksPage />} />
         <Route path="/notes" element={<NotesPage />} />
         <Route path="/plans" element={<PlansPage />} />
+        <Route path="/word-study/:strongsId" element={<WordStudyPage />} />
       </Route>
     </Routes>
   );

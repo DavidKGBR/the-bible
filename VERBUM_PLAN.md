@@ -240,9 +240,9 @@ Competição média-baixa vs Bible Hub (UX terrível).
 | 1 | Notas + Highlighting | 🔥🔥🔥🔥 | ✅ Concluído | [branch](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-1-notes-highlighting) |
 | 2 | Streak + Reading Plans | 🔥🔥🔥 | ✅ Concluído | [branch](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-2-streak-plans) |
 | 3 | Extract Strong's + originals | 🔥🔥🔥🔥 | ✅ Concluído (3a+3b+3c+3d) | [3a](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-3a-strongs-lexicon) · [3b](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-3b-hebrew-wlc) · [3c](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-3c-greek-sblgnt) · [3d](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-3d-interlinear-stepbible) |
-| 4 | API endpoints (6 novos) | 🔥🔥🔥 | 🔲 Planejado | — |
-| 5 | Interlinear View | 🔥🔥🔥🔥🔥 | 🔲 Planejado | — |
-| 6 | Word Study page | 🔥🔥🔥🔥 | 🔲 Planejado | — |
+| 4 | API endpoints (6 novos) | 🔥🔥🔥 | ✅ Concluído | — |
+| 5 | Interlinear View | 🔥🔥🔥🔥🔥 | ✅ Concluído | — |
+| 6 | Word Study page | 🔥🔥🔥🔥 | ✅ Concluído | — |
 | 7 | Bible Dictionary | 🔥🔥🔥 | 🔲 Planejado | — |
 | 8 | Commentary (HelloAO) | 🔥🔥🔥 | 🔲 Planejado | — |
 | 9 | Verse Sharing | 🔥🔥 | 🔲 Planejado | — |
@@ -364,9 +364,39 @@ entrada lógica — sem depender da memória de conversa.
 - **Arquivos novos (2):** `src/extract/sblgnt_extractor.py`, `tests/test_sblgnt.py`.
 - **Arquivos modificados (3):** `src/cli.py` (+ comando greek + atribuição SBL no docstring), `VERBUM_PLAN.md`, status ledger.
 - **Atribuição:** docstring do módulo + help do CLI credita "SBL Greek New Testament (SBLGNT), © 2010 SBL + Logos Bible Software". Pode entrar no README junto com Task #4 ou em commit avulso de credits.
-- **Próxima entrada:** #3d — o crown jewel da Fase 2. Interlinear + semantic tags a partir do STEPBible TAHOT (HEB) e TAGNT (GRK). Envolve:
-  - Parse de TSV bem mais complexo (múltiplas colunas morfológicas por palavra)
-  - Nova tabela `interlinear` (verse_id + word_position PK)
-  - Mapeamento palavra→Strong's, morfologia, semantic domain
-  - Validação de sanidade (contagem EN vs HEB tolerando >3× por aglutinação)
-  - É a maior e mais delicada das 4 sub-tarefas. Provavelmente precisa de sessão dedicada.
+- **Próxima entrada:** #3d — o crown jewel da Fase 2. Interlinear + semantic tags a partir do STEPBible TAHOT (HEB) e TAGNT (GRK).
+
+### 2026-04-13 — Tarefa #3d concluída: Interlinear STEPBible
+- Quinta e última sub-tarefa da Fase 2A. A mais complexa de ETL finalizada!
+- **Fonte:** `STEPBible-Data` (TAHOT e TAGNT). Download de 6 arquivos TSV grandes totaling ~100MB salvos no cache.
+- **Implementação:** O extractor `StepBibleExtractor` desenvolvido e loader robusto carregando pra tabela `interlinear` do DuckDB (~406K words).
+- Algumas decisões chave de design:
+  - Máquina de estado compartilhada, delegando o parser row-a-row pro TAGNT vs TAHOT.
+  - **Deduplicação** no nível de `(verse, position)`, garantindo que apenas a primeira variante (usualmente NKO - mainstream) seja importada para lidar com restrições do DuckDB e limpar referências.
+  - **Normalização do Strong:** Lemmas complexos como `H9002/H9009/{H0776G}` e `G0976=N-NSF` foram isolados como a root word pura `H776` e `G976`.
+  - Tags semânticas extraídas cruas (Ex: `"Jesus»Jesus|Jesus@Mat.1.1"`) pra nossa Tarefa #10 futuramente consumir e criar o grafo semântico.
+- **CLI:** Novo comando finalizado `python -m src.cli interlinear`.
+- **Testes:** 27 offline testes e +1 integração validados.
+- **Status:** **Fase 2 de ETL de dados concluída integralmente.**
+- **Próxima entrada:** Tarefa #4 — API endpoints (Fase 2B). 
+
+### 2026-04-13 — Tarefa #4 concluída: API Endpoints (Fase 2B)
+- Criação e montagem do router `lexicon.py` no backend.
+- **6 novos endpoints construídos no FastAPI** com queries diretas e otimizadas no DuckDB:
+  - `GET /api/v1/strongs/{id}`
+  - `GET /api/v1/strongs/search?q={termo}&language={lang}`
+  - `GET /api/v1/original/{verse_id}`
+  - `GET /api/v1/interlinear/{verse_id}`
+  - `GET /api/v1/words/{strongs_id}/verses`
+  - `GET /api/v1/words/frequency?book={book}`
+- **Testes Implementados**: A fixture de DB `seeded_db` em `test_api.py` recebeu um mock impecável das tabelas de Léxico (usando `H776` - Terra no Gênesis e `G25` - Amor em João 3:16). Todas as 6 rotas estão cobertas pela bateria de testes da classe `TestLexicon`.
+- **Status:** Fase 2B concluída e integração do backend pronta para o front-end.
+- **Próxima entrada:** Tarefa #5 — Interlinear View. O nosso grande passo para trazer os dados interlineares para dentro do Reader no React!
+
+### 2026-04-13 — Tarefa #5 concluída: Interlinear View (Fase 2C)
+- **Otimização Crítica no Backend**: Adicionada a rota `GET /interlinear/chapter/{book_id}/{chapter}` ao `lexicon.py` para processar a carga pesada de agrupamento do interlinear de forma que o front-end consuma apenas 1 request. Testes de API devidamente atualizados.
+- **Integração Tipográfica**: Google Fonts `Frank Ruhl Libre` e `GFS Didot` injetados no aplicativo React (`index.css`) com as devidas classes `.font-hebrew` e `.font-greek`.
+- **InterlinearView.tsx**: Componente robusto criado reproduzindo as 4 camadas da visualização (Original, Morfologia/Transliteração, Tradução Base e Botão do Strong's). Ele implementa flex-wrap isolado para não corromper resoluções de telas variadas.
+- **WordDetailPanel.tsx**: Sidebar de estudos (Lexicon Sidebar) injetada à direita do Reader sempre que um Strong's é clicado. Exibe o domínio semântico, pronúncia, posições, long description, e top 5 versículos cruzados usando os 2 novos endpoints recém consumidos.
+- **Status:** Fase 2C concluída lindamente. A funcionalidade visual está entregue.
+- **Próxima entrada:** Tarefa #6 — Word Study Page (Fase 2D). Uma versão expandida da URL dedicada que receberá o force-directed graph (Gráficos) ou estatísticas avançadas baseadas nos logs de analytics.
