@@ -15,6 +15,7 @@ from rich.logging import RichHandler
 
 from src.config import PipelineConfig
 from src.extract.morphhb_extractor import MorphHbExtractor
+from src.extract.sblgnt_extractor import SblgntExtractor
 from src.extract.strongs_extractor import StrongsExtractor
 from src.load.duckdb_loader import DuckDBLoader
 from src.pipeline import BiblePipeline
@@ -242,6 +243,68 @@ def hebrew(
     books_loaded = sorted({v.book_id for v in verses})
     console.print(
         f"\n[green]✓[/green] Loaded [bold]{count:,}[/bold] Hebrew verses "
+        f"across [cyan]{len(books_loaded)}[/cyan] book"
+        f"{'s' if len(books_loaded) != 1 else ''}."
+    )
+
+
+@app.command()
+def greek(
+    book: str | None = typer.Option(
+        None,
+        "--book",
+        "-b",
+        help="Load only one book (SBLGNT name or canonical ID). Default: all 27 NT books.",
+    ),
+    cache: bool = typer.Option(
+        True,
+        "--cache/--no-cache",
+        help="Use cached XML in data/raw/sblgnt/ if present.",
+    ),
+    log_level: str = typer.Option("INFO", "--log-level", "-l", help="Logging level"),
+) -> None:
+    """✝️ Extract and load the Greek NT (SBL Greek New Testament).
+
+    SBLGNT © 2010 Society of Biblical Literature & Logos Bible Software.
+    Free for personal, academic, and open-source use with attribution.
+    """
+    setup_logging(log_level)
+
+    console.print("[bold]✝️  Greek NT (SBLGNT)[/bold]\n")
+    extractor = SblgntExtractor()
+    books_arg = [book] if book else None
+    try:
+        verses = extractor.extract(books=books_arg, use_cache=cache)
+    except ValueError as e:
+        console.print(f"[red]✗[/red] {e}")
+        raise typer.Exit(code=1) from e
+
+    if not verses:
+        console.print("[yellow]No verses extracted.[/yellow]")
+        raise typer.Exit(code=1)
+
+    df = pd.DataFrame(
+        [
+            {
+                "verse_id": v.verse_id,
+                "book_id": v.book_id,
+                "chapter": v.chapter,
+                "verse": v.verse,
+                "language": v.language.value,
+                "text": v.text,
+                "source": v.source,
+            }
+            for v in verses
+        ]
+    )
+
+    config = PipelineConfig()
+    with DuckDBLoader(config.load) as loader:
+        count = loader.load_original_texts(df, language="greek")
+
+    books_loaded = sorted({v.book_id for v in verses})
+    console.print(
+        f"\n[green]✓[/green] Loaded [bold]{count:,}[/bold] Greek verses "
         f"across [cyan]{len(books_loaded)}[/cyan] book"
         f"{'s' if len(books_loaded) != 1 else ''}."
     )

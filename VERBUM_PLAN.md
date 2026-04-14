@@ -239,7 +239,7 @@ Competição média-baixa vs Bible Hub (UX terrível).
 |---|------|---------|--------|-----|
 | 1 | Notas + Highlighting | 🔥🔥🔥🔥 | ✅ Concluído | [branch](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-1-notes-highlighting) |
 | 2 | Streak + Reading Plans | 🔥🔥🔥 | ✅ Concluído | [branch](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-2-streak-plans) |
-| 3 | Extract Strong's + originals | 🔥🔥🔥🔥 | 🚧 Em andamento (3a ✅ · 3b ✅ · 3c/d 🔲) | [3a](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-3a-strongs-lexicon) · [3b](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-3b-hebrew-wlc) |
+| 3 | Extract Strong's + originals | 🔥🔥🔥🔥 | 🚧 Em andamento (3a ✅ · 3b ✅ · 3c ✅ · 3d 🔲) | [3a](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-3a-strongs-lexicon) · [3b](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-3b-hebrew-wlc) · [3c](https://github.com/DavidKGBR/verbum/pull/new/feat/verbum-3c-greek-sblgnt) |
 | 4 | API endpoints (6 novos) | 🔥🔥🔥 | 🔲 Planejado | — |
 | 5 | Interlinear View | 🔥🔥🔥🔥🔥 | 🔲 Planejado | — |
 | 6 | Word Study page | 🔥🔥🔥🔥 | 🔲 Planejado | — |
@@ -352,3 +352,21 @@ entrada lógica — sem depender da memória de conversa.
   - Comparações diretas de Hebreus com niqqud falham frequentemente porque marcas de cantilação (teamim) variam entre edições. Stripping de `\u0591`-`\u05c7` (cantillation + points) antes de comparar é a técnica robusta.
 - **Build prod:** `Original Texts: 23,213` visível em `cli info`.
 - **Próxima entrada:** #3c — Grego SBLGNT (NT em grego koiné, ~7.956 versos). Estrutura de dados e layout da tabela já pronta (mesmo `original_texts` com `language='greek'`). Decisão pendente de fonte: SBLGNT OSIS XML direto vs. byztxt vs. outra. Vou investigar na próxima sessão.
+
+### 2026-04-13 — Tarefa #3c concluída: Grego SBLGNT
+- Quarta tarefa do mesmo dia. Continua a ocupar a tabela `original_texts` — agora com `language='greek'`, `source='sblgnt'`, 7.939 versos do NT.
+- **Fonte:** `LogosBible/SBLGNT` (SBL Greek New Testament, ed. Michael Holmes). 27 arquivos XML, um por livro. Licença SBL/Logos — livre pra uso open-source/acadêmico com atribuição, não comercial.
+- **Formato NÃO é OSIS** (diferente do morphhb). XML custom: `<book id="Matt">`, `<p>` paragraphs, `<verse-number id="Matthew 1:1">` como markers (não envoltórios!), `<w>` + `<suffix>` + `<prefix>`.
+- **Parser com máquina de estados:** walk em document-order via `DefusedET.iter()`, acumula word+suffix entre markers `<verse-number>`, faz flush quando novo marker aparece ou EOF.
+- **Gotcha do dia:** a fixture que escrevi tinha `<suffix> </suffix>` (com espaço), mas os arquivos REAIS usam `<suffix></suffix>` vazio + relying em document-order whitespace do XML serializado. Meu parser original colapsou "Ἐνἀρχῇἦνὁλόγος" em vez de "Ἐν ἀρχῇ ἦν ὁ λόγος". Fix: quando suffix vazio, inserir espaço single. Testes de fixture já passavam; só descobri rodando o CLI contra dados reais e inspecionando João 1:1. Lição: sempre validar com dataset real antes de marcar done.
+- **Total original_texts:** 31.152 (23.213 hebrew + 7.939 greek). Discrepância pequena vs. 7.956 esperado no SBLGNT padrão — algumas versões contam versos de cabeçalho/introdução que essa edição não tem.
+- **Scoped delete verificado:** rodar `cli greek --no-cache` 2× não apaga hebreus. Teste `test_scoped_delete_preserves_hebrew` cobre o caso.
+- **Arquivos novos (2):** `src/extract/sblgnt_extractor.py`, `tests/test_sblgnt.py`.
+- **Arquivos modificados (3):** `src/cli.py` (+ comando greek + atribuição SBL no docstring), `VERBUM_PLAN.md`, status ledger.
+- **Atribuição:** docstring do módulo + help do CLI credita "SBL Greek New Testament (SBLGNT), © 2010 SBL + Logos Bible Software". Pode entrar no README junto com Task #4 ou em commit avulso de credits.
+- **Próxima entrada:** #3d — o crown jewel da Fase 2. Interlinear + semantic tags a partir do STEPBible TAHOT (HEB) e TAGNT (GRK). Envolve:
+  - Parse de TSV bem mais complexo (múltiplas colunas morfológicas por palavra)
+  - Nova tabela `interlinear` (verse_id + word_position PK)
+  - Mapeamento palavra→Strong's, morfologia, semantic domain
+  - Validação de sanidade (contagem EN vs HEB tolerando >3× por aglutinação)
+  - É a maior e mais delicada das 4 sub-tarefas. Provavelmente precisa de sessão dedicada.
