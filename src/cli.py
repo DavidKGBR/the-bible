@@ -22,6 +22,7 @@ from src.extract.sblgnt_extractor import SblgntExtractor
 from src.extract.stepbible_extractor import StepBibleExtractor
 from src.extract.strongs_extractor import StrongsExtractor
 from src.extract.theographic_extractor import TheographicExtractor
+from src.extract.wikidata_images import WikidataImageExtractor
 from src.load.duckdb_loader import DuckDBLoader
 from src.models.schemas import InterlinearWord
 from src.pipeline import BiblePipeline
@@ -514,24 +515,30 @@ def geocoding(
 @app.command()
 def images(
     cache: bool = typer.Option(True, "--cache/--no-cache", help="Use cached JSONL files."),
+    skip_wikidata: bool = typer.Option(False, "--skip-wikidata", help="Skip Wikidata SPARQL."),
     log_level: str = typer.Option("INFO", "--log-level", "-l", help="Logging level"),
 ) -> None:
     """🖼️ Load Wikimedia Commons images for biblical places.
 
-    Downloads image.jsonl + modern.jsonl from openbibleinfo/Bible-Geocoding-Data
+    Phase 1: Downloads image.jsonl + modern.jsonl from openbibleinfo/Bible-Geocoding-Data
     (CC-BY) and links 2,400+ place photos to the biblical_places table.
+
+    Phase 2: Queries Wikidata SPARQL for images of places that OpenBible missed
+    (Babylon, Bethlehem, Jericho, etc.) — fills ~400-500 extra places.
+
     Run `theographic` first to populate the base place records.
     """
     from dataclasses import asdict
 
     setup_logging(log_level)
 
-    console.print("[bold]🖼️  Place Images from OpenBible[/bold]\n")
+    # ── Phase 1: OpenBible images ──────────────────────────────────────
+    console.print("[bold]🖼️  Phase 1 — OpenBible Place Images[/bold]\n")
     extractor = OpenBibleGeoExtractor()
     records = extractor.extract_images(use_cache=cache)
 
     if not records:
-        console.print("[red]No image records extracted.[/red]")
+        console.print("[red]No image records extracted from OpenBible.[/red]")
         raise typer.Exit(code=1)
 
     console.print(f"  Extracted [bold]{len(records):,}[/bold] image–place pairs")
@@ -541,10 +548,68 @@ def images(
     config = PipelineConfig()
     with DuckDBLoader(config.load) as loader:
         count = loader.load_place_images(df)
+        console.print(
+            f"  [green]\u2713[/green] [bold]{count:,}[/bold] images loaded from OpenBible\n"
+        )
+
+        # ── Phase 2: Wikidata gap-fill ─────────────────────────────────
+        if skip_wikidata:
+            console.print("[dim]Skipping Wikidata (--skip-wikidata)[/dim]")
+        else:
+            console.print("[bold]🔍 Phase 2 — Wikidata SPARQL Gap-Fill[/bold]\n")
+
+            # Find places that still have no images
+            missing = loader.conn.execute("""
+                SELECT bp.name
+                FROM biblical_places bp
+                LEFT JOIN (
+                    SELECT DISTINCT place_slug FROM place_images
+                ) pi ON pi.place_slug = bp.slug
+                WHERE pi.place_slug IS NULL
+                ORDER BY bp.verse_count DESC
+            """).fetchall()
+            missing_names = [r[0] for r in missing]
+
+            console.print(f"  {len(missing_names)} places still without images")
+
+            if missing_names:
+                wd_extractor = WikidataImageExtractor()
+                wd_records = wd_extractor.extract_for_places(
+                    missing_names, use_cache=cache
+                )
+
+                if wd_records:
+                    console.print(
+                        f"  Wikidata returned [bold]{len(wd_records):,}[/bold] images"
+                    )
+                    wd_df = pd.DataFrame([asdict(r) for r in wd_records])
+                    # Add missing columns expected by the loader
+                    wd_df["author"] = ""
+                    wd_df["placeholder_colors"] = ""
+                    wd_df["crop_file"] = ""
+                    added = loader.append_place_images(wd_df)
+                    console.print(
+                        f"  [green]\u2713[/green] [bold]{added:,}[/bold] new images "
+                        f"from Wikidata"
+                    )
+                else:
+                    console.print("  [yellow]No images found on Wikidata[/yellow]")
+
+        # Final summary
+        final_count = loader.conn.execute(  # type: ignore[index]
+            "SELECT COUNT(*) FROM place_images"
+        ).fetchone()[0]
+        final_places = loader.conn.execute(  # type: ignore[index]
+            "SELECT COUNT(DISTINCT place_slug) FROM place_images"
+        ).fetchone()[0]
+        total_places = loader.conn.execute(  # type: ignore[index]
+            "SELECT COUNT(*) FROM biblical_places"
+        ).fetchone()[0]
 
     console.print(
-        f"\n[green]\u2713[/green] [bold]{count:,}[/bold] images loaded "
-        f"for biblical places"
+        f"\n[green]\u2713[/green] [bold]{final_count:,}[/bold] total images "
+        f"for [bold]{final_places:,}[/bold]/{total_places:,} places "
+        f"({final_places * 100 // total_places}% coverage)"
     )
 
 

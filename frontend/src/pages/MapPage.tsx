@@ -95,6 +95,9 @@ function MarkerLayer({ features }: { features: GeoFeature[] }) {
                   alt={f.properties.name}
                   className="w-full h-24 object-cover rounded mb-1.5"
                   loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
                 />
               )}
               <strong>{f.properties.name}</strong>

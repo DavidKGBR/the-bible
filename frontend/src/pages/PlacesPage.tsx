@@ -42,6 +42,15 @@ function Lightbox({
           src={image.file_url}
           alt={image.description || placeName}
           className="w-full max-h-[80vh] object-contain rounded-lg"
+          onError={(e) => {
+            const img = e.currentTarget;
+            // Try hero_url fallback, then hide
+            if (image.hero_url && img.src !== image.hero_url) {
+              img.src = image.hero_url;
+            } else {
+              img.style.display = "none";
+            }
+          }}
         />
         <div className="mt-2 flex items-center justify-between text-white/70 text-xs px-1">
           <span>
@@ -116,6 +125,17 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
             alt={hero.description || detail.name}
             className="w-full h-48 md:h-56 object-cover cursor-pointer"
             onClick={() => setLightboxImage(hero)}
+            onError={(e) => {
+              const img = e.currentTarget;
+              // Try fallback chain: hero → thumbnail → file_url → hide
+              if (hero.hero_url && img.src === hero.hero_url && hero.thumbnail_url) {
+                img.src = hero.thumbnail_url;
+              } else if (img.src !== hero.file_url) {
+                img.src = hero.file_url;
+              } else {
+                img.parentElement!.style.display = "none";
+              }
+            }}
           />
           <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent h-20 pointer-events-none" />
           <div className="absolute bottom-2 left-3 right-3 flex items-end justify-between">
@@ -180,6 +200,10 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
                              group-hover:border-[var(--color-gold)]
                              group-hover:brightness-110 transition"
                   loading="lazy"
+                  onError={(e) => {
+                    // Hide broken gallery thumbnails
+                    e.currentTarget.parentElement!.style.display = "none";
+                  }}
                 />
               </button>
             ))}
@@ -447,21 +471,31 @@ export default function PlacesPage() {
               >
                 <div className="flex items-center gap-3 min-w-0">
                   {/* Thumbnail */}
-                  {place.thumbnail_url ? (
-                    <img
-                      src={place.thumbnail_url}
-                      alt={place.name}
-                      className="w-14 h-14 rounded-lg object-cover shrink-0 border border-[var(--color-gold-dark)]/10"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-[var(--color-gold)]/8 to-[var(--color-gold)]/3 shrink-0 flex items-center justify-center border border-[var(--color-gold-dark)]/5">
+                  <div className="w-14 h-14 shrink-0 relative">
+                    {place.thumbnail_url ? (
+                      <img
+                        src={place.thumbnail_url}
+                        alt={place.name}
+                        className="w-14 h-14 rounded-lg object-cover border border-[var(--color-gold-dark)]/10"
+                        loading="lazy"
+                        onError={(e) => {
+                          // On error, hide img and show fallback sibling
+                          e.currentTarget.style.display = "none";
+                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = "flex";
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="w-14 h-14 rounded-lg bg-gradient-to-br from-[var(--color-gold)]/8 to-[var(--color-gold)]/3 items-center justify-center border border-[var(--color-gold-dark)]/5"
+                      style={{ display: place.thumbnail_url ? "none" : "flex" }}
+                    >
                       <svg className="w-6 h-6 text-[var(--color-gold-dark)] opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
                       </svg>
                     </div>
-                  )}
+                  </div>
 
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">

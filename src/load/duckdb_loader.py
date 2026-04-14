@@ -914,6 +914,57 @@ class DuckDBLoader:
         logger.info("Loaded %d images for %d unique places", count, unique)
         return count
 
+    def append_place_images(self, df: pd.DataFrame) -> int:
+        """Append additional place images without deleting existing ones.
+
+        Uses INSERT OR IGNORE to skip duplicates (same image_id + place_slug).
+        Useful for merging a second image source (e.g. Wikidata) on top of
+        the primary OpenBible source.
+        """
+        if df.empty:
+            return 0
+        self._ensure_theographic_tables()
+        self._ensure_place_images_table()
+
+        before = self.conn.execute(  # type: ignore[index]
+            "SELECT COUNT(*) FROM place_images"
+        ).fetchone()[0]
+
+        logger.info("Appending %d image records (INSERT OR IGNORE)...", len(df))
+        self.conn.execute("""
+            INSERT OR IGNORE INTO place_images (
+                image_id, place_slug, file_url, thumbnail_pattern,
+                description, license, author, credit, credit_url,
+                width, height, placeholder_colors, crop_file
+            )
+            SELECT
+                df.image_id,
+                bp.slug,
+                df.file_url,
+                df.thumbnail_pattern,
+                df.description,
+                df.license,
+                COALESCE(df.author, ''),
+                df.credit,
+                df.credit_url,
+                df.width,
+                df.height,
+                COALESCE(df.placeholder_colors, ''),
+                COALESCE(df.crop_file, '')
+            FROM df
+            JOIN biblical_places bp ON LOWER(bp.name) = LOWER(df.place_name)
+        """)
+
+        after = self.conn.execute(  # type: ignore[index]
+            "SELECT COUNT(*) FROM place_images"
+        ).fetchone()[0]
+        added = after - before
+        unique = self.conn.execute(  # type: ignore[index]
+            "SELECT COUNT(DISTINCT place_slug) FROM place_images"
+        ).fetchone()[0]
+        logger.info("Appended %d new images (total: %d for %d places)", added, after, unique)
+        return added
+
     # ── Nave's Topical Bible ────────────────────────────────────────────────
 
     def _ensure_topics_tables(self) -> None:
