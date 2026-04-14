@@ -101,7 +101,10 @@ def random_verse(
         if df.empty:
             raise HTTPException(status_code=404, detail="No verses found")
 
-        return df.iloc[0].to_dict()
+        row = df.iloc[0].to_dict()
+        if translation.lower() == "kjv":
+            row["text_clean"] = strip_kjv_annotations(str(row.get("text", "")))
+        return row
     finally:
         conn.close()
 

@@ -15,12 +15,14 @@ import { useVerseNotes } from "../hooks/useVerseNotes";
 import { useReadingPlans, recordPlanAutoMark } from "../hooks/useReadingPlans";
 import { getPlanById } from "./plans/plansData";
 import { parseKjvAnnotations } from "./reader/kjvAnnotations";
+import { useI18n } from "../i18n/i18nContext";
 
 const TRANSLATIONS = ["kjv", "bbe", "nvi", "ra", "acf", "rvr", "apee", "asv", "web", "darby"];
 
 type InitialTab = "none" | "crossrefs" | "notes";
 
 export default function BibleReader() {
+  const { t } = useI18n();
   const [searchParams] = useSearchParams();
   const { record } = useReadingHistory();
   const [books, setBooks] = useState<Book[]>([]);
@@ -197,7 +199,7 @@ export default function BibleReader() {
           className="border rounded px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/50 focus:border-[var(--color-gold)]/60"
         >
           {Array.from({ length: totalChapters }, (_, i) => i + 1).map((ch) => (
-            <option key={ch} value={ch}>Chapter {ch}</option>
+            <option key={ch} value={ch}>{t("reader.chapterN").replace("{n}", String(ch))}</option>
           ))}
         </select>
 
@@ -220,15 +222,15 @@ export default function BibleReader() {
                             ? "bg-[var(--color-gold)]/10 border-[var(--color-gold)] text-[var(--color-gold-dark)]"
                             : "bg-white hover:bg-gray-50"
                         }`}
-            title="Show KJV translator annotations"
+            title={t("reader.translatorNotes")}
           >
-            Translator notes: {notesOn ? "on" : "off"}
+            {notesOn ? t("reader.notesOn") : t("reader.notesOff")}
           </button>
         )}
       </div>
 
       {loading ? (
-        <LoadingSpinner text="Loading chapter..." />
+        <LoadingSpinner text={t("reader.loadingChapter")} />
       ) : page ? (
         <div>
           {/* Header */}
@@ -238,7 +240,7 @@ export default function BibleReader() {
             </h2>
             <p className="text-xs opacity-50 mt-1">
               {page.testament} &middot; {page.category} &middot;{" "}
-              {page.translation.toUpperCase()} &middot; {page.verse_count} verses
+              {page.translation.toUpperCase()} &middot; {page.verse_count} {t("common.verses")}
             </p>
           </div>
 
@@ -267,7 +269,7 @@ export default function BibleReader() {
                   {planDef.emoji} {planDef.title}
                 </span>
                 <span className="opacity-60 ml-2">
-                  · Day {today.day} · {doneToday} / {total} read today
+                  · Day {today.day} · {doneToday} / {total} {t("reader.readToday")}
                   {doneToday === total && total > 0 ? " 🎉" : ""}
                 </span>
               </Link>
@@ -353,7 +355,7 @@ export default function BibleReader() {
           {isKjv && notesOn && kjvRender.footnotes.length > 0 && (
             <div className="mt-6 pt-3 border-t border-dashed border-[var(--color-gold-dark)]/30">
               <p className="text-[11px] uppercase tracking-[0.25em] opacity-50 mb-2 font-display">
-                Translator notes
+                {t("reader.translatorNotes")}
               </p>
               <ol className="space-y-1 text-xs text-[var(--color-gold-dark)]/90">
                 {kjvRender.footnotes.map((note, i) => (
@@ -374,7 +376,7 @@ export default function BibleReader() {
               className="px-4 py-2 rounded bg-[var(--color-ink)] text-[var(--color-parchment)]
                          text-sm disabled:opacity-30 hover:opacity-80 transition"
             >
-              Previous
+              {t("reader.previous")}
             </button>
             <button
               disabled={!page.has_next}
@@ -382,12 +384,12 @@ export default function BibleReader() {
               className="px-4 py-2 rounded bg-[var(--color-ink)] text-[var(--color-parchment)]
                          text-sm disabled:opacity-30 hover:opacity-80 transition"
             >
-              Next
+              {t("reader.next")}
             </button>
           </div>
         </div>
       ) : (
-        <p className="text-red-600">Failed to load chapter.</p>
+        <p className="text-red-600">{t("reader.loadError")}</p>
       )}
     </div>
   );

@@ -26,6 +26,7 @@ data/analytics/*.duckdb.wal
 
 # ─── Claude Code local workspace ──────────────────────────────────────────────
 .claude/
+CLAUDE.md
 
 # ─── Environment ──────────────────────────────────────────────────────────────
 .env
@@ -38,6 +39,8 @@ env/
 .coverage
 htmlcov/
 coverage.xml
+verbum_plan.md
+verbum_presentation.md
 
 # ─── Linting ──────────────────────────────────────────────────────────────────
 .mypy_cache/
@@ -49,6 +52,8 @@ Thumbs.db
 
 # ─── GCP credentials ─────────────────────────────────────────────────────────
 *.json
+!frontend/src/i18n/*.json
+!data/static/**/*.json
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/analytics/.gitkeep

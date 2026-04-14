@@ -19,6 +19,7 @@ from src.api.routers import (
     deep_analytics,
     devotional,
     emotional,
+    home,
     intertextuality,
     lexicon,
     open_questions,
@@ -69,6 +70,7 @@ app.include_router(open_questions.router, prefix="/api/v1", tags=["Open Question
 app.include_router(threads.router, prefix="/api/v1", tags=["Semantic Threads"])
 app.include_router(structure.router, prefix="/api/v1", tags=["Literary Structure"])
 app.include_router(emotional.router, prefix="/api/v1", tags=["Emotional Landscape"])
+app.include_router(home.router, prefix="/api/v1", tags=["Home"])
 app.include_router(community.router, prefix="/api/v1", tags=["Community Notes"])
 
 

@@ -790,9 +790,12 @@ export interface ParallelPage {
   book_id: string;
   book_name: string;
   chapter: number;
+  total_chapters: number;
   left_translation: string;
   right_translation: string;
   verse_count: number;
+  has_previous: boolean;
+  has_next: boolean;
   verses: ParallelVerse[];
 }
 
@@ -857,11 +860,43 @@ export interface RandomVerse {
   verse_id: string;
   reference: string;
   text: string;
+  text_clean?: string;
   book_id: string;
   book_name: string;
   chapter: number;
   verse: number;
   sentiment_label?: string;
+}
+
+// ── Home Stats ─────────────────────────────────────────────────────────────
+
+export interface HomeStatsNote {
+  id: string;
+  verse_id: string;
+  title: string;
+  category: string;
+  date: string;
+}
+
+export interface HomeStatsQuestion {
+  id: string;
+  title: string;
+  category: string;
+}
+
+export interface HomeStats {
+  people_count: number;
+  places_count: number;
+  topics_count: number;
+  structures_count: number;
+  questions_count: number;
+  community_notes_count: number;
+  recent_notes: HomeStatsNote[];
+  recent_questions: HomeStatsQuestion[];
+}
+
+export async function fetchHomeStats(): Promise<HomeStats> {
+  return fetchJson<HomeStats>(`${BASE}/home/stats`);
 }
 
 export function fetchRandomVerse(translation = "kjv") {

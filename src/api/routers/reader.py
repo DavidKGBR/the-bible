@@ -126,12 +126,24 @@ def reader_parallel(
                 detail=f"No data for {book_upper} chapter {chapter}",
             )
 
-        # Get book name
+        # Get book name + total chapters
         book_row = conn.execute(
-            "SELECT DISTINCT book_name FROM verses WHERE book_id = ? LIMIT 1",
-            [book_upper],
+            """
+            SELECT book_name, total_chapters
+            FROM book_stats
+            WHERE book_id = ? AND translation_id = ?
+            LIMIT 1
+            """,
+            [book_upper, left.lower()],
         ).fetchdf()
+        if book_row.empty:
+            book_row = conn.execute(
+                "SELECT DISTINCT book_name FROM verses WHERE book_id = ? LIMIT 1",
+                [book_upper],
+            ).fetchdf()
         book_name = book_row.iloc[0]["book_name"] if not book_row.empty else book_upper
+        has_tc = not book_row.empty and "total_chapters" in book_row.columns
+        total_chapters = int(book_row.iloc[0]["total_chapters"]) if has_tc else 150
 
         # Align by verse number
         all_verses = sorted(set(left_df["verse"].tolist() + right_df["verse"].tolist()))
@@ -167,9 +179,12 @@ def reader_parallel(
             "book_id": book_upper,
             "book_name": book_name,
             "chapter": chapter,
+            "total_chapters": total_chapters,
             "left_translation": left.lower(),
             "right_translation": right.lower(),
             "verse_count": len(aligned),
+            "has_previous": chapter > 1,
+            "has_next": chapter < total_chapters,
             "verses": aligned,
         }
     finally:

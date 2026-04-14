@@ -1,7 +1,7 @@
-<h1 align="center">🕊️ Bible Data Pipeline</h1>
+<h1 align="center">Verbum</h1>
 
 <p align="center">
-  <strong>Multi-translation Bible analytics — ETL pipeline, cross-reference graph, REST API, React reader, and Gemini explanations.</strong>
+  <strong>The first free, open-source Bible study platform that rivals Logos ($400+) — combining academic tools, geography, AI analysis, and devotional content in one app.</strong>
 </p>
 
 <p align="center">
@@ -10,41 +10,114 @@
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" alt="React">
   <img src="https://img.shields.io/badge/DuckDB-1.1+-yellow?logo=duckdb" alt="DuckDB">
   <img src="https://img.shields.io/badge/Gemini-AI-8E75B2?logo=google&logoColor=white" alt="Gemini">
+  <img src="https://img.shields.io/badge/i18n-EN%20|%20PT%20|%20ES-ff69b4" alt="i18n">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
 </p>
 
 <p align="center">
   <a href="#-what-you-get">What you get</a> •
+  <a href="#-features-at-a-glance">Features</a> •
   <a href="#-quick-start">Quick start</a> •
   <a href="#-architecture">Architecture</a> •
-  <a href="#-api">API</a> •
-  <a href="#-deployment">Deployment</a>
+  <a href="#-api-reference">API</a> •
+  <a href="#-testing--quality">Testing</a>
 </p>
 
 ---
 
-## 📖 What you get
+## What you get
 
-A production-style data pipeline + reader app built around the Bible:
+A complete Bible study ecosystem — ETL pipeline, REST API, React reader, and AI insights:
 
-- **302,503 verses** across **10 translations** in **5 languages** (English: KJV, BBE, ASV, WEB, DARBY · Portuguese: NVI, RA, ACF · Spanish: RVR · French: APEE)
-- **344,754 cross-references** (OpenBible.info) visualised as an interactive arc diagram à la Chris Harrison
-- **NLP enrichment** — TextBlob sentiment per verse, per-chapter and per-book stats
-- **FastAPI REST** with 20+ endpoints for books, verses, search, analytics, cross-refs, AI
-- **React 19 / Vite frontend** with five surfaces: Home, Reader (single · parallel · immersive 3D book spread), Arc Diagram, Search, Bookmarks
-- **Google Gemini explanations** — per-verse "AI Explain" panel with cached responses in EN or PT-BR
-- **DuckDB** for analytics (blazing queries, pre-built views)
-- **Streamlit dashboard** (legacy, still works) for data scientists who prefer notebooks over web UIs
+| Metric | Count |
+|--------|-------|
+| **Verses** | 302,503 across 10 translations in 5 languages |
+| **Cross-references** | 344,754 (OpenBible.info) |
+| **Strong's entries** | 14,870 (Hebrew + Greek lexicon) |
+| **Interlinear words** | 800K+ (TAGNT + TAHOT via STEPBible) |
+| **Biblical people** | 3,000+ with family trees and timelines |
+| **Biblical places** | 1,600+ with coordinates and events |
+| **Topical index** | 20,000+ topics (Nave's Topical Bible) |
+| **API endpoints** | 82 across 22 routers |
+| **Frontend pages** | 26 interactive surfaces |
+| **Test cases** | 385 (pytest) |
+| **Languages (UI)** | English, Portuguese, Spanish |
+
+### Translations
+
+| Language | Translations |
+|----------|-------------|
+| English | KJV, BBE, ASV, WEB, DARBY |
+| Portuguese | NVI, RA, ACF |
+| Spanish | RVR |
+| French | APEE |
 
 ---
 
-## 🚀 Quick start
+## Features at a glance
+
+### Reading & Study
+| Feature | Route | Description |
+|---------|-------|-------------|
+| **Reader** | `/reader` | Three modes: single, parallel (2 translations), immersive (3D book spread with page flip) |
+| **Search** | `/search` | Full-text search with keyword pills, sentiment badges, popular verses |
+| **Bookmarks** | `/bookmarks` | Local bookmarks with seeded suggestions |
+| **Notes** | `/notes` | Personal study notes (localStorage) |
+| **Reading Plans** | `/plans` | Multi-day reading plans with progress tracking |
+| **Compare** | `/compare` | Synoptic parallel viewer (Last Supper, Beatitudes, etc.) with custom passages |
+| **Dictionary** | `/dictionary` | Easton's + Smith's Bible Dictionary, 7,000+ entries |
+
+### Languages & Interlinear
+| Feature | Route | Description |
+|---------|-------|-------------|
+| **Word Study** | `/word-study/:id` | Strong's concordance + interlinear view + word journey across eras |
+| **Semantic Graph** | `/semantic-graph` | D3 force-directed graph of word co-occurrences |
+| **Translation Divergence** | — | Side-by-side comparison of how translations render the same Greek/Hebrew word |
+
+### People, Places & Geography
+| Feature | Route | Description |
+|---------|-------|-------------|
+| **Authors** | `/authors` | 40 biblical authors with literary style and vocab fingerprints |
+| **People** | `/people` | 3,000+ biblical persons — search, filter by gender/tribe/book, family trees |
+| **Places** | `/places` | 1,600+ locations with coordinates, events, and type filters |
+| **Map** | `/map` | Interactive Leaflet map with era filters and journey routes (Paul's journeys, Exodus) |
+| **Timeline** | `/timeline` | Cross-referenced biblical + secular events on a zoomable D3 timeline |
+
+### Topics & Devotional
+| Feature | Route | Description |
+|---------|-------|-------------|
+| **Topics** | `/topics` | 20,000+ Nave's topics — search-first UI with popular chips |
+| **Devotional** | `/devotional` | Thematic reading plans (Names of God, Forgiveness, etc.) with verse text |
+
+### AI & Deep Analysis
+| Feature | Route | Description |
+|---------|-------|-------------|
+| **AI Explain** | (in Reader) | Google Gemini per-verse explanations in EN/PT, cached on disk |
+| **Deep Analytics** | `/deep-analytics` | Hapax legomena, vocabulary richness, lexical density heatmaps |
+| **Intertextuality** | `/intertextuality` | OT→NT citation heatmap + quotation graph |
+| **Open Questions** | `/open-questions` | 15 curated scholarly debates with multiple perspectives |
+| **Semantic Threads** | `/threads` | Auto-discovered thematic threads spanning distant books |
+| **Literary Structure** | `/structure` | Chiasms, parallelisms, inclusio across 10+ passages |
+
+### Community & Polish
+| Feature | Route | Description |
+|---------|-------|-------------|
+| **Emotional Landscape** | `/emotional` | Per-verse sentiment flow charts + book emotional profiles |
+| **Community Notes** | `/community` | Curated scholarly observations per verse, searchable |
+| **Arc Diagram** | `/arc-diagram` | 344K cross-refs as canvas arcs at 60fps, click to explore |
+| **i18n** | (sidebar) | Flag selector for EN/PT/ES, auto-detects browser language |
+| **Commentary** | (in Reader) | 6 external commentaries via HelloAO (Matthew Henry, John Gill, etc.) |
+| **Streak** | (sidebar) | Reading streak tracker with daily badge |
+
+---
+
+## Quick start
 
 ### 1. Install
 
 ```bash
-git clone https://github.com/DavidKGBR/the-bible.git
-cd the-bible
+git clone https://github.com/DavidKGBR/verbum.git
+cd verbum
 pip install -e ".[all]"
 cd frontend && npm install && cd ..
 cp .env.example .env          # fill in ABIBLIA_DIGITAL_TOKEN, GEMINI_API_KEY (optional)
@@ -53,11 +126,18 @@ cp .env.example .env          # fill in ABIBLIA_DIGITAL_TOKEN, GEMINI_API_KEY (o
 ### 2. Run the pipeline
 
 ```bash
-# All 10 translations + cross-refs (cached runs take ~2 min)
+# All 10 translations + cross-refs (cached runs ~2 min; first fetch longer)
 python -m src.cli run --translations kjv,nvi,bbe,ra,acf,rvr,apee,asv,web,darby
 
-# One translation, specific books
+# Single translation, specific books
 python -m src.cli run --books "GEN,PSA,JHN" --translations kjv
+
+# Extract Strong's, interlinear, people, places, topics
+python -m src.cli extract-strongs
+python -m src.cli extract-interlinear
+python -m src.cli extract-theographic
+python -m src.cli extract-geocoding
+python -m src.cli extract-naves
 
 # See what got loaded
 python -m src.cli info
@@ -67,207 +147,205 @@ python -m src.cli info
 
 ```bash
 # Backend (FastAPI) — http://localhost:8000 · docs at /docs
-python -m uvicorn src.api.main:app --reload
+PYTHONIOENCODING=utf-8 python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
 
-# Frontend (Vite) — http://localhost:5173
+# Frontend (Vite) — http://localhost:5173 (proxies /api to :8000)
 cd frontend && npm run dev
-
-# Or the legacy Streamlit dashboard
-make dashboard                # http://localhost:8501
 ```
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────────────┐
-│   EXTRACT   │───▶│  TRANSFORM   │───▶│    LOAD     │───▶│    SERVE     │
-├─────────────┤    ├──────────────┤    ├─────────────┤    ├──────────────┤
-│ bible-api   │    │  Clean +     │    │  DuckDB     │    │  FastAPI     │
-│ abibliadig. │    │  HTML decode │    │  10 tables  │    │  20+ routes  │
-│ OpenBible   │    │  TextBlob    │    │  views +    │    │              │
-│ JSON cache  │    │  sentiment   │    │  344K refs  │    │  React SPA   │
-│ per trans.  │    │  dedup       │    │             │    │  + Gemini    │
-└─────────────┘    └──────────────┘    └─────────────┘    └──────────────┘
+┌──────────────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────────────────┐
+│     EXTRACT      │───▶│  TRANSFORM   │───▶│    LOAD     │───▶│      SERVE       │
+├──────────────────┤    ├──────────────┤    ├─────────────┤    ├──────────────────┤
+│ bible-api.com    │    │ Clean + HTML │    │ DuckDB      │    │ FastAPI (82 API) │
+│ abibliadigital   │    │ TextBlob NLP │    │ 15+ tables  │    │ React 19 SPA     │
+│ STEPBible TAGNT  │    │ Dedup + KJV  │    │ 344K xrefs  │    │ 26 pages         │
+│ Theographic      │    │ annotations  │    │ 800K interl. │    │ Gemini AI        │
+│ OpenBible refs   │    │ Sentiment    │    │ 14K Strong's │    │ i18n (EN/PT/ES)  │
+│ Nave's Topical   │    │ enrichment   │    │             │    │                  │
+│ OpenBible Geo    │    │              │    │             │    │                  │
+└──────────────────┘    └──────────────┘    └─────────────┘    └──────────────────┘
 ```
 
 ### Tech stack
 
 | Layer | Stack |
 |-------|-------|
-| **Extract** | `httpx`, per-translation JSON cache (`data/raw/{trans}/`) |
-| **Transform** | `pandas`, `textblob`, `html.unescape`, KJV annotation stripper |
-| **Load** | `duckdb` (analytical views, book/chapter stats), CSV exports |
-| **API** | `fastapi`, `pydantic v2`, `typer` CLI |
-| **Frontend** | `react 19`, `vite 6`, `typescript`, `tailwind v4`, `d3`, `react-router` |
+| **Extract** | `httpx`, per-translation JSON cache, STEPBible parsers, Theographic, Nave's |
+| **Transform** | `pandas`, `textblob`, `html.unescape`, KJV annotation stripper, sentiment enrichment |
+| **Load** | `duckdb` (analytical views, parameterised inserts, 15+ tables) |
+| **API** | `fastapi`, `pydantic v2`, `typer` CLI, 22 routers, 82 endpoints |
+| **Frontend** | `react 19`, `vite 6`, `typescript`, `tailwind v4`, `d3`, `leaflet`, `react-router` |
 | **AI** | `google-generativeai` (Gemini 2.0 Flash), disk cache with rate limiting |
-| **Infra** | `docker`, `github actions`, `ruff`, `mypy`, `pytest` |
-| **Cloud** | `google-cloud-storage`, `google-cloud-bigquery` (optional) |
+| **i18n** | React Context + `useI18n()` hook, 3 languages, localStorage persistence |
+| **Quality** | `ruff`, `mypy`, `pytest` (385 tests), `tsc --noEmit` |
 
 ### Source layout
 
 ```
 src/
-  cli.py              # Typer: run, info, sample, query
-  pipeline.py         # BiblePipeline orchestrator (extract → transform → load)
-  config.py           # Dataclass config + env overrides
+  cli.py                  # Typer: run, info, extract-*, query
+  pipeline.py             # BiblePipeline orchestrator
+  config.py               # Dataclass config + env overrides
   extract/
-    bible_sources.py  # BibleSource ABC + BibleApiCom + AbibliaDigital impls
-    translations.py   # TRANSLATION_REGISTRY: 10 translations
-    crossref_extractor.py   # OpenBible.info cross-refs loader
+    bible_sources.py      # BibleSource ABC + 2 implementations
+    translations.py       # 10 translations registry
+    crossref_extractor.py # OpenBible 344K cross-refs
+    strongs_extractor.py  # 14,870 Strong's entries
+    stepbible_extractor.py # TAGNT + TAHOT interlinear
+    theographic_extractor.py # 3K people, 1.6K places, 4K events
+    openbible_geocoding.py # lat/long for places
+    naves_extractor.py    # 20K topics
+    morphhb_extractor.py  # Hebrew morphology
+    sblgnt_extractor.py   # Greek NT text
+    dictionary_extractor.py # Easton's + Smith's
   transform/
-    cleaning.py       # normalize_text, dedup, validate
-    enrichment.py     # metrics + sentiment + aggregates
-    kjv_annotations.py  # strip {added words} and {Heb. marginal notes}
+    cleaning.py           # normalize, dedup, validate
+    enrichment.py         # sentiment + metrics + aggregates
+    kjv_annotations.py    # strip {annotations}
     multilang_aligner.py  # align verses across translations
+    crossref_mapper.py    # map cross-refs to verse IDs
   load/
-    duckdb_loader.py  # schema, views, parameterised INSERTs
-    gcs_loader.py     # optional GCS + BigQuery
+    duckdb_loader.py      # schema, views, 15+ tables
+    gcs_loader.py         # optional GCS + BigQuery
   api/
-    main.py           # FastAPI app
-    routers/          # books, reader, crossrefs, analytics, search, ai_insights
+    main.py               # FastAPI app + CORS + 22 routers
+    dependencies.py       # per-request DuckDB connection
+    routers/              # 22 router modules (see API Reference)
   ai/
-    gemini_client.py  # rate-limited + cached client
-    passage_explainer.py  # explain + compare prompts
+    gemini_client.py      # rate-limited + cached
+    passage_explainer.py  # prompts for explain + compare
   models/
-    schemas.py        # Pydantic: RawVerse, EnrichedVerse, Translation, etc.
+    schemas.py            # Pydantic v2: RawVerse, EnrichedVerse, etc.
+    theographic.py        # BiblicalPerson, BiblicalPlace, etc.
+
 frontend/src/
-  pages/              # HomePage, ReaderPage, ArcDiagramPage, SearchPage, BookmarksPage
-  components/         # BibleReader, ParallelView, ImmersiveReader/, ArcDiagram/,
-                      # VerseActions, AIExplanationPanel, VerseOfTheDay, ...
-  hooks/              # useArcData, useBookmarks, useReadingHistory,
-                      # useTranslatorNotes
-  services/api.ts     # typed wrapper around /api/v1
+  App.tsx                 # 26 routes
+  main.tsx                # BrowserRouter + I18nProvider
+  i18n/                   # i18nContext.tsx + en/pt/es.json
+  pages/                  # 26 page components
+  components/             # BibleReader, ParallelView, ImmersiveReader/,
+                          # ArcDiagram/, VerseActions, FamilyTree, etc.
+  hooks/                  # useArcData, useBookmarks, useReadingHistory, etc.
+  services/api.ts         # typed fetch wrappers for all 82 endpoints
+
+data/static/              # Curated JSON: authors, plans, questions, structures, etc.
+tests/                    # 32 test files, 385 test cases
 ```
 
 ---
 
-## 🔌 API
+## API Reference
 
-Full OpenAPI docs at `http://localhost:8000/docs`. Highlights:
+Full OpenAPI docs at `http://localhost:8000/docs`. Summary of all 22 routers:
 
-```
-GET  /api/v1/books                          # list all books (per translation)
-GET  /api/v1/books/{book}/chapters/{ch}     # chapter with verse data
-GET  /api/v1/reader/page?book=GEN&chapter=1&translation=kjv
-                                            # chapter reader view (adds text_clean)
-GET  /api/v1/reader/parallel?book=JHN&chapter=3&left=kjv&right=nvi
-                                            # two-translation spread
-GET  /api/v1/verses/search?q=love&translation=kjv
-GET  /api/v1/verses/{verse_id}              # verse in one or more translations
-GET  /api/v1/verses/{verse_id}/translations?translations=kjv,nvi,rvr
-GET  /api/v1/verses/random?translation=kjv  # verse of the day
-GET  /api/v1/crossrefs/arcs?source_book=GEN&target_book=REV
-                                            # aggregated book-to-book arcs
-GET  /api/v1/crossrefs/between?source_book=ISA&target_book=JER
-                                            # detailed pairs between two books
-GET  /api/v1/crossrefs/{verse_id}           # incoming + outgoing refs
-GET  /api/v1/crossrefs/counts?book=GEN&chapter=1
-                                            # per-verse ref counts for badges
-GET  /api/v1/analytics/sentiment?group_by=book|testament|category
-GET  /api/v1/analytics/translations         # per-translation stats
-POST /api/v1/ai/explain                     # Gemini explanation (cached)
-POST /api/v1/ai/compare                     # Gemini translation comparison
-```
-
----
-
-## 🎨 Frontend surfaces
-
-| Route | Features |
-|-------|----------|
-| `/` | Hero with live stats · quick actions · Verse of the Day · John 3:16 in 6 translations · translations table |
-| `/reader` | Three modes: **Single** (verse actions inline — cross-refs, Gemini, bookmark, copy, compare) · **Parallel** (two translations stacked on mobile, spread on desktop) · **Immersive** (3D book spread with spine, drop cap, ornate corners, page-flip, fullscreen `F` key) |
-| `/arc-diagram` | 344K cross-refs rendered on canvas at 60fps · source + target filters · click arc or pick a pair → grouped detail panel |
-| `/search` | Keyword pills · popular verses · highlighted matches · sentiment icon badges |
-| `/bookmarks` | localStorage, per-device · seeded with John 3:16 / Psalm 23:1 / Philippians 4:13 when empty |
-
-Responsive (hamburger drawer on `<md`), accessible (focus rings, ESC to close panels, keyboard nav in arc rows and verse actions).
+| Router | Endpoints | Description |
+|--------|-----------|-------------|
+| **books** | 5 | Book list, chapters, verses, random verse, translations |
+| **reader** | 2 | Chapter page (with `text_clean` for KJV), parallel view |
+| **search** | 1 | Full-text search with translation/book filters |
+| **analytics** | 3 | Sentiment by group, translation stats, heatmap |
+| **crossrefs** | 5 | Arcs, between books, per-verse, counts, network |
+| **ai_insights** | 2 | Gemini explain + compare |
+| **lexicon** | 8 | Strong's lookup, interlinear chapter, word distribution, journey |
+| **semantic** | 3 | Co-occurrence graph, divergence analysis |
+| **authors** | 2 | Author list, detail with vocab stats |
+| **people** | 4 | People search, detail, family tree, by book |
+| **places** | 4 | Place search, detail, types, GeoJSON |
+| **timeline** | 3 | Biblical events, secular events, combined |
+| **compare** | 3 | Synoptic presets, custom parallel, diff |
+| **topics** | 4 | Topic search, popular, detail with verse text |
+| **devotional** | 3 | Plans list, plan detail, day reading |
+| **deep_analytics** | 4 | Hapax, fingerprint, density, vocabulary richness |
+| **intertextuality** | 3 | OT→NT quotations, heatmap, citation chain |
+| **open_questions** | 3 | Questions list, detail, for-verse |
+| **threads** | 3 | Thread list, detail, discover by tag |
+| **structure** | 4 | All structures, by book, by chapter, chiasms |
+| **emotional** | 3 | Sentiment landscape, peaks, book profiles |
+| **community** | 3 | Notes by verse, recent notes, stats |
 
 ---
 
-## 📊 Dashboard (legacy)
-
-The original Streamlit dashboard is still available for exploratory analytics:
+## Testing & quality
 
 ```bash
-make dashboard      # http://localhost:8501
-```
-
-Five pages: Overview, Book Explorer, Sentiment Analysis, Verse Search, Comparisons.
-
----
-
-## ☁️ Deployment
-
-Local dev is the current focus. GCP deploy (Cloud Run + Artifact Registry + BigQuery + Secret Manager + Terraform) is the next milestone — see [docs/](docs/) for the sketch when ready.
-
-```bash
-# Optional — upload DuckDB contents to BigQuery + GCS
-export USE_GCP=true
-export GCP_PROJECT_ID=your-project
-export GCP_BUCKET_NAME=your-bucket
-pip install -e ".[gcp]"
-gcloud auth application-default login
-python -m src.cli run
-```
-
-### Docker
-
-```bash
-docker compose up              # pipeline + dashboard
-docker compose up pipeline     # pipeline only
-docker compose --profile test run --rm tests
-```
-
----
-
-## 🧪 Testing & quality
-
-```bash
-make test            # fast tests (no @slow, no @integration)
-make test-all        # full suite with coverage HTML
+make test            # fast tests (excludes @slow, @integration)
+make test-all        # full suite (385 tests) with coverage HTML
 make lint            # ruff check
 make typecheck       # mypy
 make quality         # lint + typecheck + test
+
+# Frontend
+cd frontend && npx tsc --noEmit    # TypeScript strict check
+cd frontend && npm run build       # production build
 ```
 
-Frontend: `cd frontend && npx tsc --noEmit` for types; no component tests yet.
+### Test coverage
 
-138 pytest cases covering cleaning, enrichment, loader, API routes, KJV annotations, and multi-language behaviour.
-
----
-
-## 🛠️ Utility scripts
-
-```bash
-python scripts/fix_html_entities.py       # one-shot retrofit of DuckDB rows
-                                          # with legacy HTML entities
-```
+- **32 test files** covering all API routers, extractors, transforms, and loaders
+- **385 test cases** with parameterised fixtures and seeded DuckDB
+- Backend routers for all Fase 0-4 features have dedicated test suites
+- Markers: `@pytest.mark.integration`, `@pytest.mark.slow`
 
 ---
 
-## 🤝 Contributing
+## Data sources & credits
 
-1. Fork, branch (`git checkout -b feature/something`).
-2. `make quality` locally.
-3. Commit with Conventional style (`feat:`, `polish:`, `fix:`).
-4. PR against `main`.
+| Source | Data | License |
+|--------|------|---------|
+| [bible-api.com](https://bible-api.com) | KJV, BBE, ASV, WEB, DARBY text | Public domain |
+| [abibliadigital.com.br](https://www.abibliadigital.com.br) | NVI, RA, ACF, RVR, APEE text | Public domain |
+| [OpenBible.info](https://www.openbible.info/labs/cross-references/) | 344K cross-references | CC-BY |
+| [STEPBible](https://github.com/STEPBible/STEPBible-Data) | TAGNT + TAHOT interlinear | CC-BY |
+| [Theographic](https://github.com/robertrouse/theographic-bible-metadata) | People, places, events | CC-BY-SA 4.0 |
+| [OpenBible Geocoding](https://github.com/openbibleinfo/Bible-Geocoding-Data) | 1,300+ lat/long coordinates | CC-BY |
+| Nave's Topical Bible | 20,000+ topics | Public domain |
+| Easton's + Smith's Dictionaries | 7,000+ entries | Public domain |
+| [HelloAO](https://bible.helloao.org) | Commentary API | Open |
+| [TextBlob](https://textblob.readthedocs.io/) | NLP sentiment analysis | MIT |
+| [DuckDB](https://duckdb.org/) | Analytical database | MIT |
+| [Google Gemini](https://ai.google.dev/) | AI explanations | API terms |
 
 ---
 
-## 📜 License
+## Development roadmap
+
+### Completed
+
+- **v1.0** — Pipeline + Streamlit dashboard
+- **v2.0** — FastAPI + React reader (single/parallel/immersive) + arc diagram + search + bookmarks
+- **v3.0** — Strong's concordance + interlinear + semantic graph + dictionary + commentary + word study
+- **v4.0** — 17 new features across 4 phases:
+  - Fase 0+1: Infrastructure extractors + geography & people (authors, people, places, map, timeline)
+  - Fase 2: Advanced study (compare, topics, devotional)
+  - Fase 3: AI analysis (word journey, hapax, intertextuality, open questions, threads, literary structure)
+  - Fase 4: Community & polish (emotional landscape, i18n, community notes)
+
+### Future
+
+- Cloud deployment (GCP Cloud Run + BigQuery + Terraform)
+- Three.js 3D emotional terrain visualization
+- User accounts + community note submissions
+- Mobile PWA optimization
+- More translations and languages
+
+---
+
+## Contributing
+
+1. Fork, branch (`git checkout -b feature/something`)
+2. `make quality` locally
+3. Commit with Conventional style (`feat:`, `fix:`, `docs:`)
+4. PR against `main`
+
+---
+
+## License
 
 MIT — see [LICENSE](LICENSE).
 
-## 🙏 Credits
-
-- **Bible text**: [bible-api.com](https://bible-api.com), [abibliadigital.com.br](https://www.abibliadigital.com.br) (public domain translations)
-- **Cross-references**: [OpenBible.info](https://www.openbible.info/labs/cross-references/)
-- **NLP**: [TextBlob](https://textblob.readthedocs.io/)
-- **Analytical DB**: [DuckDB](https://duckdb.org/)
-- **AI**: [Google Gemini](https://ai.google.dev/)
-- **Inspiration**: Chris Harrison's visualizations of the Bible
-
-<p align="center"><strong>Built one sprint at a time with ❤️ and ☕</strong></p>
+<p align="center"><strong>Built one sprint at a time with Claude Code</strong></p>

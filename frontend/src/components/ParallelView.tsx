@@ -6,10 +6,12 @@ import {
   type ParallelPage,
 } from "../services/api";
 import LoadingSpinner from "./common/LoadingSpinner";
+import { useI18n } from "../i18n/i18nContext";
 
 const TRANSLATIONS = ["kjv", "bbe", "nvi", "ra", "acf", "rvr", "apee", "asv", "web", "darby"];
 
 export default function ParallelView() {
+  const { t } = useI18n();
   const [books, setBooks] = useState<Book[]>([]);
   const [page, setPage] = useState<ParallelPage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +32,8 @@ export default function ParallelView() {
       .finally(() => setLoading(false));
   }, [bookId, chapter, left, right]);
 
+  const totalChapters = page?.total_chapters || 1;
+
   return (
     <div>
       {/* Controls */}
@@ -49,8 +53,8 @@ export default function ParallelView() {
           onChange={(e) => setChapter(Number(e.target.value))}
           className="border rounded px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/50 focus:border-[var(--color-gold)]/60"
         >
-          {Array.from({ length: 150 }, (_, i) => i + 1).map((ch) => (
-            <option key={ch} value={ch}>Ch. {ch}</option>
+          {Array.from({ length: totalChapters }, (_, i) => i + 1).map((ch) => (
+            <option key={ch} value={ch}>{t("reader.chapterN").replace("{n}", String(ch))}</option>
           ))}
         </select>
 
@@ -64,7 +68,7 @@ export default function ParallelView() {
               <option key={t} value={t}>{t.toUpperCase()}</option>
             ))}
           </select>
-          <span className="text-[var(--color-gold)] font-bold">vs</span>
+          <span className="text-[var(--color-gold)] font-bold">{t("reader.vs")}</span>
           <select
             value={right}
             onChange={(e) => setRight(e.target.value)}
@@ -78,13 +82,13 @@ export default function ParallelView() {
       </div>
 
       {loading ? (
-        <LoadingSpinner text="Loading parallel view..." />
+        <LoadingSpinner text={t("reader.loadingParallel")} />
       ) : page ? (
         <div>
           <h2 className="text-xl font-bold mb-4 text-[var(--color-ink)]">
             {page.book_name} {page.chapter}
             <span className="text-sm font-normal opacity-50 ml-2">
-              {page.left_translation.toUpperCase()} vs {page.right_translation.toUpperCase()}
+              {page.left_translation.toUpperCase()} {t("reader.vs")} {page.right_translation.toUpperCase()}
             </span>
           </h2>
 
@@ -112,7 +116,7 @@ export default function ParallelView() {
                   </span>
                   <p className="text-sm leading-relaxed">
                     {(v.left_text_clean ?? v.left_text) || (
-                      <span className="opacity-30 italic">missing</span>
+                      <span className="opacity-30 italic">{t("reader.missing")}</span>
                     )}
                   </p>
                 </div>
@@ -122,7 +126,7 @@ export default function ParallelView() {
                   </span>
                   <p className="text-sm leading-relaxed">
                     {(v.right_text_clean ?? v.right_text) || (
-                      <span className="opacity-30 italic">missing</span>
+                      <span className="opacity-30 italic">{t("reader.missing")}</span>
                     )}
                   </p>
                 </div>
@@ -131,7 +135,7 @@ export default function ParallelView() {
           </div>
         </div>
       ) : (
-        <p className="text-red-600">Failed to load parallel view.</p>
+        <p className="text-red-600">{t("reader.loadError")}</p>
       )}
     </div>
   );

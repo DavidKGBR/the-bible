@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { fetchRandomVerse, type RandomVerse } from "../services/api";
+import { useI18n } from "../i18n/i18nContext";
 
 export default function VerseOfTheDay() {
+  const { t } = useI18n();
   const [verse, setVerse] = useState<RandomVerse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -37,22 +39,22 @@ export default function VerseOfTheDay() {
     >
       <div className="flex items-center justify-between mb-3">
         <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-gold)] opacity-70">
-          Verse of the Day
+          {t("home.verseOfTheDay")}
         </span>
         <button
           onClick={load}
           disabled={loading}
-          title="Random verse"
+          title={t("home.verseNew")}
           className="text-xs text-[var(--color-gold)] opacity-60 hover:opacity-100
                      disabled:opacity-30 transition"
         >
-          {loading ? "..." : "↻ New"}
+          {loading ? "..." : `↻ ${t("home.verseNew")}`}
         </button>
       </div>
 
       {error ? (
         <p className="text-xs text-red-400 opacity-70">
-          Could not load random verse.
+          {t("home.verseError")}
         </p>
       ) : loading && !verse ? (
         <div className="space-y-2 animate-pulse">
@@ -72,7 +74,7 @@ export default function VerseOfTheDay() {
             >
               &ldquo;
             </span>
-            {verse.text}
+            {verse.text_clean || verse.text}
           </p>
           <p
             className="text-right mt-3 text-sm font-display tracking-wide
