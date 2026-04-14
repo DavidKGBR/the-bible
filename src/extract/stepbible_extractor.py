@@ -27,6 +27,7 @@ import logging
 import re
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 from urllib.parse import quote
 
 import httpx
@@ -261,7 +262,7 @@ class StepBibleExtractor:
         text: str,
         language: InterlinearLanguage,
         source: str,
-        row_parser,
+        row_parser: Any,
     ) -> Iterable[InterlinearWord]:
         """Outer state machine shared by TAGNT and TAHOT.
 
@@ -336,8 +337,8 @@ class StepBibleExtractor:
         lemma_gloss = cols[4].strip()
         lemma, gloss = _split_lemma_gloss(lemma_gloss)
 
-        semantic_tag = cols[9].strip() if len(cols) > 9 else ""
-        semantic_tag = semantic_tag or None
+        raw_tag = cols[9].strip() if len(cols) > 9 else ""
+        semantic_tag: str | None = raw_tag or None
 
         return InterlinearWord(
             verse_id=verse_id,

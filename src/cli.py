@@ -19,6 +19,7 @@ from src.extract.sblgnt_extractor import SblgntExtractor
 from src.extract.stepbible_extractor import StepBibleExtractor
 from src.extract.strongs_extractor import StrongsExtractor
 from src.load.duckdb_loader import DuckDBLoader
+from src.models.schemas import InterlinearWord
 from src.pipeline import BiblePipeline
 
 app = typer.Typer(
@@ -344,7 +345,7 @@ def interlinear(
     extractor = StepBibleExtractor()
     config = PipelineConfig()
 
-    def _to_df(words):
+    def _to_df(words: list[InterlinearWord]) -> pd.DataFrame:
         return pd.DataFrame(
             [
                 {
