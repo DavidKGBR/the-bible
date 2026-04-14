@@ -168,37 +168,114 @@ def seeded_db(tmp_path_factory):
     )
 
     # Seed strongs
-    loader.load_strongs_entries(pd.DataFrame([{
-        "strongs_id": "H776", "language": "hebrew", "original": "אֶרֶץ", "transliteration": "erets",
-        "pronunciation": "eh'-rets", "short_definition": "earth, land", "long_definition": "earth, land", "part_of_speech": "noun"
-    }, {
-        "strongs_id": "G25", "language": "greek", "original": "ἀγαπάω", "transliteration": "agapao",
-        "pronunciation": "ag-ap-ah'-o", "short_definition": "to love", "long_definition": "to love", "part_of_speech": "verb"
-    }]))
+    loader.load_strongs_entries(
+        pd.DataFrame(
+            [
+                {
+                    "strongs_id": "H776",
+                    "language": "hebrew",
+                    "original": "אֶרֶץ",
+                    "transliteration": "erets",
+                    "pronunciation": "eh'-rets",
+                    "short_definition": "earth, land",
+                    "long_definition": "earth, land",
+                    "part_of_speech": "noun",
+                },
+                {
+                    "strongs_id": "G25",
+                    "language": "greek",
+                    "original": "ἀγαπάω",
+                    "transliteration": "agapao",
+                    "pronunciation": "ag-ap-ah'-o",
+                    "short_definition": "to love",
+                    "long_definition": "to love",
+                    "part_of_speech": "verb",
+                },
+            ]
+        )
+    )
 
     # Seed original texts
-    loader.load_original_texts(pd.DataFrame([{
-        "verse_id": "GEN.1.1", "book_id": "GEN", "chapter": 1, "verse": 1,
-        "language": "hebrew", "text": "בראשית ברא אלהים את השמים ואת הארץ", "source": "wlc"
-    }]), "hebrew")
-    
-    loader.load_original_texts(pd.DataFrame([{
-        "verse_id": "JHN.3.16", "book_id": "JHN", "chapter": 3, "verse": 16,
-        "language": "greek", "text": "οὕτως γὰρ ἠγάπησεν ὁ θεὸς τὸν κόσμον", "source": "sblgnt"
-    }]), "greek")
+    loader.load_original_texts(
+        pd.DataFrame(
+            [
+                {
+                    "verse_id": "GEN.1.1",
+                    "book_id": "GEN",
+                    "chapter": 1,
+                    "verse": 1,
+                    "language": "hebrew",
+                    "text": "בראשית ברא אלהים את השמים ואת הארץ",
+                    "source": "wlc",
+                }
+            ]
+        ),
+        "hebrew",
+    )
+
+    loader.load_original_texts(
+        pd.DataFrame(
+            [
+                {
+                    "verse_id": "JHN.3.16",
+                    "book_id": "JHN",
+                    "chapter": 3,
+                    "verse": 16,
+                    "language": "greek",
+                    "text": "οὕτως γὰρ ἠγάπησεν ὁ θεὸς τὸν κόσμον",
+                    "source": "sblgnt",
+                }
+            ]
+        ),
+        "greek",
+    )
 
     # Seed interlinear
-    loader.load_interlinear(pd.DataFrame([{
-        "verse_id": "GEN.1.1", "word_position": 1, "language": "hebrew", "source": "tahot", 
-        "original_word": "הָאָרֶץ", "transliteration": "ha-arets", "english": "earth", 
-        "strongs_id": "H776", "strongs_raw": "H0776", "grammar": "N", "lemma": "אֶרֶץ", "gloss": "earth", "semantic_tag": "planet"
-    }]), "tahot")
+    loader.load_interlinear(
+        pd.DataFrame(
+            [
+                {
+                    "verse_id": "GEN.1.1",
+                    "word_position": 1,
+                    "language": "hebrew",
+                    "source": "tahot",
+                    "original_word": "הָאָרֶץ",
+                    "transliteration": "ha-arets",
+                    "english": "earth",
+                    "strongs_id": "H776",
+                    "strongs_raw": "H0776",
+                    "grammar": "N",
+                    "lemma": "אֶרֶץ",
+                    "gloss": "earth",
+                    "semantic_tag": "planet",
+                }
+            ]
+        ),
+        "tahot",
+    )
 
-    loader.load_interlinear(pd.DataFrame([{
-        "verse_id": "JHN.3.16", "word_position": 3, "language": "greek", "source": "tagnt", 
-        "original_word": "ἠγάπησεν", "transliteration": "egapesen", "english": "loved", 
-        "strongs_id": "G25", "strongs_raw": "G0025", "grammar": "V", "lemma": "ἀγαπάω", "gloss": "love", "semantic_tag": "affection"
-    }]), "tagnt")
+    loader.load_interlinear(
+        pd.DataFrame(
+            [
+                {
+                    "verse_id": "JHN.3.16",
+                    "word_position": 3,
+                    "language": "greek",
+                    "source": "tagnt",
+                    "original_word": "ἠγάπησεν",
+                    "transliteration": "egapesen",
+                    "english": "loved",
+                    "strongs_id": "G25",
+                    "strongs_raw": "G0025",
+                    "grammar": "V",
+                    "lemma": "ἀγαπάω",
+                    "gloss": "love",
+                    "semantic_tag": "affection",
+                }
+            ]
+        ),
+        "tagnt",
+    )
 
     loader.close()
     return db_path

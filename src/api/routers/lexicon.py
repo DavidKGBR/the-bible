@@ -59,14 +59,14 @@ def search_strongs(
         conn.close()
 
 
-@router.get("/strongs/{id}")
-def get_strongs(id: str) -> dict:
+@router.get("/strongs/{strongs_id}")
+def get_strongs(strongs_id: str) -> dict:
     """Get a specific Strong's entry by ID (e.g., H776, G976)."""
     conn = get_db()
     try:
-        # Normalize uppercase in case user sends h776
         df = conn.execute(
-            "SELECT * FROM strongs_lexicon WHERE strongs_id = ?", [id.upper()]
+            "SELECT * FROM strongs_lexicon WHERE strongs_id = ?",
+            [strongs_id.upper()],
         ).fetchdf()
         if df.empty:
             raise HTTPException(status_code=404, detail="Strong's ID not found")
@@ -148,7 +148,8 @@ def get_verses_by_strongs(
         df = conn.execute(
             """
             SELECT DISTINCT
-               v.verse_id, v.book_id, v.chapter, v.verse, v.reference, v.text as verse_text, v.book_position
+               v.verse_id, v.book_id, v.chapter, v.verse,
+               v.reference, v.text as verse_text, v.book_position
             FROM interlinear i
             JOIN verses v ON i.verse_id = v.verse_id AND v.translation_id = 'kjv'
             WHERE i.strongs_id = ?
@@ -181,14 +182,14 @@ def get_words_frequency(
 
         df = conn.execute(
             """
-            SELECT 
-                strongs_id, 
-                original_word, 
-                transliteration, 
-                ANY_VALUE(lemma) as lemma, 
+            SELECT
+                strongs_id,
+                original_word,
+                transliteration,
+                ANY_VALUE(lemma) as lemma,
                 ANY_VALUE(gloss) as gloss,
                 COUNT(*) as frequency
-            FROM interlinear 
+            FROM interlinear
             WHERE verse_id LIKE ? AND strongs_id IS NOT NULL
             GROUP BY strongs_id, original_word, transliteration
             ORDER BY frequency DESC
