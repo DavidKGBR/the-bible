@@ -416,3 +416,12 @@ entrada lógica — sem depender da memória de conversa.
 - **Snapshot do DuckDB:** 302.503 versos · 344.754 crossrefs · 14.178 Strong's · 31.152 original texts · 406.852 interlinear words.
 - **Evolução do projeto nesta sessão:** de 6 tasks concluídas pra 6 tasks + merge + CI fixes + Task #6 completa. Repo limpo em main, zero branches pendentes, CI passando (aguardando confirmação do último push).
 - **Próxima entrada:** Tarefa #7 — Bible Dictionary (Easton's, 3500 verbetes). Primeiro conteúdo de "referência" — não extrai de fontes bíblicas originais, mas de dicionário acadêmico do séc. XIX (domínio público). Diferente das tarefas anteriores: é um corpus textual em prosa, não TSV/XML estruturado.
+
+### 2026-04-14 — Tarefa #7 concluída: Bible Dictionary (Fase 3A)
+- **Fonte:** `neuu-org/bible-dictionary-dataset` — 26 JSON files (a.json…z.json, ~7.8MB) com 5.965 entradas combinadas de Easton's (1897, 3.954 verbetes) e Smith's (1863, 4.488 verbetes). Ambos domínio público.
+- **Backend:** `DictionaryExtractor` baixa e parseia JSON → `DictionaryEntry` Pydantic → DuckDB `dictionary_entries` (PK: slug). Uma row por verbete com `text_easton` e `text_smith` como colunas separadas — queries simples sem JOIN. CLI: `python -m src.cli dictionary [--no-cache]`.
+- **API:** `GET /dictionary/{slug}` (entry única), `GET /dictionary/search?q=...` (ILIKE com preview de 200 chars, limit 50). Adicionados no `lexicon.py` router existente.
+- **Frontend:** `/dictionary` com busca debounced (300ms), cards expansíveis com badges "Easton" (gold) e "Smith" (roxo), texto completo de ambas fontes quando expandido, link "Search in Bible →" por verbete. Suggested terms no empty-state (Jerusalem, David, Sabbath, Passover, Tabernacle, Covenant).
+- **Nav:** "Dictionary" adicionado ao sidebar com ícone de livro aberto.
+- **Snapshot DuckDB:** 302.503 versos · 344.754 crossrefs · 14.178 Strong's · 31.152 original texts · 406.852 interlinear words · **5.965 dictionary entries**.
+- **Próxima entrada:** Tarefa #8 — Commentary (HelloAO). Zero ETL: API externa que entrega comentário por versículo em tempo real. Matthew Henry, Adam Clarke, John Gill, Keil-Delitzsch. Integração direta no Reader como painel lateral.
