@@ -1,7 +1,11 @@
-<h1 align="center">Verbum</h1>
+<h1 align="center">
+  <br>
+  <img src="verbum.svg" alt="Verbum" width="360">
+  <br>
+</h1>
 
 <p align="center">
-  <strong>The first free, open-source Bible study platform that rivals Logos ($400+) — combining academic tools, geography, AI analysis, and devotional content in one app.</strong>
+  <em>"No princípio era o Verbo." — João 1:1</em>
 </p>
 
 <p align="center">
@@ -15,8 +19,9 @@
 </p>
 
 <p align="center">
+  <a href="#-why-verbum-exists">Why it exists</a> •
   <a href="#-what-you-get">What you get</a> •
-  <a href="#-features-at-a-glance">Features</a> •
+  <a href="#-features">Features</a> •
   <a href="#-quick-start">Quick start</a> •
   <a href="#-architecture">Architecture</a> •
   <a href="#-api-reference">API</a> •
@@ -25,23 +30,31 @@
 
 ---
 
+## Why Verbum exists
+
+Premium Bible study software costs $400+ and locks scholarly tools — interlinear texts, semantic graphs, cross-reference maps — behind paywalls. That means students, pastors in developing communities, and anyone without a credit card are shut out from the same depth of study.
+
+The biblical text belongs to humanity. It was written, copied, translated, and preserved across millennia so it could be read — not sold.
+
+Verbum is 100% free, open-source (MIT), and runs locally in your browser. No accounts, no subscriptions, no data collection. A Brazilian developer and an AI built it together, sprint by sprint, to deliver what the text always deserved: **unrestricted access to deep study, for everyone**.
+
+---
+
 ## What you get
 
-A complete Bible study ecosystem — ETL pipeline, REST API, React reader, and AI insights:
-
-| Metric | Count |
-|--------|-------|
-| **Verses** | 302,503 across 10 translations in 5 languages |
-| **Cross-references** | 344,754 (OpenBible.info) |
-| **Strong's entries** | 14,870 (Hebrew + Greek lexicon) |
-| **Interlinear words** | 800K+ (TAGNT + TAHOT via STEPBible) |
-| **Biblical people** | 3,000+ with family trees and timelines |
-| **Biblical places** | 1,600+ with coordinates and events |
-| **Topical index** | 20,000+ topics (Nave's Topical Bible) |
-| **API endpoints** | 82 across 22 routers |
-| **Frontend pages** | 26 interactive surfaces |
-| **Test cases** | 385 (pytest) |
-| **Languages (UI)** | English, Portuguese, Spanish |
+| | |
+|---|---|
+| **302,503 verses** | 10 translations across 5 languages (EN, PT, ES, FR) |
+| **344,754 cross-references** | Full intertextual mapping from OpenBible.info |
+| **800,000+ interlinear words** | Greek (TAGNT) and Hebrew (TAHOT) with morphology |
+| **14,870 Strong's entries** | Complete Hebrew + Greek lexicon |
+| **3,000+ biblical people** | Family trees, timelines, tribe and gender filters |
+| **1,600+ biblical places** | Coordinates, events, interactive maps |
+| **20,000+ topics** | Nave's Topical Bible, searchable |
+| **82 API endpoints** | 22 RESTful routers powered by DuckDB |
+| **26 frontend pages** | React 19 + Tailwind, fully responsive |
+| **385 test cases** | pytest with seeded fixtures |
+| **3 languages (UI)** | English, Portuguese, Spanish |
 
 ### Translations
 
@@ -54,60 +67,68 @@ A complete Bible study ecosystem — ETL pipeline, REST API, React reader, and A
 
 ---
 
-## Features at a glance
+## Features
 
-### Reading & Study
-| Feature | Route | Description |
-|---------|-------|-------------|
-| **Reader** | `/reader` | Three modes: single, parallel (2 translations), immersive (3D book spread with page flip) |
-| **Search** | `/search` | Full-text search with keyword pills, sentiment badges, popular verses |
-| **Bookmarks** | `/bookmarks` | Local bookmarks with seeded suggestions |
-| **Notes** | `/notes` | Personal study notes (localStorage) |
-| **Reading Plans** | `/plans` | Multi-day reading plans with progress tracking |
-| **Compare** | `/compare` | Synoptic parallel viewer (Last Supper, Beatitudes, etc.) with custom passages |
-| **Dictionary** | `/dictionary` | Easton's + Smith's Bible Dictionary, 7,000+ entries |
+### The Reader — the heart of the platform
+
+Three reading modes designed for different depths of focus:
+
+- **Single view** — full text with per-verse actions (cross-refs, AI, compare, save, copy)
+- **Parallel view** — two translations side by side for comparative study
+- **Immersive mode** — a 3D book spread with page-flip animation, designed for contemplation
 
 ### Languages & Interlinear
-| Feature | Route | Description |
-|---------|-------|-------------|
-| **Word Study** | `/word-study/:id` | Strong's concordance + interlinear view + word journey across eras |
-| **Semantic Graph** | `/semantic-graph` | D3 force-directed graph of word co-occurrences |
-| **Translation Divergence** | — | Side-by-side comparison of how translations render the same Greek/Hebrew word |
+
+| Feature | Description |
+|---------|-------------|
+| **Word Study** (`/word-study/:id`) | Strong's concordance + interlinear view + word journey across eras |
+| **Semantic Graph** (`/semantic-graph`) | D3 force-directed graph of word co-occurrences |
+| **Translation Divergence** | How different translations render the same Greek/Hebrew word |
 
 ### People, Places & Geography
-| Feature | Route | Description |
-|---------|-------|-------------|
-| **Authors** | `/authors` | 40 biblical authors with literary style and vocab fingerprints |
-| **People** | `/people` | 3,000+ biblical persons — search, filter by gender/tribe/book, family trees |
-| **Places** | `/places` | 1,600+ locations with coordinates, events, and type filters |
-| **Map** | `/map` | Interactive Leaflet map with era filters and journey routes (Paul's journeys, Exodus) |
-| **Timeline** | `/timeline` | Cross-referenced biblical + secular events on a zoomable D3 timeline |
 
-### Topics & Devotional
-| Feature | Route | Description |
-|---------|-------|-------------|
-| **Topics** | `/topics` | 20,000+ Nave's topics — search-first UI with popular chips |
-| **Devotional** | `/devotional` | Thematic reading plans (Names of God, Forgiveness, etc.) with verse text |
+| Feature | Description |
+|---------|-------------|
+| **People** (`/people`) | 3,000+ biblical persons — search, filter, family trees |
+| **Places** (`/places`) | 1,600+ locations with coordinates and historical events |
+| **Map** (`/map`) | Interactive Leaflet map with era filters and journey routes |
+| **Timeline** (`/timeline`) | Biblical + secular events on a zoomable D3 timeline |
+| **Authors** (`/authors`) | 40 biblical authors with literary style and vocab fingerprints |
+
+### Study & Devotional
+
+| Feature | Description |
+|---------|-------------|
+| **Search** (`/search`) | Full-text search with keyword pills, sentiment badges, popular verses |
+| **Bookmarks** (`/bookmarks`) | Local bookmarks with seeded suggestions |
+| **Notes** (`/notes`) | Personal study notes (localStorage) |
+| **Reading Plans** (`/plans`) | Multi-day plans with progress tracking |
+| **Compare** (`/compare`) | Synoptic parallel viewer (Last Supper, Beatitudes, etc.) |
+| **Dictionary** (`/dictionary`) | Easton's + Smith's, 7,000+ entries |
+| **Topics** (`/topics`) | 20,000+ Nave's topics with popular chips |
+| **Devotional** (`/devotional`) | Thematic reading plans with verse text |
 
 ### AI & Deep Analysis
-| Feature | Route | Description |
-|---------|-------|-------------|
-| **AI Explain** | (in Reader) | Google Gemini per-verse explanations in EN/PT, cached on disk |
-| **Deep Analytics** | `/deep-analytics` | Hapax legomena, vocabulary richness, lexical density heatmaps |
-| **Intertextuality** | `/intertextuality` | OT→NT citation heatmap + quotation graph |
-| **Open Questions** | `/open-questions` | 15 curated scholarly debates with multiple perspectives |
-| **Semantic Threads** | `/threads` | Auto-discovered thematic threads spanning distant books |
-| **Literary Structure** | `/structure` | Chiasms, parallelisms, inclusio across 10+ passages |
+
+| Feature | Description |
+|---------|-------------|
+| **AI Explain** (in Reader) | Google Gemini per-verse explanations (EN/PT), cached on disk |
+| **Emotional Landscape** (`/emotional`) | Per-verse NLP sentiment flow + book emotional profiles |
+| **Semantic Threads** (`/threads`) | Auto-discovered thematic threads spanning distant books |
+| **Arc Diagram** (`/arc-diagram`) | 344K cross-refs as canvas arcs at 60fps |
+| **Intertextuality** (`/intertextuality`) | OT→NT citation heatmap + quotation graph |
+| **Deep Analytics** (`/deep-analytics`) | Hapax legomena, vocabulary richness, lexical density |
+| **Literary Structure** (`/structure`) | Chiasms, parallelisms, inclusio |
+| **Open Questions** (`/open-questions`) | 15 curated scholarly debates with multiple perspectives |
 
 ### Community & Polish
-| Feature | Route | Description |
-|---------|-------|-------------|
-| **Emotional Landscape** | `/emotional` | Per-verse sentiment flow charts + book emotional profiles |
-| **Community Notes** | `/community` | Curated scholarly observations per verse, searchable |
-| **Arc Diagram** | `/arc-diagram` | 344K cross-refs as canvas arcs at 60fps, click to explore |
-| **i18n** | (sidebar) | Flag selector for EN/PT/ES, auto-detects browser language |
-| **Commentary** | (in Reader) | 6 external commentaries via HelloAO (Matthew Henry, John Gill, etc.) |
-| **Streak** | (sidebar) | Reading streak tracker with daily badge |
+
+| Feature | Description |
+|---------|-------------|
+| **Community Notes** (`/community`) | Curated scholarly observations per verse |
+| **Commentary** (in Reader) | 6 external commentaries via HelloAO |
+| **i18n** (sidebar) | Flag selector for EN/PT/ES, auto-detects browser language |
+| **Streak** (sidebar) | Reading streak tracker with daily badge |
 
 ---
 
@@ -288,7 +309,6 @@ cd frontend && npm run build       # production build
 
 - **32 test files** covering all API routers, extractors, transforms, and loaders
 - **385 test cases** with parameterised fixtures and seeded DuckDB
-- Backend routers for all Fase 0-4 features have dedicated test suites
 - Markers: `@pytest.mark.integration`, `@pytest.mark.slow`
 
 ---
@@ -312,22 +332,16 @@ cd frontend && npm run build       # production build
 
 ---
 
-## Development roadmap
+## The journey
 
-### Completed
+- **v1.0** — Proof of concept: Python ETL pipeline + Streamlit dashboard
+- **v2.0** — The foundation: FastAPI + React reader (single/parallel/immersive) + arc diagram + search
+- **v3.0** — Academic tools: Strong's concordance + interlinear + semantic graph + dictionary + word study
+- **v4.0** — The full ecosystem: 17 new features across geography, AI analysis, devotional content, and community — built with [Claude Code](https://claude.ai/code) as a pair programmer
 
-- **v1.0** — Pipeline + Streamlit dashboard
-- **v2.0** — FastAPI + React reader (single/parallel/immersive) + arc diagram + search + bookmarks
-- **v3.0** — Strong's concordance + interlinear + semantic graph + dictionary + commentary + word study
-- **v4.0** — 17 new features across 4 phases:
-  - Fase 0+1: Infrastructure extractors + geography & people (authors, people, places, map, timeline)
-  - Fase 2: Advanced study (compare, topics, devotional)
-  - Fase 3: AI analysis (word journey, hapax, intertextuality, open questions, threads, literary structure)
-  - Fase 4: Community & polish (emotional landscape, i18n, community notes)
+### What's next
 
-### Future
-
-- Cloud deployment (GCP Cloud Run + BigQuery + Terraform)
+- Cloud deployment (GCP Cloud Run + BigQuery)
 - Three.js 3D emotional terrain visualization
 - User accounts + community note submissions
 - Mobile PWA optimization
@@ -348,4 +362,8 @@ cd frontend && npm run build       # production build
 
 MIT — see [LICENSE](LICENSE).
 
-<p align="center"><strong>Built one sprint at a time with Claude Code</strong></p>
+<p align="center">
+  <em>Free and open-source. Built for the community.</em>
+  <br>
+  <strong>A Brazilian developer and an AI, one sprint at a time.</strong>
+</p>
