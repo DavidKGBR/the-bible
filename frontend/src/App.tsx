@@ -11,6 +11,11 @@ import WordStudyPage from "./pages/WordStudyPage";
 import DictionaryPage from "./pages/DictionaryPage";
 import SemanticGraphPage from "./pages/SemanticGraphPage";
 import TranslationDivergencePage from "./pages/TranslationDivergencePage";
+import AuthorsPage from "./pages/AuthorsPage";
+import PeoplePage from "./pages/PeoplePage";
+import PlacesPage from "./pages/PlacesPage";
+import MapPage from "./pages/MapPage";
+import TimelinePage from "./pages/TimelinePage";
 
 export default function App() {
   return (
@@ -27,6 +32,11 @@ export default function App() {
         <Route path="/dictionary" element={<DictionaryPage />} />
         <Route path="/semantic-graph" element={<SemanticGraphPage />} />
         <Route path="/translation-divergence" element={<TranslationDivergencePage />} />
+        <Route path="/authors" element={<AuthorsPage />} />
+        <Route path="/people" element={<PeoplePage />} />
+        <Route path="/places" element={<PlacesPage />} />
+        <Route path="/map" element={<MapPage />} />
+        <Route path="/timeline" element={<TimelinePage />} />
       </Route>
     </Routes>
   );

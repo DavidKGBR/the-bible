@@ -165,6 +165,8 @@ class DuckDBLoader:
         self._ensure_original_texts_table()
         self._ensure_interlinear_table()
         self._ensure_dictionary_table()
+        self._ensure_theographic_tables()
+        self._ensure_topics_tables()
 
         self._create_analytical_views()
         logger.info("✅ Schema created successfully")
@@ -675,6 +677,328 @@ class DuckDBLoader:
             ],
         )
 
+    # ── Theographic (people, places, events, family) ────────────────────────
+
+    def _ensure_theographic_tables(self) -> None:
+        """Create theographic tables if they don't exist. Idempotent."""
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS biblical_people (
+                person_id       VARCHAR PRIMARY KEY,
+                slug            VARCHAR NOT NULL,
+                name            VARCHAR NOT NULL,
+                gender          VARCHAR,
+                birth_year      INTEGER,
+                death_year      INTEGER,
+                description     VARCHAR,
+                also_called     VARCHAR,
+                tribe           VARCHAR,
+                occupation      VARCHAR,
+                books_mentioned VARCHAR,
+                verse_count     INTEGER DEFAULT 0,
+                min_year        INTEGER,
+                max_year        INTEGER,
+                loaded_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_people_slug "
+            "ON biblical_people(slug);"
+        )
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_people_name "
+            "ON biblical_people(name);"
+        )
+
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS biblical_places (
+                place_id        VARCHAR PRIMARY KEY,
+                slug            VARCHAR NOT NULL,
+                name            VARCHAR NOT NULL,
+                latitude        DOUBLE,
+                longitude       DOUBLE,
+                geo_confidence  DOUBLE,
+                place_type      VARCHAR,
+                description     VARCHAR,
+                also_called     VARCHAR,
+                verse_count     INTEGER DEFAULT 0,
+                loaded_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_places_slug "
+            "ON biblical_places(slug);"
+        )
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_places_name "
+            "ON biblical_places(name);"
+        )
+
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS biblical_events (
+                event_id        VARCHAR PRIMARY KEY,
+                title           VARCHAR NOT NULL,
+                description     VARCHAR,
+                start_year      INTEGER,
+                sort_key        DOUBLE,
+                duration        VARCHAR,
+                era             VARCHAR,
+                participants    VARCHAR,
+                locations       VARCHAR,
+                verse_refs      VARCHAR,
+                loaded_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_events_era "
+            "ON biblical_events(era);"
+        )
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_events_year "
+            "ON biblical_events(start_year);"
+        )
+
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS family_relations (
+                person_id           VARCHAR NOT NULL,
+                related_person_id   VARCHAR NOT NULL,
+                relation_type       VARCHAR NOT NULL,
+                loaded_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (person_id, related_person_id, relation_type)
+            );
+        """)
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_family_person "
+            "ON family_relations(person_id);"
+        )
+
+    def load_biblical_people(self, df: pd.DataFrame) -> int:
+        """Replace all biblical people rows."""
+        if df.empty:
+            return 0
+        self._ensure_theographic_tables()
+        logger.info("Loading %d biblical people into DuckDB...", len(df))
+        self.conn.execute("DELETE FROM biblical_people;")
+        self.conn.execute("""
+            INSERT INTO biblical_people (
+                person_id, slug, name, gender, birth_year, death_year,
+                description, also_called, tribe, occupation,
+                books_mentioned, verse_count, min_year, max_year
+            )
+            SELECT
+                person_id, slug, name, gender, birth_year, death_year,
+                description, also_called, tribe, occupation,
+                books_mentioned, verse_count, min_year, max_year
+            FROM df
+        """)
+        count = self.conn.execute(
+            "SELECT COUNT(*) FROM biblical_people"
+        ).fetchone()[0]  # type: ignore[index]
+        logger.info("Loaded %d biblical people", count)
+        return count
+
+    def load_biblical_places(self, df: pd.DataFrame) -> int:
+        """Replace all biblical places rows."""
+        if df.empty:
+            return 0
+        self._ensure_theographic_tables()
+        logger.info("Loading %d biblical places into DuckDB...", len(df))
+        self.conn.execute("DELETE FROM biblical_places;")
+        self.conn.execute("""
+            INSERT INTO biblical_places (
+                place_id, slug, name, latitude, longitude,
+                geo_confidence, place_type, description,
+                also_called, verse_count
+            )
+            SELECT
+                place_id, slug, name, latitude, longitude,
+                geo_confidence, place_type, description,
+                also_called, verse_count
+            FROM df
+        """)
+        count = self.conn.execute(
+            "SELECT COUNT(*) FROM biblical_places"
+        ).fetchone()[0]  # type: ignore[index]
+        logger.info("Loaded %d biblical places", count)
+        return count
+
+    def load_biblical_events(self, df: pd.DataFrame) -> int:
+        """Replace all biblical events rows."""
+        if df.empty:
+            return 0
+        self._ensure_theographic_tables()
+        logger.info("Loading %d biblical events into DuckDB...", len(df))
+        self.conn.execute("DELETE FROM biblical_events;")
+        self.conn.execute("""
+            INSERT INTO biblical_events (
+                event_id, title, description, start_year, sort_key,
+                duration, era, participants, locations, verse_refs
+            )
+            SELECT
+                event_id, title, description, start_year, sort_key,
+                duration, era, participants, locations, verse_refs
+            FROM df
+        """)
+        count = self.conn.execute(
+            "SELECT COUNT(*) FROM biblical_events"
+        ).fetchone()[0]  # type: ignore[index]
+        logger.info("Loaded %d biblical events", count)
+        return count
+
+    def load_family_relations(self, df: pd.DataFrame) -> int:
+        """Replace all family relations rows."""
+        if df.empty:
+            return 0
+        self._ensure_theographic_tables()
+        logger.info("Loading %d family relations into DuckDB...", len(df))
+        self.conn.execute("DELETE FROM family_relations;")
+        self.conn.execute("""
+            INSERT INTO family_relations (
+                person_id, related_person_id, relation_type
+            )
+            SELECT person_id, related_person_id, relation_type
+            FROM df
+        """)
+        count = self.conn.execute(
+            "SELECT COUNT(*) FROM family_relations"
+        ).fetchone()[0]  # type: ignore[index]
+        logger.info("Loaded %d family relations", count)
+        return count
+
+    # ── Nave's Topical Bible ────────────────────────────────────────────────
+
+    def _ensure_topics_tables(self) -> None:
+        """Create topics tables if they don't exist. Idempotent."""
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS topics (
+                topic_id        VARCHAR PRIMARY KEY,
+                name            VARCHAR NOT NULL,
+                slug            VARCHAR NOT NULL,
+                verse_count     INTEGER DEFAULT 0,
+                loaded_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_topics_slug ON topics(slug);"
+        )
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_topics_name ON topics(name);"
+        )
+
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS topic_verses (
+                topic_id        VARCHAR NOT NULL,
+                verse_id        VARCHAR NOT NULL,
+                sort_order      INTEGER NOT NULL,
+                loaded_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (topic_id, verse_id)
+            );
+        """)
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_topic_verses_verse "
+            "ON topic_verses(verse_id);"
+        )
+
+    def load_topics(self, df: pd.DataFrame) -> int:
+        """Replace all topics rows."""
+        if df.empty:
+            return 0
+        self._ensure_topics_tables()
+        logger.info("Loading %d topics into DuckDB...", len(df))
+        self.conn.execute("DELETE FROM topics;")
+        self.conn.execute("""
+            INSERT INTO topics (topic_id, name, slug, verse_count)
+            SELECT topic_id, name, slug, verse_count
+            FROM df
+        """)
+        count = self.conn.execute(
+            "SELECT COUNT(*) FROM topics"
+        ).fetchone()[0]  # type: ignore[index]
+        logger.info("Loaded %d topics", count)
+        return count
+
+    def load_topic_verses(self, df: pd.DataFrame) -> int:
+        """Replace all topic_verses rows."""
+        if df.empty:
+            return 0
+        self._ensure_topics_tables()
+        logger.info("Loading %d topic-verse links into DuckDB...", len(df))
+        self.conn.execute("DELETE FROM topic_verses;")
+        self.conn.execute("""
+            INSERT INTO topic_verses (topic_id, verse_id, sort_order)
+            SELECT topic_id, verse_id, sort_order
+            FROM df
+        """)
+        count = self.conn.execute(
+            "SELECT COUNT(*) FROM topic_verses"
+        ).fetchone()[0]  # type: ignore[index]
+        logger.info("Loaded %d topic-verse links", count)
+        return count
+
+    def enrich_places_geocoding(self, df: pd.DataFrame) -> int:
+        """Enrich biblical_places with coordinates from OpenBible Geocoding.
+
+        The DataFrame must have columns: name, latitude, longitude,
+        geo_confidence, place_type. Matching is done on a normalised
+        lowercase name against the existing biblical_places.name.
+
+        Places that already have coordinates from Theographic are updated
+        only if the OpenBible confidence is higher.
+
+        New places not in Theographic are inserted as well.
+        """
+        if df.empty:
+            return 0
+        self._ensure_theographic_tables()
+
+        # Register the incoming DataFrame for DuckDB access
+        self.conn.register("geo_df", df)
+
+        # Update existing places: set coords where missing or lower confidence
+        self.conn.execute("""
+            UPDATE biblical_places AS bp
+            SET
+                latitude = g.latitude,
+                longitude = g.longitude,
+                geo_confidence = g.geo_confidence,
+                place_type = COALESCE(bp.place_type, g.place_type)
+            FROM geo_df AS g
+            WHERE LOWER(bp.name) = LOWER(g.name)
+              AND (bp.latitude IS NULL
+                   OR COALESCE(bp.geo_confidence, 0) < g.geo_confidence)
+        """)
+
+        # Insert places not already in the table
+        self.conn.execute("""
+            INSERT INTO biblical_places (
+                place_id, slug, name, latitude, longitude,
+                geo_confidence, place_type, verse_count
+            )
+            SELECT
+                'geo_' || ROW_NUMBER() OVER () AS place_id,
+                LOWER(REPLACE(REPLACE(g.name, ' ', '_'), '''', '')) AS slug,
+                g.name,
+                g.latitude,
+                g.longitude,
+                g.geo_confidence,
+                g.place_type,
+                0 AS verse_count
+            FROM geo_df AS g
+            WHERE NOT EXISTS (
+                SELECT 1 FROM biblical_places bp
+                WHERE LOWER(bp.name) = LOWER(g.name)
+            )
+        """)
+
+        self.conn.unregister("geo_df")
+
+        total = self.conn.execute(
+            "SELECT COUNT(*) FROM biblical_places WHERE latitude IS NOT NULL"
+        ).fetchone()[0]  # type: ignore[index]
+        logger.info(
+            "Geocoding enrichment: %d places now have coordinates", total
+        )
+        return total
+
     def query(self, sql: str) -> pd.DataFrame:
         """Run an arbitrary SQL query and return results as DataFrame."""
         return self.conn.execute(sql).fetchdf()
@@ -727,5 +1051,41 @@ class DuckDBLoader:
             result["dictionary_entries"] = row[0] if row else 0
         except Exception:
             result["dictionary_entries"] = 0
+
+        try:
+            row = self.conn.execute("SELECT COUNT(*) FROM topics").fetchone()
+            result["topics"] = row[0] if row else 0
+        except Exception:
+            result["topics"] = 0
+
+        try:
+            row = self.conn.execute("SELECT COUNT(*) FROM topic_verses").fetchone()
+            result["topic_verses"] = row[0] if row else 0
+        except Exception:
+            result["topic_verses"] = 0
+
+        try:
+            row = self.conn.execute("SELECT COUNT(*) FROM biblical_people").fetchone()
+            result["biblical_people"] = row[0] if row else 0
+        except Exception:
+            result["biblical_people"] = 0
+
+        try:
+            row = self.conn.execute("SELECT COUNT(*) FROM biblical_places").fetchone()
+            result["biblical_places"] = row[0] if row else 0
+        except Exception:
+            result["biblical_places"] = 0
+
+        try:
+            row = self.conn.execute("SELECT COUNT(*) FROM biblical_events").fetchone()
+            result["biblical_events"] = row[0] if row else 0
+        except Exception:
+            result["biblical_events"] = 0
+
+        try:
+            row = self.conn.execute("SELECT COUNT(*) FROM family_relations").fetchone()
+            result["family_relations"] = row[0] if row else 0
+        except Exception:
+            result["family_relations"] = 0
 
         return result

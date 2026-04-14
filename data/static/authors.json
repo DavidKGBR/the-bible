@@ -1,0 +1,299 @@
+[
+  {
+    "author_id": "moses",
+    "name": "Moses",
+    "period": "~1400 BC",
+    "testament": "OT",
+    "books": ["GEN", "EXO", "LEV", "NUM", "DEU"],
+    "literary_style": "Law, Narrative, Poetry",
+    "description": "Leader of Israel's exodus from Egypt. Traditionally credited with writing the Torah (Pentateuch), the foundational texts of Israelite law, history, and identity."
+  },
+  {
+    "author_id": "joshua",
+    "name": "Joshua",
+    "period": "~1350 BC",
+    "testament": "OT",
+    "books": ["JOS"],
+    "literary_style": "Historical Narrative",
+    "description": "Moses' successor who led Israel into the Promised Land. His book chronicles the conquest and settlement of Canaan."
+  },
+  {
+    "author_id": "samuel",
+    "name": "Samuel / Nathan / Gad",
+    "period": "~1050–950 BC",
+    "testament": "OT",
+    "books": ["JDG", "RUT", "1SA", "2SA"],
+    "literary_style": "Historical Narrative",
+    "description": "Samuel was the last judge and first major prophet, who anointed both Saul and David. Traditionally credited alongside prophets Nathan and Gad for the historical books of this era."
+  },
+  {
+    "author_id": "david",
+    "name": "David",
+    "period": "~1000 BC",
+    "testament": "OT",
+    "books": ["PSA"],
+    "literary_style": "Poetry, Hymns, Lament",
+    "description": "Israel's greatest king, warrior, and poet. Credited with writing roughly half the Psalms — songs of praise, lament, thanksgiving, and royal ceremony."
+  },
+  {
+    "author_id": "solomon",
+    "name": "Solomon",
+    "period": "~950 BC",
+    "testament": "OT",
+    "books": ["PRO", "ECC", "SNG"],
+    "literary_style": "Wisdom Literature, Poetry",
+    "description": "David's son, known as the wisest man in the ancient world. Built the First Temple and authored proverbs, philosophical reflections, and love poetry."
+  },
+  {
+    "author_id": "isaiah",
+    "name": "Isaiah",
+    "period": "~740–680 BC",
+    "testament": "OT",
+    "books": ["ISA"],
+    "literary_style": "Prophetic Poetry, Oracle",
+    "description": "The 'prince of prophets' who served under four kings of Judah. His book contains sweeping messianic prophecies alongside social justice oracles."
+  },
+  {
+    "author_id": "jeremiah",
+    "name": "Jeremiah",
+    "period": "~627–580 BC",
+    "testament": "OT",
+    "books": ["JER", "LAM", "1KI", "2KI"],
+    "literary_style": "Prophetic Poetry, Lament, Narrative",
+    "description": "The 'weeping prophet' who warned Judah before the Babylonian exile. Also credited with Kings and the deeply emotional Lamentations."
+  },
+  {
+    "author_id": "ezekiel",
+    "name": "Ezekiel",
+    "period": "~593–571 BC",
+    "testament": "OT",
+    "books": ["EZK"],
+    "literary_style": "Prophetic Vision, Apocalyptic",
+    "description": "A priest and prophet who ministered to exiles in Babylon. Known for elaborate symbolic visions — the valley of dry bones, the wheel within a wheel, the restored temple."
+  },
+  {
+    "author_id": "daniel",
+    "name": "Daniel",
+    "period": "~605–530 BC",
+    "testament": "OT",
+    "books": ["DAN"],
+    "literary_style": "Apocalyptic, Narrative",
+    "description": "A Jewish exile who rose to prominence in the Babylonian and Persian courts. His book combines court narratives with sweeping apocalyptic visions."
+  },
+  {
+    "author_id": "ezra",
+    "name": "Ezra",
+    "period": "~450 BC",
+    "testament": "OT",
+    "books": ["EZR", "NEH", "1CH", "2CH"],
+    "literary_style": "Historical Narrative, Genealogy",
+    "description": "A priest and scribe who led the return from Babylonian exile and restored the Torah. Traditionally credited with Chronicles, Ezra, and Nehemiah."
+  },
+  {
+    "author_id": "hosea",
+    "name": "Hosea",
+    "period": "~750 BC",
+    "testament": "OT",
+    "books": ["HOS"],
+    "literary_style": "Prophetic Poetry",
+    "description": "Prophet to the northern kingdom of Israel whose marriage to an unfaithful wife became a powerful metaphor for God's relationship with Israel."
+  },
+  {
+    "author_id": "joel",
+    "name": "Joel",
+    "period": "~835 BC",
+    "testament": "OT",
+    "books": ["JOL"],
+    "literary_style": "Prophetic Poetry, Apocalyptic",
+    "description": "Prophet who used a devastating locust plague as a springboard for prophecy about the Day of the Lord and the outpouring of the Spirit."
+  },
+  {
+    "author_id": "amos",
+    "name": "Amos",
+    "period": "~760 BC",
+    "testament": "OT",
+    "books": ["AMO"],
+    "literary_style": "Prophetic Oracle",
+    "description": "A shepherd from Tekoa who delivered thunderous social justice oracles against the wealthy elite of the northern kingdom."
+  },
+  {
+    "author_id": "obadiah",
+    "name": "Obadiah",
+    "period": "~586 BC",
+    "testament": "OT",
+    "books": ["OBA"],
+    "literary_style": "Prophetic Oracle",
+    "description": "Author of the shortest book in the Old Testament — a single chapter pronouncing judgment against Edom for betraying Judah."
+  },
+  {
+    "author_id": "jonah",
+    "name": "Jonah",
+    "period": "~760 BC",
+    "testament": "OT",
+    "books": ["JON"],
+    "literary_style": "Narrative, Satire",
+    "description": "The reluctant prophet who fled from God's call to preach to Nineveh. His story explores divine mercy extending beyond Israel."
+  },
+  {
+    "author_id": "micah",
+    "name": "Micah",
+    "period": "~735–700 BC",
+    "testament": "OT",
+    "books": ["MIC"],
+    "literary_style": "Prophetic Poetry",
+    "description": "A rural prophet from Moresheth who challenged both Samaria and Jerusalem with messages of justice, mercy, and future restoration."
+  },
+  {
+    "author_id": "nahum",
+    "name": "Nahum",
+    "period": "~663–612 BC",
+    "testament": "OT",
+    "books": ["NAM"],
+    "literary_style": "Prophetic Poetry",
+    "description": "Prophet who proclaimed the fall of Nineveh (Assyrian capital). His vivid poetry describes divine judgment against oppression."
+  },
+  {
+    "author_id": "habakkuk",
+    "name": "Habakkuk",
+    "period": "~608 BC",
+    "testament": "OT",
+    "books": ["HAB"],
+    "literary_style": "Prophetic Dialogue, Hymn",
+    "description": "Unique among prophets for dialoguing directly with God about injustice. His book ends with one of the most powerful hymns in the Old Testament."
+  },
+  {
+    "author_id": "zephaniah",
+    "name": "Zephaniah",
+    "period": "~630 BC",
+    "testament": "OT",
+    "books": ["ZEP"],
+    "literary_style": "Prophetic Oracle",
+    "description": "A royal descendant who prophesied during King Josiah's reforms, warning of cosmic judgment and promising a humble remnant."
+  },
+  {
+    "author_id": "haggai",
+    "name": "Haggai",
+    "period": "~520 BC",
+    "testament": "OT",
+    "books": ["HAG"],
+    "literary_style": "Prophetic Exhortation",
+    "description": "Post-exilic prophet who challenged the returned community to rebuild the Temple, promising that its future glory would surpass the former."
+  },
+  {
+    "author_id": "zechariah",
+    "name": "Zechariah",
+    "period": "~520–480 BC",
+    "testament": "OT",
+    "books": ["ZEC"],
+    "literary_style": "Prophetic Vision, Apocalyptic",
+    "description": "Contemporary of Haggai whose eight night visions encouraged Temple reconstruction. His later chapters contain messianic prophecies cited in the Gospels."
+  },
+  {
+    "author_id": "malachi",
+    "name": "Malachi",
+    "period": "~430 BC",
+    "testament": "OT",
+    "books": ["MAL"],
+    "literary_style": "Prophetic Dialogue",
+    "description": "The last prophetic voice of the Old Testament, using a confrontational question-and-answer style to challenge spiritual apathy."
+  },
+  {
+    "author_id": "mordecai_esther",
+    "name": "Mordecai / Esther",
+    "period": "~470 BC",
+    "testament": "OT",
+    "books": ["EST"],
+    "literary_style": "Historical Narrative",
+    "description": "The Book of Esther, traditionally attributed to Mordecai, tells the story of a Jewish queen who saved her people from genocide in the Persian Empire."
+  },
+  {
+    "author_id": "job_unknown",
+    "name": "Unknown (Job)",
+    "period": "~2000–500 BC",
+    "testament": "OT",
+    "books": ["JOB"],
+    "literary_style": "Wisdom Literature, Dramatic Dialogue",
+    "description": "The author of Job is unknown. The book is one of the oldest and most profound explorations of suffering, divine justice, and human faith."
+  },
+  {
+    "author_id": "matthew",
+    "name": "Matthew (Levi)",
+    "period": "~60–70 AD",
+    "testament": "NT",
+    "books": ["MAT"],
+    "literary_style": "Gospel Narrative",
+    "description": "A former tax collector turned apostle. His Gospel emphasizes Jesus as the fulfillment of Old Testament prophecy, written primarily for a Jewish audience."
+  },
+  {
+    "author_id": "mark",
+    "name": "Mark (John Mark)",
+    "period": "~55–65 AD",
+    "testament": "NT",
+    "books": ["MRK"],
+    "literary_style": "Gospel Narrative",
+    "description": "Companion of Peter and Paul. His is the shortest and likely earliest Gospel, written with urgent pace and vivid detail for a Roman audience."
+  },
+  {
+    "author_id": "luke",
+    "name": "Luke",
+    "period": "~60–80 AD",
+    "testament": "NT",
+    "books": ["LUK", "ACT"],
+    "literary_style": "Gospel Narrative, Historical",
+    "description": "A physician and companion of Paul. The most literary of the Gospel writers, he authored both a Gospel and the Acts of the Apostles as a two-volume work."
+  },
+  {
+    "author_id": "john_apostle",
+    "name": "John (Apostle)",
+    "period": "~85–95 AD",
+    "testament": "NT",
+    "books": ["JHN", "1JN", "2JN", "3JN", "REV"],
+    "literary_style": "Gospel, Epistle, Apocalyptic",
+    "description": "The 'beloved disciple', last surviving apostle. His Gospel is deeply theological; his letters address love and truth; Revelation is the Bible's climactic apocalyptic vision."
+  },
+  {
+    "author_id": "paul",
+    "name": "Paul (Saul of Tarsus)",
+    "period": "~49–67 AD",
+    "testament": "NT",
+    "books": ["ROM", "1CO", "2CO", "GAL", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM"],
+    "literary_style": "Epistle, Theological Treatise",
+    "description": "Former Pharisee and persecutor of Christians who became Christianity's greatest missionary theologian. His 13 epistles form the backbone of New Testament theology."
+  },
+  {
+    "author_id": "peter",
+    "name": "Peter (Simon Peter)",
+    "period": "~64–67 AD",
+    "testament": "NT",
+    "books": ["1PE", "2PE"],
+    "literary_style": "Epistle",
+    "description": "The leading apostle, fisherman from Galilee. His letters encourage persecuted believers and warn against false teachers."
+  },
+  {
+    "author_id": "james",
+    "name": "James (Brother of Jesus)",
+    "period": "~49 AD",
+    "testament": "NT",
+    "books": ["JAS"],
+    "literary_style": "Epistle, Wisdom",
+    "description": "Leader of the Jerusalem church and half-brother of Jesus. His practical epistle on faith-in-action is the most Jewish book of the New Testament."
+  },
+  {
+    "author_id": "jude",
+    "name": "Jude (Brother of Jesus)",
+    "period": "~65 AD",
+    "testament": "NT",
+    "books": ["JUD"],
+    "literary_style": "Epistle",
+    "description": "Another half-brother of Jesus who wrote a short, fiery letter warning against false teachers who had infiltrated the church."
+  },
+  {
+    "author_id": "hebrews_unknown",
+    "name": "Unknown (Hebrews)",
+    "period": "~60–70 AD",
+    "testament": "NT",
+    "books": ["HEB"],
+    "literary_style": "Theological Treatise, Sermon",
+    "description": "The author of Hebrews is unknown (possibly Paul, Apollos, or Barnabas). A masterful theological argument for Christ's superiority over the old covenant system."
+  }
+]

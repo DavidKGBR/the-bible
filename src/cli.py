@@ -16,9 +16,12 @@ from rich.logging import RichHandler
 from src.config import PipelineConfig
 from src.extract.dictionary_extractor import DictionaryExtractor
 from src.extract.morphhb_extractor import MorphHbExtractor
+from src.extract.naves_extractor import NavesExtractor
+from src.extract.openbible_geocoding import OpenBibleGeoExtractor
 from src.extract.sblgnt_extractor import SblgntExtractor
 from src.extract.stepbible_extractor import StepBibleExtractor
 from src.extract.strongs_extractor import StrongsExtractor
+from src.extract.theographic_extractor import TheographicExtractor
 from src.load.duckdb_loader import DuckDBLoader
 from src.models.schemas import InterlinearWord
 from src.pipeline import BiblePipeline
@@ -420,6 +423,150 @@ def dictionary(
         f"\n[green]✓[/green] Loaded [bold]{count:,}[/bold] dictionary entries "
         f"([cyan]{eas:,}[/cyan] Easton · [cyan]{smi:,}[/cyan] Smith)"
     )
+
+
+@app.command()
+def theographic(
+    cache: bool = typer.Option(True, "--cache/--no-cache", help="Use cached JSON files."),
+    log_level: str = typer.Option("INFO", "--log-level", "-l", help="Logging level"),
+) -> None:
+    """🌍 Extract and load Theographic Bible metadata (people, places, events, family)."""
+    setup_logging(log_level)
+
+    console.print("[bold]🌍 Theographic Bible Metadata[/bold]\n")
+    extractor = TheographicExtractor()
+
+    # Extract in order: people first (builds ID→slug map), then places, events, family
+    people = extractor.extract_people(use_cache=cache)
+    places = extractor.extract_places(use_cache=cache)
+    events = extractor.extract_events(use_cache=cache)
+    relations = extractor.extract_family_relations(use_cache=cache)
+
+    config = PipelineConfig()
+    with DuckDBLoader(config.load) as loader:
+        if people:
+            df_people = pd.DataFrame([p.model_dump() for p in people])
+            count_p = loader.load_biblical_people(df_people)
+            console.print(
+                f"[green]\u2713[/green] Loaded [bold]{count_p:,}[/bold] people"
+            )
+
+        if places:
+            df_places = pd.DataFrame([p.model_dump() for p in places])
+            count_pl = loader.load_biblical_places(df_places)
+            console.print(
+                f"[green]\u2713[/green] Loaded [bold]{count_pl:,}[/bold] places"
+            )
+
+        if events:
+            df_events = pd.DataFrame([e.model_dump() for e in events])
+            count_e = loader.load_biblical_events(df_events)
+            console.print(
+                f"[green]\u2713[/green] Loaded [bold]{count_e:,}[/bold] events"
+            )
+
+        if relations:
+            df_rels = pd.DataFrame([r.model_dump() for r in relations])
+            count_r = loader.load_family_relations(df_rels)
+            console.print(
+                f"[green]\u2713[/green] Loaded [bold]{count_r:,}[/bold] family relations"
+            )
+
+    console.print("\n[green]\u2713 Theographic extraction complete.[/green]")
+
+
+@app.command()
+def geocoding(
+    cache: bool = typer.Option(True, "--cache/--no-cache", help="Use cached JSONL file."),
+    log_level: str = typer.Option("INFO", "--log-level", "-l", help="Logging level"),
+) -> None:
+    """🗺️ Enrich biblical places with OpenBible Geocoding coordinates.
+
+    Downloads ancient.jsonl from openbibleinfo/Bible-Geocoding-Data (CC-BY)
+    and merges lat/long + confidence into the biblical_places table.
+    Run `theographic` first to populate the base place records.
+    """
+    setup_logging(log_level)
+
+    console.print("[bold]🗺️  OpenBible Geocoding[/bold]\n")
+    extractor = OpenBibleGeoExtractor()
+    records = extractor.extract(use_cache=cache)
+
+    if not records:
+        console.print("[red]No geocoding records extracted.[/red]")
+        raise typer.Exit(code=1)
+
+    df = pd.DataFrame(
+        [
+            {
+                "name": r.name,
+                "latitude": r.latitude,
+                "longitude": r.longitude,
+                "geo_confidence": r.confidence,
+                "place_type": r.place_type,
+            }
+            for r in records
+        ]
+    )
+
+    config = PipelineConfig()
+    with DuckDBLoader(config.load) as loader:
+        total_with_coords = loader.enrich_places_geocoding(df)
+
+    console.print(
+        f"\n[green]\u2713[/green] [bold]{total_with_coords:,}[/bold] places now have coordinates "
+        f"(from {len(records):,} OpenBible geocoding records)"
+    )
+
+
+@app.command()
+def naves(
+    cache: bool = typer.Option(True, "--cache/--no-cache", help="Use cached ZIP/txt files."),
+    log_level: str = typer.Option("INFO", "--log-level", "-l", help="Logging level"),
+) -> None:
+    """📚 Extract and load Nave's Topical Bible (~4.7K topics, ~215K verse links)."""
+    setup_logging(log_level)
+
+    console.print("[bold]📚 Nave's Topical Bible[/bold]\n")
+    extractor = NavesExtractor()
+    topics, topic_verses = extractor.extract(use_cache=cache)
+
+    if not topics:
+        console.print("[red]No topics extracted.[/red]")
+        raise typer.Exit(code=1)
+
+    df_topics = pd.DataFrame(
+        [
+            {
+                "topic_id": t.topic_key,
+                "name": t.name,
+                "slug": t.slug,
+                "verse_count": t.verse_count,
+            }
+            for t in topics
+        ]
+    )
+
+    df_verses = pd.DataFrame(
+        [
+            {
+                "topic_id": tv.topic_key,
+                "verse_id": tv.verse_id,
+                "sort_order": tv.sort_order,
+            }
+            for tv in topic_verses
+        ]
+    )
+
+    config = PipelineConfig()
+    with DuckDBLoader(config.load) as loader:
+        count_t = loader.load_topics(df_topics)
+        console.print(f"[green]\u2713[/green] Loaded [bold]{count_t:,}[/bold] topics")
+
+        count_v = loader.load_topic_verses(df_verses)
+        console.print(f"[green]\u2713[/green] Loaded [bold]{count_v:,}[/bold] topic-verse links")
+
+    console.print("\n[green]\u2713 Nave's extraction complete.[/green]")
 
 
 @app.command()

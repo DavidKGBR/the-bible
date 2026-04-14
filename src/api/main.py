@@ -11,12 +11,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.api.routers import (
     ai_insights,
     analytics,
+    authors,
     books,
     crossrefs,
     lexicon,
+    people,
+    places,
     reader,
     search,
     semantic,
+    timeline,
 )
 
 app = FastAPI(
@@ -42,6 +46,10 @@ app.include_router(ai_insights.router, prefix="/api/v1", tags=["AI Insights"])
 app.include_router(books.router, prefix="/api/v1", tags=["Books & Verses"])
 app.include_router(lexicon.router, prefix="/api/v1", tags=["Lexicon & Interlinear"])
 app.include_router(semantic.router, prefix="/api/v1", tags=["Semantic Graph"])
+app.include_router(authors.router, prefix="/api/v1", tags=["Authors"])
+app.include_router(people.router, prefix="/api/v1", tags=["People"])
+app.include_router(places.router, prefix="/api/v1", tags=["Places"])
+app.include_router(timeline.router, prefix="/api/v1", tags=["Timeline"])
 
 
 @app.get("/health")

@@ -6,6 +6,192 @@ async function fetchJson<T>(url: string): Promise<T> {
   return res.json();
 }
 
+// ── Timeline ────────────────────────────────────────────────────────────────
+
+export interface TimelineEra {
+  id: string;
+  name: string;
+  start: number;
+  end: number;
+  color: string;
+}
+
+export interface TimelineEvent {
+  id: string;
+  title: string;
+  year: number;
+  era?: string | null;
+  category?: string | null;
+  description?: string | null;
+  type: "biblical" | "secular";
+  participants?: string[];
+  locations?: string[];
+}
+
+export interface CombinedTimeline {
+  year_min: number;
+  year_max: number;
+  biblical: TimelineEvent[];
+  secular: TimelineEvent[];
+  eras: TimelineEra[];
+}
+
+export async function fetchCombinedTimeline(
+  yearMin = -2200,
+  yearMax = 100
+): Promise<CombinedTimeline> {
+  return fetchJson<CombinedTimeline>(
+    `${BASE}/timeline/combined?year_min=${yearMin}&year_max=${yearMax}`
+  );
+}
+
+// ── Places ──────────────────────────────────────────────────────────────────
+
+export interface BiblicalPlace {
+  place_id: string;
+  slug: string;
+  name: string;
+  latitude: number | null;
+  longitude: number | null;
+  geo_confidence: number | null;
+  place_type: string | null;
+  description: string | null;
+  also_called: string[] | null;
+  verse_count: number;
+  events?: { event_id: string; title: string; start_year: number | null; era: string | null }[];
+}
+
+export interface PlacesListResponse {
+  total: number;
+  limit: number;
+  offset: number;
+  results: BiblicalPlace[];
+}
+
+export interface PlaceTypeCount {
+  place_type: string;
+  count: number;
+}
+
+export async function fetchPlaces(
+  params?: { q?: string; place_type?: string; has_coords?: boolean; limit?: number; offset?: number }
+): Promise<PlacesListResponse> {
+  const sp = new URLSearchParams();
+  if (params?.q) sp.set("q", params.q);
+  if (params?.place_type) sp.set("place_type", params.place_type);
+  if (params?.has_coords !== undefined) sp.set("has_coords", String(params.has_coords));
+  if (params?.limit) sp.set("limit", String(params.limit));
+  if (params?.offset) sp.set("offset", String(params.offset));
+  const qs = sp.toString();
+  return fetchJson<PlacesListResponse>(`${BASE}/places${qs ? `?${qs}` : ""}`);
+}
+
+export async function fetchPlace(slug: string): Promise<BiblicalPlace> {
+  return fetchJson<BiblicalPlace>(`${BASE}/places/${slug}`);
+}
+
+export async function fetchPlaceTypes(): Promise<PlaceTypeCount[]> {
+  const data = await fetchJson<{ types: PlaceTypeCount[] }>(`${BASE}/places/types`);
+  return data.types;
+}
+
+// ── People ──────────────────────────────────────────────────────────────────
+
+export interface BiblicalPerson {
+  person_id: string;
+  slug: string;
+  name: string;
+  gender: string | null;
+  birth_year: number | null;
+  death_year: number | null;
+  description: string | null;
+  also_called: string[] | null;
+  tribe: string | null;
+  occupation: string | null;
+  books_mentioned: string[] | null;
+  verse_count: number;
+  min_year: number | null;
+  max_year: number | null;
+}
+
+export interface PeopleListResponse {
+  total: number;
+  limit: number;
+  offset: number;
+  results: BiblicalPerson[];
+}
+
+export interface FamilyMember {
+  slug: string;
+  name: string;
+  gender: string | null;
+}
+
+export interface FamilyResponse {
+  person: string;
+  relations: Record<string, FamilyMember[]>;
+}
+
+export async function fetchPeople(
+  params?: { q?: string; gender?: string; book?: string; limit?: number; offset?: number }
+): Promise<PeopleListResponse> {
+  const sp = new URLSearchParams();
+  if (params?.q) sp.set("q", params.q);
+  if (params?.gender) sp.set("gender", params.gender);
+  if (params?.book) sp.set("book", params.book);
+  if (params?.limit) sp.set("limit", String(params.limit));
+  if (params?.offset) sp.set("offset", String(params.offset));
+  const qs = sp.toString();
+  return fetchJson<PeopleListResponse>(`${BASE}/people${qs ? `?${qs}` : ""}`);
+}
+
+export async function fetchPerson(slug: string): Promise<BiblicalPerson> {
+  return fetchJson<BiblicalPerson>(`${BASE}/people/${slug}`);
+}
+
+export async function fetchPersonFamily(slug: string): Promise<FamilyResponse> {
+  return fetchJson<FamilyResponse>(`${BASE}/people/${slug}/family`);
+}
+
+// ── Authors ─────────────────────────────────────────────────────────────────
+
+export interface Author {
+  author_id: string;
+  name: string;
+  period: string;
+  testament: string;
+  books: string[];
+  literary_style: string;
+  description: string;
+}
+
+export interface AuthorTopWord {
+  strongs_id: string;
+  gloss: string;
+  occurrences: number;
+}
+
+export interface AuthorStats {
+  unique_strongs: number;
+  total_words: number;
+  total_verses: number;
+  top_words: AuthorTopWord[];
+}
+
+export interface AuthorDetail extends Author {
+  stats: AuthorStats;
+}
+
+export async function fetchAuthors(testament?: string): Promise<Author[]> {
+  const params = testament ? `?testament=${testament}` : "";
+  const data = await fetchJson<{ authors: Author[] }>(`${BASE}/authors${params}`);
+  return data.authors;
+}
+
+export async function fetchAuthorDetail(authorId: string): Promise<AuthorDetail> {
+  return fetchJson<AuthorDetail>(`${BASE}/authors/${authorId}`);
+}
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface Book {
