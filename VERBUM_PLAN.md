@@ -463,7 +463,7 @@ A Bíblia hebraica foi projetada para tradição oral com estruturas complexas q
 | 15 | 5C — Special Passages Engine (10 passagens, áudio proxy, clicáveis) | 🔥🔥🔥🔥🔥 | ✅ Concluído |
 | 16 | 5D — Camada acadêmica (Tibéria + Koiné) | 🔥🔥🔥🔥🔥 | 🗄️ Backlog — Chirp3-HD suficiente |
 | — | **FASE 6-8 — Legado** | | |
-| 17 | Fase 6 — Estruturas quiásticas (Macula-Hebrew + modo Structural) | 🔥🔥🔥🔥🔥 | 🔲 Planejado |
+| 17 | Fase 6 — Engenharia Literária (ChiasmDiagram + modo Structural) | 🔥🔥🔥🔥🔥 | ✅ Concluído |
 | 18 | Fase 7 — Genealogia semântica (chesed → eleos → agape, AT→NT) | 🔥🔥🔥🔥🔥 | 🔲 Planejado |
 | 19 | Fase 8 — BigQuery Public Dataset + infraestrutura como legado | 🔥🔥🔥🔥🔥 | 🔲 Planejado |
 
@@ -706,3 +706,18 @@ entrada lógica — sem depender da memória de conversa.
 - **Limpeza de docs:** `VERBUM_PRESENTATION.md` (197 linhas, framing competitivo desatualizado) e `Verbum - Plano de Legado Transgeracional.md` (55 linhas Gemini) deletados. Conteúdo das Fases 6-8 absorvido no VERBUM_PLAN.md.
 - **Commits desta sessão:** `fix: use el-GR-Wavenet-A`, `fix: upgrade both voices to Chirp3-HD`.
 - **Próxima entrada:** aguardar conclusão da geração de áudio (hebraico ~10h, grego ~6h em paralelo). Depois: Tarefa #12 (Deploy + SEO) ou 5B (contato Foreman/Kantor).
+
+### 2026-04-15 — Fase 6 concluída: Engenharia Literária
+
+- **Contexto:** sessão retomada após compactação. Fase 5C já concluída (10 passagens, áudio proxy Árabe, palavras clicáveis). Usuário pediu "vamos, fase 6".
+- **Escopo entregue:**
+  - `data/static/literary_structures.json`: +4 estruturas — Gênesis 1 (dias forma+preenchimento), Salmo 23 (quiasmo pastoril), Mateus 6:9-13 (Pai Nosso como quiasmo), Filipenses 2:5-11 (Carmen Christi) → total **13 estruturas** no catálogo.
+  - `frontend/src/components/structure/ChiasmDiagram.tsx` *(criado)*: visualização em escada onde o centro é o ponto mais recuado e realçado em dourado. Paleta de 5 cores por profundidade. Para paralelismos e inclusão: layout plano com cores cíclicas. Linha de "estrutura simétrica" mostra a sequência de labels (A · B · CENTER · B' · A').
+  - `frontend/src/components/structure/StructuralView.tsx` *(criado)*: visão de leitura estrutural — carrega estruturas do capítulo atual via `/structure/{book}/{chapter}`, mostra ChiasmDiagram + versículos anotados com badges dos elementos (A/B/CENTER...). Placeholder elegante quando o capítulo não tem estruturas mapeadas.
+  - `frontend/src/pages/StructurePage.tsx` *(reescrito)*: usa ChiasmDiagram em cards expansíveis, filtro por livro (dropdown), stats bar por tipo, link "Abrir em modo Estrutural" por passagem single-chapter.
+  - `frontend/src/pages/ReaderPage.tsx` *(atualizado)*: 5º modo "Estrutural" no mode switcher. Lê `?book=&chapter=&mode=structural` da URL → deep-linkable da StructurePage. StructuralView renderizado inline.
+  - `frontend/src/services/api.ts`: `fetchChapterStructures(book, chapter, translation)` + tipo `LiteraryStructure.type` narrowed para union.
+  - i18n: `reader.structural` em pt/en/es.
+- **Commit:** `64aa719 feat: Fase 6 — Literary Engineering (chiasm diagram + structural reader mode)`.
+- **TypeScript clean:** `npx tsc --noEmit` sem erros.
+- **Próxima entrada:** Fase 7 — Genealogia Semântica (rastreio de conceitos AT→NT), ou Tarefa #12 (Deploy + SEO). A decidir na próxima sessão.
