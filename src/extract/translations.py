@@ -80,6 +80,16 @@ TRANSLATION_REGISTRY: dict[str, Translation] = {
         license="Public Domain",
         source_api="abibliadigital.com.br",
     ),
+    # ── Zefania XML — German ────────────────────────────────────────────
+    "neue": Translation(
+        translation_id="neue",
+        language="de",
+        name="Neue evangelistische Übersetzung",
+        full_name="Neue evangelistische Übersetzung (NeÜ)",
+        year=2024,
+        license="Karl-Heinz Vanheiden",
+        source_api="zefania-xml",
+    ),
     # ── bible-api.com (fallback for translations not on abibliadigital) ──
     "asv": Translation(
         translation_id="asv",
@@ -114,6 +124,7 @@ TRANSLATION_REGISTRY: dict[str, Translation] = {
 
 BIBLE_API_COM_TRANSLATIONS = {"asv", "web", "darby"}
 ABIBLIA_DIGITAL_TRANSLATIONS = {"kjv", "bbe", "nvi", "ra", "acf", "rvr", "apee"}
+ZEFANIA_XML_TRANSLATIONS = {"neue"}
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────

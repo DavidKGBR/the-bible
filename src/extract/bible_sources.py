@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import time
+import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -19,6 +20,7 @@ from src.config import ExtractConfig
 from src.extract.translations import (
     ABIBLIA_DIGITAL_TRANSLATIONS,
     BIBLE_API_COM_TRANSLATIONS,
+    ZEFANIA_XML_TRANSLATIONS,
     get_translation,
 )
 from src.models.schemas import BOOK_CATALOG, RawVerse
@@ -450,6 +452,125 @@ class ABibliaDigitalSource(BibleSource):
         return []
 
 
+# ─── Zefania XML Implementation ─────────────────────────────────────────────
+
+# Maps translation_id → XML file path relative to data/raw/
+ZEFANIA_XML_FILES: dict[str, str] = {
+    "neue": "gerneue/SF_2025-12-07_GER_GERNEUE_(NEUE EVANGELISTISCHE ÜBERSETZUNG).xml",
+}
+
+# Map BOOK_CATALOG position (1-based) to book_id
+_BOOK_NUM_TO_ID: dict[int, tuple[str, str]] = {
+    i + 1: (b["id"], b["name"]) for i, b in enumerate(BOOK_CATALOG)
+}
+
+
+class ZefaniaXMLSource(BibleSource):
+    """Reads Bible data from a local Zefania XML file (no API calls)."""
+
+    def __init__(self, translation_id: str, config: ExtractConfig | None = None) -> None:
+        super().__init__(translation_id, config)
+        rel_path = ZEFANIA_XML_FILES.get(translation_id, "")
+        self.xml_path = Path("data/raw") / rel_path
+        self._parsed: dict[str, dict[int, list[RawVerse]]] | None = None
+
+    def close(self) -> None:
+        self._parsed = None
+
+    def _parse_xml(self) -> dict[str, dict[int, list[RawVerse]]]:
+        """Parse the entire XML file into {book_name: {chapter: [verses]}}."""
+        if self._parsed is not None:
+            return self._parsed
+
+        if not self.xml_path.exists():
+            raise FileNotFoundError(f"Zefania XML not found: {self.xml_path}")
+
+        tree = ET.parse(self.xml_path)  # noqa: S314
+        root = tree.getroot()
+
+        result: dict[str, dict[int, list[RawVerse]]] = {}
+
+        for biblebook in root.findall(".//BIBLEBOOK"):
+            bnumber = int(biblebook.get("bnumber", "0"))
+            if bnumber not in _BOOK_NUM_TO_ID:
+                continue
+            book_id, book_name = _BOOK_NUM_TO_ID[bnumber]
+
+            chapters: dict[int, list[RawVerse]] = {}
+            for chapter_el in biblebook.findall("CHAPTER"):
+                ch_num = int(chapter_el.get("cnumber", "0"))
+                verses: list[RawVerse] = []
+
+                for vers_el in chapter_el.findall("VERS"):
+                    v_num = int(vers_el.get("vnumber", "0"))
+                    # Get all text content (including nested elements)
+                    text = "".join(vers_el.itertext()).strip()
+                    if not text:
+                        continue
+                    verses.append(
+                        RawVerse(
+                            book_id=book_id,
+                            book_name=book_name,
+                            chapter=ch_num,
+                            verse=v_num,
+                            text=text,
+                            translation_id=self.translation_id,
+                            language=self.translation.language,
+                        )
+                    )
+
+                chapters[ch_num] = sorted(verses, key=lambda v: v.verse)
+
+            result[book_name] = chapters
+
+        self._parsed = result
+        total = sum(len(v) for chs in result.values() for v in chs.values())
+        logger.info(f"📖 Parsed {total} verses from Zefania XML: {self.xml_path.name}")
+        return result
+
+    def fetch_chapter(self, book_name: str, chapter: int) -> list[RawVerse]:
+        """Return verses for a single chapter from the parsed XML."""
+        data = self._parse_xml()
+        return data.get(book_name, {}).get(chapter, [])
+
+    def fetch_all(
+        self,
+        output_dir: Path | None = None,
+        books: list[str] | None = None,
+    ) -> list[RawVerse]:
+        """Override fetch_all for instant local loading (no per-chapter API calls)."""
+        data = self._parse_xml()
+        catalog = BOOK_CATALOG
+        if books:
+            catalog = [b for b in catalog if b["id"] in books]
+
+        all_verses: list[RawVerse] = []
+        for book in catalog:
+            book_name = book["name"]
+            book_id = book["id"]
+            chapters = data.get(book_name, {})
+            book_verses: list[RawVerse] = []
+            for _ch_num, ch_verses in sorted(chapters.items()):
+                book_verses.extend(ch_verses)
+
+            all_verses.extend(book_verses)
+
+            if output_dir:
+                output_dir.mkdir(parents=True, exist_ok=True)
+                book_file = output_dir / f"{book_id.lower()}.json"
+                book_file.write_text(
+                    json.dumps(
+                        [v.model_dump() for v in book_verses],
+                        indent=2,
+                        ensure_ascii=False,
+                    ),
+                    encoding="utf-8",
+                )
+
+        logger.info(f"📂 Loaded {len(all_verses)} verses from Zefania XML ({self.translation_id})")
+        return all_verses
+
+
 # ─── Factory ──────────────────────────────────────────────────────────────────
 
 
@@ -464,5 +585,9 @@ def create_source(
         return BibleApiComSource(tid, config)
     if tid in ABIBLIA_DIGITAL_TRANSLATIONS:
         return ABibliaDigitalSource(tid, config)
-    available = ", ".join(sorted(BIBLE_API_COM_TRANSLATIONS | ABIBLIA_DIGITAL_TRANSLATIONS))
+    if tid in ZEFANIA_XML_TRANSLATIONS:
+        return ZefaniaXMLSource(tid, config)
+    available = ", ".join(
+        sorted(BIBLE_API_COM_TRANSLATIONS | ABIBLIA_DIGITAL_TRANSLATIONS | ZEFANIA_XML_TRANSLATIONS)
+    )
     raise ValueError(f"Unknown translation '{translation_id}'. Available: {available}")

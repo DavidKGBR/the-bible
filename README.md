@@ -44,7 +44,7 @@ Verbum is 100% free, open-source (MIT), and runs locally in your browser. No acc
 
 | | |
 |---|---|
-| **302,503 verses** | 10 translations across 5 languages (EN, PT, ES, FR) |
+| **333,657 verses** | 11 translations across 5 languages (EN, PT, ES, FR, DE) |
 | **344,754 cross-references** | Full intertextual mapping from OpenBible.info |
 | **800,000+ interlinear words** | Greek (TAGNT) and Hebrew (TAHOT) with morphology |
 | **14,870 Strong's entries** | Complete Hebrew + Greek lexicon |
