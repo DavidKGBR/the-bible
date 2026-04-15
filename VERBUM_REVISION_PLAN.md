@@ -3,7 +3,7 @@
 > **Status:** Bloqueador do `VERBUM_V1_LAUNCH_PLAN.md`.
 > **Origem:** Auditoria visual do David em 14 abril 2026 — 14 bugs reportados em ~10 superfícies diferentes.
 > **Diagnóstico:** A i18n da Fase 5 cobriu o **chrome do app** (632 chaves: botões, labels, navegação). Os **dados de domínio** (nomes próprios, descrições, eventos curados, jornadas, comparisons, devotional themes) continuam em inglês porque vivem em JSONs estáticos e tabelas DuckDB que nunca foram processadas pela passagem de i18n.
-> **Janela:** ~7 sessões antes do início do `VERBUM_V1_LAUNCH_PLAN.md` (sessão #2 do launch plan passa a ser pós-revisão).
+> **Janela:** ~9 sessões bloqueantes + batches incrementais antes do início do `VERBUM_V1_LAUNCH_PLAN.md` (sessão #2 do launch plan passa a ser pós-revisão).
 >
 > **Decisões já tomadas com o David (15 abril 2026):**
 > - **Emojis nos cards** (Semantic Explorer, etc.): substituir por **SVGs do design system** (mesma família visual da Home), não manter os emojis.
@@ -246,6 +246,144 @@ Reportados na 2ª rodada de auditoria. Mais profundos que F porque envolvem visu
 
 ---
 
+### Sessão R3.5 — Semantic Explorer / Graph polish (UX sem dataset novo)
+
+**Entrega:** os 6 ajustes visíveis no Semantic Explorer/Graph que **não dependem** de dataset multilíngue novo. Depende da R3 (lookup tables) para os labels dos nós.
+
+**Contexto:** David auditou `/semantic-explorer` em PT-BR (15 abr 2026) e apontou que várias partes da UX ainda vazam inglês ou têm polish pendente — especialmente na experiência de explorar conceitos, que é um dos diferenciais visuais do Verbum.
+
+**Tarefas:**
+
+- **G3.b — Label de idioma:** "Idioma: Hebrew/Greek/Aramaic" → "Hebraico/Grego/Aramaico" / "Hebreo/Griego/Arameo". Chaves i18n novas: `lexicon.lang.hebrew`, `lexicon.lang.greek`, `lexicon.lang.aramaic` (ou reusar `passageWord.source.*` que já existe).
+
+- **G3.c — Labels dos nós do grafo:** topics ("POETRY" → "Poesia"), persons ("David" → "Davi"), places ("ISRAEL" preservado). Consome lookup tables da R3 via helpers `personName(id, locale)`, `topicName(id, locale)`, `placeName(id, locale)`.
+
+- **G3.d — Formatter de labels cru:** função `formatNodeLabel(raw: string): string`:
+  - `ISRAEL_PROPHETS` → "Israel Prophets" → (após lookup) "Profetas de Israel"
+  - Title-case seguro (preserva siglas all-caps como "YHWH", "NT", "OT")
+  - Remove underscores + trim
+  - Fallback: retorna o raw se nada bater
+
+- **G3.e — Versículos no idioma do usuário:** backend `/lexicon/{strongs_id}/verses` aceita `?translation=nvi`. Frontend `DetailPanel` passa o translation atual (mesmo selector que ComparePage usa). Replica pattern já existente no Reader.
+
+- **G3.f — Breadcrumb de navegação:** "Trilha" hoje mostra só o nó atual. Trackear array de nós visitados no state do Explorer. UI: `Chêçêd → Davi → Salmos` com clique em qualquer nível pra voltar.
+
+- **G3.g — Posicionamento da legenda:** em grafos densos (25+ nós) a legenda dentro do canvas se sobrepõe. Mover pra fora do canvas, ou tornar colapsável com toggle.
+
+**Critério de done:**
+- Abrir `/semantic-explorer` em PT-BR → clicar em preset "Love in Hebrew & Greek" → clicar em `chêçêd` → nó no grafo tem labels portugueses; painel direito mostra "Idioma: Hebraico"; trilha aparece como breadcrumb; versículos que aparecerem estão em NVI.
+- Definição do Strong's continua em inglês por enquanto com indicador "Definição original em inglês · tradução em refinamento" (isso é produto da R3.6.0 setup, faz o wire-up do indicator aqui).
+
+---
+
+### Sessão R3.6 — Strong's Lexicon multilingual (fluxo humano-LLM batches)
+
+**Entrega:** Colunas `short_definition_pt/_es` e `long_definition_pt/_es` na tabela `strongs_lexicon_multilang`, eliminando a discrepância de ver `DEFINIÇÃO: kindness; by implication (towards God) piety; rarely (by opposition) reproof...` em PT-BR.
+
+**Contexto técnico:**
+Hoje `strongs_lexicon.short_definition` e `.long_definition` são populados uma única vez pelo `openscriptures/strongs` — em inglês. Qualquer usuário PT/ES vê definição EN crua, o que quebra a experiência em `/word-study`, `/semantic-explorer` DetailPanel, Interlinear Reader word panel, etc.
+
+**Por que Claude Opus 4.6 1M (MAX) em vez de Gemini API:**
+
+Decisão David (15 abr 2026): mesma lógica do R7 sentiment. Claude Opus 4.6 1M context no plano MAX = custo direto $0, qualidade contextual superior (pode aplicar conhecimento teológico, preservar siglas como YHWH/ELOHIM, manter consistência entre entries cognatas), e auditável (JSONL versionado por batch).
+
+**Volume:**
+- 14.178 entradas (8.674 HE + 5.504 GR)
+- 2 línguas (PT, ES)
+- **28.356 definições totais** (cada uma short + long)
+
+**Estratégia em duas fases:**
+
+**Pré-launch (~4 batches, BLOQUEANTE mínimo):**
+- Top 2.000 Strong's por frequência (cobertura ~85% dos cliques esperados)
+  - Pra calcular: `SELECT strongs_id FROM interlinear GROUP BY strongs_id ORDER BY COUNT(*) DESC LIMIT 2000`
+- 2.000 × 2 línguas = 4.000 definições
+- Batches de ~1.000 definições cada (com 1M context cabe, mas limita-se a 1.000 pra manter qualidade)
+- ~4 batches = ~4 sessões dedicadas
+
+**Pós-launch (incremental, ~3 meses):**
+- Restantes 12.178 entradas × 2 línguas = 24.356 definições
+- ~24 batches em cadência 2-3/semana
+- Dashboard CLI rastreia `% coberto` por idioma
+
+---
+
+#### R3.6.0 — Setup infraestrutural (1 sessão, BLOQUEANTE pré-launch)
+
+**Tarefas:**
+- Schema migration: nova tabela `strongs_lexicon_multilang`:
+  ```sql
+  CREATE TABLE strongs_lexicon_multilang (
+      strongs_id      TEXT NOT NULL,
+      language        TEXT NOT NULL,       -- 'pt' | 'es'
+      short_definition TEXT,
+      long_definition  TEXT,
+      confidence      REAL,                -- 0.0–1.0
+      notes           TEXT,                -- rationale/divergência, opcional
+      labeled_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (strongs_id, language)
+  );
+  ```
+- `scripts/prep_strongs_batch.py`: gera TSV de input com colunas `strongs_id | language | original | transliteration | short_def_en | long_def_en | top_books_hint`. Parametrizado por `--language hebrew|greek`, `--start H1`, `--end H500`, ou `--top-frequency 2000`.
+- `scripts/load_strongs_batch.py`: carrega JSONL, valida schema (pydantic), idempotente (UPSERT por PK).
+- `scripts/strongs_coverage.py`: dashboard CLI com `% coberto por language + livro com maior gap`. Salva snapshot em `data/processed/strongs_multilang/coverage.json`.
+- Backend `lexicon.py`: queries aceitam `?lang=pt` ou `?lang=es`, retornam definições do `strongs_lexicon_multilang` com JOIN fallback pro `strongs_lexicon` (EN) quando não existir. Flag de resposta `is_translated: bool` + `translation_confidence?: float`.
+- Frontend `DetailPanel.tsx` (Explorer) e `WordDetailPanel.tsx` (Reader): renderizam indicador discreto `"*Definição original em inglês · tradução em refinamento"` quando `is_translated=false`. Quando `true`, mostra definição PT/ES direto.
+- Frontend `i18n/sentimentCoverage.ts` pattern → `i18n/strongsCoverage.ts` com map `{"H1": true, "H2": false, ...}` se quiser fino-grão (opcional pra v1).
+
+**Critério de done:**
+- Schema criado, 0 rows
+- Scripts roda em entradas fake e valida round-trip
+- `/lexicon/H2617?lang=pt` retorna `is_translated: false` com short/long ainda em EN (fallback)
+- Explorer DetailPanel mostra o indicador discreto abaixo da definição EN
+
+---
+
+#### R3.6.1–4 — Labeling pré-launch (top 2.000 Strong's × 2 línguas)
+
+**Cadência:** 1 batch por sessão dedicada. Cada batch = ~1.000 definições traduzidas.
+
+- **R3.6.1** — Top 1000 HE (PT + ES em paralelo) = ~2.000 definições
+- **R3.6.2** — Top 500 HE + top 500 GR (PT + ES) = ~2.000 definições
+- **R3.6.3** — Top 500 GR remaining (PT + ES) = ~2.000 definições
+- **R3.6.4** — Buffer/spot-check + recalibragem + labeling das divergências flagadas
+
+**Rubrica de labeling:**
+
+Claude Opus 4.6 vai gerar `short_definition_pt/es` e `long_definition_pt/es` seguindo:
+
+1. **Preservar** nomes originais (ELOHIM, YHWH, Adonai, agapē, chesed — transliterações universais)
+2. **Traduzir** conceitos teológicos usando vocabulário consagrado em PT-BR e ES-LATAM:
+   - `covenant` → `aliança` / `pacto`
+   - `righteousness` → `justiça/retidão` / `rectitud/justicia`
+   - `lovingkindness` → `misericórdia/benignidade` / `misericordia/benignidad`
+   - `atonement` → `expiação` / `expiación`
+3. **Manter** precisão técnica: parentéticos `(by implication)`, `(subject.)`, `(towards God)` — traduzir contexto, não literal
+4. **Detectar cognatos**: entries etimologicamente relacionadas (ex: `chesed` H2617 → `chasid` H2623 → `chasad` H2616) devem usar vocabulário consistente
+5. **Logar divergências** em `notes` quando EN → PT/ES exige decisão não-óbvia
+
+**Spot-check:** David revisa 20 amostras aleatórias após cada batch. Se concordar com >90%, rubrica calibrada; senão, ajusta antes de seguir.
+
+**Critério de done pré-launch:**
+- 2.000 Strong's top-frequência 100% labelados PT + ES e carregados
+- `strongs_coverage.py` mostra `% cobertura PT ≥ 85%` no léxico real usado (weighted por frequência de ocorrência)
+- `/word-study/H2617` em PT-BR: definição em português, sem indicador de "em refinamento"
+
+---
+
+#### R3.6.5+ — Labeling pós-launch (12K restantes)
+
+Mesma mecânica, cadência 2-3 batches/semana. Dashboard rastreia progresso. A cada livro ou bloco fechado, commit `feat: strongs PT-BR batch NNN`.
+
+Duração estimada: ~3 meses até 100% cobertura PT-BR. ES pode seguir no ritmo ou ficar em backlog v1.5.
+
+**Critério de done final:**
+- 14.178 entradas × 2 línguas = 28.356 definições labeladas
+- `strongs_coverage.py` mostra `100% PT + 100% ES`
+- Frontend sem nenhum indicador "em refinamento" para usuários em PT ou ES
+
+---
+
 ### Sessão R4 — Bugs específicos (categorias F + G imediatos)
 
 **Entrega:** Os 6 bugs da categoria F + os 4 fixes imediatos da categoria G resolvidos.
@@ -443,15 +581,17 @@ Quando as 7 sessões R1–R7 estiverem ✅:
 ```
 Sessão (em paralelo) — Áudio HE termina  ╮
                                           │  Independente
-Sessão R1 — Trocador + JSONs estáticos críticos (compare, devotional, explorer)
-Sessão R2 — Static JSONs restantes (special passages, genealogy, …)
-Sessão R3 — personNames + placeNames + timelineEvents (lookup tables FE)
+✅ R1 — Trocador + synoptic parallels + explorer presets + localized helper
+Sessão R2 — Static JSONs restantes (devotional, special passages, genealogy, …)
+Sessão R3 — personNames + placeNames + timelineEvents + topicNames (lookup tables FE)
+Sessão R3.5 — Semantic Explorer UX polish (G3.b/c/d/e/f/g — sem dataset novo)
+Sessão R3.6.0 — Strong's multilingual setup (schema + scripts + backend + indicator)
+Sessões R3.6.1-4 — Strong's labeling pré-launch (top 2.000 × 2 línguas = ~4 batches)
 Sessão R4 — Bugs F1–F6 + G1/G2 imediatos (intertextuality interatividade, emotional flow vazio)
 Sessão R5 — Limpeza strings cruas + IDs resolvidos
 Sessão R6 — Audit trilíngue final
 Sessão R7.0 — Sentiment multilingual setup (schema + scripts + frontend marker)
-Sessões R7.1+ — Sentiment labeling pré-launch (Salmos + Evangelhos = ~22 batches)
-Sessões R7.23+ — Sentiment labeling pós-launch (60 livros restantes = ~91 batches, ~6-9 meses)
+Sessões R7.1-22 — Sentiment labeling pré-launch (Salmos + Evangelhos = ~22 batches)
 ─────────── REVISION CLOSED ───────────
 Sessão L2 — README de produto
 Sessão L3 — GCP backend
@@ -463,11 +603,17 @@ Sessão L8 — Observabilidade
 Sessão L9 — CI/CD
 Sessão L10 — Custom domain (opcional)
 Sessão L11 — Launch week
+─────────── POS-LAUNCH INCREMENTAL ───────────
+R3.6.5+ — Strong's 12.178 restantes × 2 línguas (~24 batches, ~3 meses em cadência 2-3/semana)
+R7.23+ — Sentiment 60 livros restantes × PT-BR (~91 batches, ~6-9 meses em cadência 2-3/semana)
 ```
 
 **Totais:**
-- **Pré-launch:** 6 bloqueantes (R1–R6) + R7.0 setup + R7.1–R7.22 (Salmos + Evangelhos labeling) + 9 launch (L2–L11) = **~38 sessões** até produto lançado. Em cadência sessão-a-sessão, ~6-9 semanas.
-- **Pós-launch:** R7.23+ (60 livros restantes labeling) = **~91 sessões**, em cadência 2-3 batches/semana = ~6-9 meses até NVI 100% coberto.
+- **Pré-launch:** R1 (✅) + R2 + R3 + R3.5 + R3.6.0 + R3.6.1-4 (4 batches) + R4 + R5 + R6 + R7.0 + R7.1-22 (22 batches) + L2-L11 (9 launch) = **~9 sessões base + ~26 batches + 9 launch = ~44 sessões** até produto lançado. Em cadência sessão-a-sessão, ~8-10 semanas.
+- **Pós-launch incremental:**
+  - **R3.6.5+** — Strong's 12.178 restantes × 2 línguas ≈ **~24 batches** (~3 meses em cadência 2-3/semana)
+  - **R7.23+** — Sentiment 60 livros restantes NVI ≈ **~91 batches** (~6-9 meses em cadência 2-3/semana)
+  - Total: ~115 batches em ~6-9 meses até cobertura completa PT-BR (Strong's + sentiment). ES fica como backlog separado, ritmo a decidir pós-launch.
 
 **Nota sobre R7:** R7 tem três momentos:
 - **R7.0 — Setup infra** (1 sessão, BLOQUEANTE pré-launch): schema, scripts, backend, frontend marker

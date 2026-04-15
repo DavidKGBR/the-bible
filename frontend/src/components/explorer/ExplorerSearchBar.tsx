@@ -9,14 +9,11 @@ interface Props {
   onSelect: (result: ExplorerSearchResult) => void;
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  strongs: "📗",
-  topic: "🏷️",
-  thread: "🔗",
-  person: "👤",
-  place: "📍",
-};
-
+/**
+ * Color-coded pill per result type. Emoji icons (📗🏷️🔗👤📍) were removed
+ * in favor of the text-only colored badge — the pill color alone is enough
+ * to signal category, and fewer pictographs mean a cleaner list.
+ */
 const TYPE_COLORS: Record<string, string> = {
   strongs: "text-green-700",
   topic: "text-amber-700",
@@ -95,23 +92,40 @@ export default function ExplorerSearchBar({ onSelect }: Props) {
           onFocus={() => results.length > 0 && setOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={t("explorer.searchPlaceholder")}
-          className="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm bg-white
-                     focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40
-                     focus:border-[var(--color-gold)] transition"
+          className="w-full pl-10 pr-9 py-2.5 rounded-lg border border-[var(--color-gold-dark)]/20
+                     bg-white text-sm text-[var(--color-ink)]
+                     placeholder:text-[var(--color-ink)]/40
+                     focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/50
+                     focus:border-[var(--color-gold)]/50 transition"
         />
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg opacity-40">
-          🔍
-        </span>
+        {/* Magnifying glass icon (SVG, currentColor) */}
+        <svg
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-gold-dark)]/50 pointer-events-none"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4.35-4.35" />
+        </svg>
         {loading && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs opacity-40 animate-pulse">
-            ...
-          </span>
+          <span
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5
+                       rounded-full border-2 border-[var(--color-gold-dark)]/30
+                       border-t-[var(--color-gold)] animate-spin"
+            aria-label="Loading"
+          />
         )}
       </div>
 
       {open && results.length > 0 && (
         <div
-          className="absolute z-50 mt-1 w-full bg-white border rounded-lg shadow-lg
+          className="absolute z-50 mt-1 w-full rounded-lg shadow-lg
+                     bg-white border border-[var(--color-gold-dark)]/20
                      max-h-80 overflow-y-auto"
           onMouseDown={(e) => e.preventDefault()} // prevent blur closing
         >
@@ -120,14 +134,17 @@ export default function ExplorerSearchBar({ onSelect }: Props) {
               key={`${r.type}:${r.id}`}
               onClick={() => handleSelect(r)}
               className={`w-full text-left px-4 py-2.5 flex items-start gap-3 transition
-                ${i === activeIdx ? "bg-[var(--color-gold)]/10" : "hover:bg-gray-50"}
-                ${i > 0 ? "border-t border-gray-100" : ""}`}
+                ${i === activeIdx ? "bg-[var(--color-gold)]/10" : "hover:bg-[var(--color-gold)]/5"}
+                ${i > 0 ? "border-t border-[var(--color-gold-dark)]/10" : ""}`}
             >
-              <span className="text-base mt-0.5">{TYPE_ICONS[r.type] || "·"}</span>
               <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-2">
-                  <span className="font-medium text-sm truncate">{r.label}</span>
-                  <span className={`text-[10px] uppercase tracking-wider font-bold ${TYPE_COLORS[r.type] || "opacity-50"}`}>
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <span className="font-medium text-sm truncate text-[var(--color-ink)]">
+                    {r.label}
+                  </span>
+                  <span
+                    className={`text-[10px] uppercase tracking-wider font-bold ${TYPE_COLORS[r.type] || "opacity-50"}`}
+                  >
                     {t(`explorer.typeBadge.${r.type}`)}
                   </span>
                 </div>
@@ -144,10 +161,7 @@ export default function ExplorerSearchBar({ onSelect }: Props) {
 
       {/* Click-away */}
       {open && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setOpen(false)}
-        />
+        <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
       )}
     </div>
   );
