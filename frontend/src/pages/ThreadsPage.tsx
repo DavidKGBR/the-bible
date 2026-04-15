@@ -7,8 +7,10 @@ import {
   type ThreadDetail,
 } from "../services/api";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useI18n } from "../i18n/i18nContext";
 
 export default function ThreadsPage() {
+  const { t } = useI18n();
   const [threads, setThreads] = useState<SemanticThread[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -40,15 +42,14 @@ export default function ThreadsPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <h1 className="text-2xl font-display font-bold mb-1">Semantic Threads</h1>
+      <h1 className="text-2xl font-display font-bold mb-1">{t("threads.title")}</h1>
       <p className="text-sm opacity-60 mb-6">
-        Hidden thematic connections that span distant books — discovered through shared
-        semantic tags in the original Hebrew and Greek.
+        {t("threads.subtitle")}
       </p>
 
       {/* Controls */}
       <div className="flex items-center gap-4 mb-6">
-        <span className="text-sm opacity-50">Min books:</span>
+        <span className="text-sm opacity-50">{t("threads.minBooks")}</span>
         {[2, 3, 5, 8, 10].map((n) => (
           <button
             key={n}
@@ -59,68 +60,69 @@ export default function ThreadsPage() {
                 : "bg-black/5 hover:bg-black/10"
             }`}
           >
-            {n}+
+            {t("threads.minPlus").replace("{n}", String(n))}
           </button>
         ))}
         <span className="ml-auto text-xs opacity-40">
-          {threads.length} threads found
+          {(threads.length === 1 ? t("threads.foundSingular") : t("threads.found"))
+            .replace("{n}", String(threads.length))}
         </span>
       </div>
 
       {loading ? (
-        <LoadingSpinner text="Discovering threads..." />
+        <LoadingSpinner text={t("threads.loading")} />
       ) : threads.length === 0 ? (
-        <p className="text-sm opacity-50">No threads found with these filters.</p>
+        <p className="text-sm opacity-50">{t("threads.noResults")}</p>
       ) : (
         <div className="space-y-3">
-          {threads.map((t) => (
+          {threads.map((th) => (
             <div
-              key={t.id}
+              key={th.id}
               className="rounded-lg border border-[var(--color-gold)]/15 bg-white overflow-hidden"
             >
               <button
-                onClick={() => handleExpand(t.id)}
+                onClick={() => handleExpand(th.id)}
                 className="w-full text-left p-4 hover:bg-[var(--color-gold)]/5 transition"
               >
                 <div className="flex items-center gap-3">
                   <span className="text-lg">
-                    {expanded === t.id ? "▾" : "▸"}
+                    {expanded === th.id ? "▾" : "▸"}
                   </span>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-display font-bold text-sm">
-                      {t.semantic_tag}
+                      {th.semantic_tag}
                     </h3>
                     <div className="flex items-center gap-3 mt-1">
                       <span className="text-[10px] opacity-50">
-                        {t.verse_count} verses
+                        {t("threads.statsVerses").replace("{n}", String(th.verse_count))}
                       </span>
                       <span className="text-[10px] opacity-50">
-                        {t.book_count} books
+                        {t("threads.statsBooks").replace("{n}", String(th.book_count))}
                       </span>
                       <span className="text-[10px] opacity-50">
-                        {t.word_count} words
+                        {t("threads.statsWords").replace("{n}", String(th.word_count))}
                       </span>
                     </div>
                   </div>
                   <div
                     className="w-16 h-2 rounded-full bg-black/5 overflow-hidden"
-                    title={`Strength: ${t.strength_score.toFixed(2)}`}
+                    title={t("threads.tooltipStrength").replace("{score}", th.strength_score.toFixed(2))}
                   >
                     <div
                       className="h-full rounded-full bg-[var(--color-gold)]"
                       style={{
-                        width: `${Math.min(100, t.strength_score * 20)}%`,
+                        width: `${Math.min(100, th.strength_score * 20)}%`,
                       }}
                     />
                   </div>
                 </div>
               </button>
 
-              {expanded === t.id && (
+              {expanded === th.id && (
                 <div className="px-4 pb-4 border-t border-[var(--color-gold)]/10">
                   {detailLoading ? (
                     <p className="text-sm opacity-50 py-3 animate-pulse">
-                      Loading thread...
+                      {t("threads.loadingThread")}
                     </p>
                   ) : detail ? (
                     <div className="pt-3 space-y-4">
@@ -165,7 +167,7 @@ export default function ThreadsPage() {
                         ))}
                         {detail.verses.length > 30 && (
                           <p className="text-xs text-center opacity-40 py-2">
-                            ... and {detail.verses.length - 30} more verses
+                            {t("threads.moreVerses").replace("{n}", String(detail.verses.length - 30))}
                           </p>
                         )}
                       </div>

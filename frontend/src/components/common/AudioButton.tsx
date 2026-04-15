@@ -10,6 +10,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useWordAudio, type BiblicalLanguage } from "../../hooks/useWordAudio";
+import { useI18n } from "../../i18n/i18nContext";
 
 interface Props {
   language: BiblicalLanguage;
@@ -38,6 +39,7 @@ export default function AudioButton({
   size = "sm",
   className = "",
 }: Props) {
+  const { t } = useI18n();
   // ── Camada 1: MP3 Neural2 via <audio> ──────────────────────────────────────
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [mp3Playing, setMp3Playing] = useState(false);
@@ -91,14 +93,14 @@ export default function AudioButton({
     : (e: React.MouseEvent) => { e.stopPropagation(); playSpeech(); };
 
   const tooltip = hasMp3
-    ? "Ouvir pronúncia (Neural2 — Google TTS)"
-    : `Ouvir pronúncia (síntese de voz — ${language === "hebrew" ? "he-IL" : "el-GR"})`;
+    ? t("audio.tooltipMp3")
+    : t("audio.tooltipSpeech").replace("{locale}", language === "hebrew" ? "he-IL" : "el-GR");
 
   return (
     <button
       onClick={handleClick}
       title={tooltip}
-      aria-label={isPlaying ? "Tocando..." : "Ouvir pronúncia"}
+      aria-label={isPlaying ? t("audio.ariaPlaying") : t("audio.ariaListen")}
       className={[
         "inline-flex items-center rounded transition-all outline-none select-none",
         "bg-[var(--color-gold)]/10 hover:bg-[var(--color-gold)]/25",
@@ -113,7 +115,7 @@ export default function AudioButton({
       </span>
       {size === "md" && (
         <span className="font-medium">
-          {isPlaying ? "Tocando..." : "Ouvir"}
+          {isPlaying ? t("audio.labelPlaying") : t("audio.labelListen")}
         </span>
       )}
     </button>

@@ -6,6 +6,7 @@ import {
   type CommentaryVerse,
 } from "../../services/api";
 import LoadingSpinner from "../common/LoadingSpinner";
+import { useI18n } from "../../i18n/i18nContext";
 
 interface Props {
   book: string;
@@ -35,6 +36,7 @@ function findVerseEntry(
 }
 
 export default function CommentaryPanel({ book, chapter, verse }: Props) {
+  const { t } = useI18n();
   const [commentaryId, setCommentaryId] = useState("matthew-henry");
   const [data, setData] = useState<CommentaryChapter | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,9 +62,9 @@ export default function CommentaryPanel({ book, chapter, verse }: Props) {
         cache.current.set(key, d);
         setData(d);
       })
-      .catch(() => setError("Commentary not available for this passage."))
+      .catch(() => setError(t("commentary.notAvailable")))
       .finally(() => setLoading(false));
-  }, [commentaryId, book, chapter]);
+  }, [commentaryId, book, chapter, t]);
 
   const entry = data ? findVerseEntry(data.chapter.content, verse) : null;
   const commentatorName =
@@ -73,7 +75,7 @@ export default function CommentaryPanel({ book, chapter, verse }: Props) {
       {/* Commentary selector */}
       <div className="flex items-center justify-between gap-3">
         <div className="text-[10px] uppercase tracking-wider opacity-50 font-display">
-          Commentary
+          {t("commentary.label")}
         </div>
         <select
           value={commentaryId}
@@ -89,17 +91,25 @@ export default function CommentaryPanel({ book, chapter, verse }: Props) {
         </select>
       </div>
 
-      {loading && <LoadingSpinner text={`Loading ${commentatorName}...`} />}
+      {loading && (
+        <LoadingSpinner
+          text={t("commentary.loadingCommentator").replace("{name}", commentatorName)}
+        />
+      )}
 
       {error && <p className="text-sm opacity-60 italic">{error}</p>}
 
       {!loading && !error && entry && (
         <div className="space-y-2">
           <div className="text-xs opacity-50">
-            {commentatorName} on{" "}
             {entry.number === verse
-              ? `verse ${verse}`
-              : `verses ${entry.number}–${verse}`}
+              ? t("commentary.onVerse")
+                  .replace("{name}", commentatorName)
+                  .replace("{n}", String(verse))
+              : t("commentary.onVerseRange")
+                  .replace("{name}", commentatorName)
+                  .replace("{a}", String(entry.number))
+                  .replace("{b}", String(verse))}
           </div>
           {entry.content.map((paragraph, i) => (
             <p
@@ -114,7 +124,9 @@ export default function CommentaryPanel({ book, chapter, verse }: Props) {
 
       {!loading && !error && !entry && data && (
         <p className="text-sm opacity-50 italic">
-          No commentary found for verse {verse} in {commentatorName}.
+          {t("commentary.noneFound")
+            .replace("{n}", String(verse))
+            .replace("{name}", commentatorName)}
         </p>
       )}
     </div>

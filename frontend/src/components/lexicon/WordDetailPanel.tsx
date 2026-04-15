@@ -7,6 +7,7 @@ import {
 } from "../../services/api";
 import LoadingSpinner from "../common/LoadingSpinner";
 import AudioButton from "../common/AudioButton";
+import { useI18n } from "../../i18n/i18nContext";
 
 interface Props {
   strongsId: string | null;
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function WordDetailPanel({ strongsId, onClose }: Props) {
+  const { t } = useI18n();
   const [entry, setEntry] = useState<StrongsEntry | null>(null);
   const [verses, setVerses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,7 +44,7 @@ export default function WordDetailPanel({ strongsId, onClose }: Props) {
       <div className="flex justify-between items-start mb-6 pt-4">
         <div>
           <span className="text-[10px] font-bold tracking-widest text-[var(--color-gold-dark)] uppercase">
-            Lexicon &bull; {entry?.language || "..."}
+            {t("lexicon.header").replace("{language}", entry?.language || "...")}
           </span>
           <h2 className="text-3xl font-display mt-1">
             {strongsId}
@@ -58,7 +60,7 @@ export default function WordDetailPanel({ strongsId, onClose }: Props) {
 
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
-            <LoadingSpinner text="Searching lexicon..." />
+            <LoadingSpinner text={t("lexicon.searching")} />
         </div>
       ) : entry ? (
         <div className="space-y-6">
@@ -83,17 +85,17 @@ export default function WordDetailPanel({ strongsId, onClose }: Props) {
 
           <div className="space-y-5 px-1">
              <div>
-               <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-gold-dark)] opacity-80 mb-1">Definition</h3>
+               <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-gold-dark)] opacity-80 mb-1">{t("lexicon.definition")}</h3>
                <p className="text-[17px] font-body font-bold leading-tight">{entry.short_definition}</p>
              </div>
              
              <div>
-               <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-gold-dark)] opacity-80 mb-1">Part of Speech</h3>
+               <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-gold-dark)] opacity-80 mb-1">{t("lexicon.partOfSpeech")}</h3>
                <p className="text-sm capitalize italic">{entry.part_of_speech}</p>
              </div>
 
              <div>
-               <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-gold-dark)] opacity-80 mb-1">Expanded Detail</h3>
+               <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-gold-dark)] opacity-80 mb-1">{t("lexicon.expandedDetail")}</h3>
                <p className="text-sm leading-relaxed opacity-80">{entry.long_definition}</p>
              </div>
           </div>
@@ -106,13 +108,13 @@ export default function WordDetailPanel({ strongsId, onClose }: Props) {
                           text-sm font-bold hover:opacity-90 transition focus:outline-none
                           focus:ring-2 focus:ring-[var(--color-gold)]/60"
              >
-               Full Study →
+               {t("lexicon.fullStudy")}
              </Link>
           </div>
 
           {/* Verses Preview */}
           <div className="mt-8 pt-6 border-t border-[var(--color-gold)]/20">
-             <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-gold-dark)] opacity-80 mb-3">Top Occurrences</h3>
+             <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-gold-dark)] opacity-80 mb-3">{t("lexicon.topOccurrences")}</h3>
              <ul className="space-y-4">
                {verses.map(v => (
                  <li key={v.verse_id} className="text-sm leading-relaxed font-body">
@@ -124,7 +126,7 @@ export default function WordDetailPanel({ strongsId, onClose }: Props) {
           </div>
         </div>
       ) : (
-        <p className="text-red-500 text-sm">Failed to load Strong's entry.</p>
+        <p className="text-red-500 text-sm">{t("lexicon.loadError")}</p>
       )}
     </div>
   );

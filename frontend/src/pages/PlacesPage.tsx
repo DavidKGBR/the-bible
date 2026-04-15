@@ -21,6 +21,7 @@ function Lightbox({
   placeName: string;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -57,7 +58,9 @@ function Lightbox({
             {image.description && (
               <span className="text-white/90">{image.description} · </span>
             )}
-            Photo: {image.credit} · {image.license}
+            {t("places.lightboxCredit")
+              .replace("{credit}", image.credit)
+              .replace("{license}", image.license)}
           </span>
           <a
             href={image.credit_url}
@@ -65,14 +68,14 @@ function Lightbox({
             rel="noopener noreferrer"
             className="text-white/50 hover:text-white underline ml-3"
           >
-            Source
+            {t("places.lightboxSource")}
           </a>
         </div>
         <button
           onClick={onClose}
           className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-black/60
                      text-white flex items-center justify-center hover:bg-black/80 transition"
-          aria-label="Close"
+          aria-label={t("places.lightboxClose")}
         >
           ×
         </button>
@@ -84,6 +87,7 @@ function Lightbox({
 /* ── Expanded place detail card ──────────────────────────────────────────── */
 
 function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
+  const { t } = useI18n();
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<PlaceImage | null>(null);
 
@@ -94,7 +98,7 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
   // Group events by era
   const eventsByEra: Record<string, typeof events> = {};
   for (const evt of events) {
-    const era = evt.era || "Other";
+    const era = evt.era || t("places.eraOther");
     (eventsByEra[era] ??= []).push(evt);
   }
   const eraOrder = Object.keys(eventsByEra);
@@ -164,12 +168,16 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
       {/* Stats row */}
       <div className="flex flex-wrap gap-2 mb-3">
         <span className="text-[10px] px-2 py-1 rounded-full bg-[var(--color-gold)]/8 text-[var(--color-gold-dark)] font-medium">
-          {detail.verse_count} verses
+          {(detail.verse_count === 1 ? t("places.verseCountSingular") : t("places.verseCount"))
+            .replace("{n}", String(detail.verse_count))}
         </span>
         {detail.also_called && Array.isArray(detail.also_called) && detail.also_called.length > 0 && (
           <span className="text-[10px] px-2 py-1 rounded-full bg-[var(--color-gold)]/8 text-[var(--color-gold-dark)]">
-            aka {detail.also_called.slice(0, 3).join(", ")}
-            {detail.also_called.length > 3 && ` +${detail.also_called.length - 3}`}
+            {t("places.alsoCalled").replace(
+              "{names}",
+              detail.also_called.slice(0, 3).join(", ") +
+                (detail.also_called.length > 3 ? ` +${detail.also_called.length - 3}` : "")
+            )}
           </span>
         )}
         {detail.latitude && detail.longitude && (
@@ -177,7 +185,9 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
             to="/map"
             className="text-[10px] px-2 py-1 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition"
           >
-            {detail.latitude.toFixed(2)}°, {detail.longitude.toFixed(2)}° · Open Map
+            {t("places.coordsOpenMap")
+              .replace("{lat}", detail.latitude.toFixed(2))
+              .replace("{lon}", detail.longitude.toFixed(2))}
           </Link>
         )}
       </div>
@@ -215,7 +225,8 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
       {totalEvents > 0 && (
         <div>
           <h4 className="text-[10px] uppercase tracking-wider font-bold opacity-50 mb-2">
-            {totalEvents} Event{totalEvents !== 1 ? "s" : ""}
+            {(totalEvents === 1 ? t("places.eventsHeaderSingular") : t("places.eventsHeader"))
+              .replace("{n}", String(totalEvents))}
           </h4>
 
           {!showAllEvents ? (
@@ -223,12 +234,12 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
               {visibleEvents.map((evt) => (
                 <div key={evt.event_id} className="text-sm flex items-center gap-2">
                   <span className="text-[8px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 shrink-0 min-w-[4rem] text-center">
-                    {evt.era || "Other"}
+                    {evt.era || t("places.eraOther")}
                   </span>
                   <span className="truncate">{evt.title}</span>
                   {evt.start_year != null && (
                     <span className="text-[10px] opacity-30 shrink-0">
-                      {Math.abs(evt.start_year)} {evt.start_year < 0 ? "BC" : "AD"}
+                      {Math.abs(evt.start_year)} {evt.start_year < 0 ? t("common.bc") : t("common.ad")}
                     </span>
                   )}
                 </div>
@@ -238,7 +249,7 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
                   onClick={() => setShowAllEvents(true)}
                   className="text-xs text-[var(--color-gold-dark)] hover:underline mt-1"
                 >
-                  Show all {totalEvents} events →
+                  {t("places.showAllEvents").replace("{n}", String(totalEvents))}
                 </button>
               )}
             </div>
@@ -255,7 +266,7 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
                         <span className="truncate">{evt.title}</span>
                         {evt.start_year != null && (
                           <span className="text-[10px] opacity-30 shrink-0">
-                            {Math.abs(evt.start_year)} {evt.start_year < 0 ? "BC" : "AD"}
+                            {Math.abs(evt.start_year)} {evt.start_year < 0 ? t("common.bc") : t("common.ad")}
                           </span>
                         )}
                       </div>
@@ -267,7 +278,7 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
                 onClick={() => setShowAllEvents(false)}
                 className="text-xs text-[var(--color-gold-dark)] hover:underline"
               >
-                Collapse ↑
+                {t("places.collapse")}
               </button>
             </div>
           )}
@@ -280,20 +291,20 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
           to={`/search?q=${encodeURIComponent(detail.name)}`}
           className="text-[var(--color-gold-dark)] hover:underline"
         >
-          Search in Bible →
+          {t("places.actionSearch")}
         </Link>
         <Link
           to={`/dictionary?q=${encodeURIComponent(detail.name)}`}
           className="text-[var(--color-gold-dark)] hover:underline"
         >
-          Dictionary →
+          {t("places.actionDictionary")}
         </Link>
         {detail.latitude && (
           <Link
             to="/map"
             className="text-[var(--color-gold-dark)] hover:underline"
           >
-            View on Map →
+            {t("places.actionMap")}
           </Link>
         )}
       </div>
@@ -377,7 +388,7 @@ export default function PlacesPage() {
       <div className="mb-6">
         <h1 className="page-title text-3xl">{t("nav.places")}</h1>
         <p className="text-sm opacity-60 mt-1">
-          1,800+ biblical locations · 1,100+ with photos · 99% geocoded
+          {t("places.subtitle")}
         </p>
       </div>
 
@@ -387,7 +398,7 @@ export default function PlacesPage() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search places (e.g., Jerusalem, Bethlehem, Sinai)..."
+          placeholder={t("places.searchPlaceholder")}
           className="w-full rounded-lg border border-[var(--color-gold-dark)]/20 px-4 py-3
                      text-sm bg-white focus:outline-none focus:ring-2
                      focus:ring-[var(--color-gold)]/50 focus:border-[var(--color-gold)]/50"
@@ -421,19 +432,21 @@ export default function PlacesPage() {
           </button>
         ))}
         <span className="text-xs opacity-40 self-center ml-2">
-          {total.toLocaleString()} results
+          {t("places.results").replace("{n}", total.toLocaleString())}
         </span>
       </div>
 
       {loading && <p className="text-sm opacity-50">{t("common.loading")}</p>}
 
       {!loading && places.length === 0 && query.length >= 2 && (
-        <p className="text-sm opacity-50 italic">No places found for &quot;{query}&quot;.</p>
+        <p className="text-sm opacity-50 italic">
+          {t("places.noResults").replace("{query}", query)}
+        </p>
       )}
 
       {!loading && places.length === 0 && !query && !typeFilter && (
         <div className="rounded-lg border border-dashed border-[var(--color-gold-dark)]/30 p-8 text-center">
-          <p className="opacity-60 mb-3">Browse or search 1,800+ biblical locations.</p>
+          <p className="opacity-60 mb-3">{t("places.browsePrompt")}</p>
           <div className="flex flex-wrap justify-center gap-2">
             {["Jerusalem", "Bethlehem", "Egypt", "Babylon", "Sinai", "Galilee", "Nazareth", "Rome"].map(
               (w) => (
@@ -509,7 +522,8 @@ export default function PlacesPage() {
                       )}
                     </div>
                     <p className="text-xs opacity-50 mt-0.5">
-                      {place.verse_count} verse{place.verse_count !== 1 ? "s" : ""}
+                      {(place.verse_count === 1 ? t("places.verseCountSingular") : t("places.verseCount"))
+                        .replace("{n}", String(place.verse_count))}
                       {place.latitude && place.longitude && (
                         <> · {place.latitude.toFixed(2)}°, {place.longitude.toFixed(2)}°</>
                       )}

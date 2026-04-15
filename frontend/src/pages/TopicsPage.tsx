@@ -7,8 +7,10 @@ import {
   type Topic,
   type TopicDetail,
 } from "../services/api";
+import { useI18n } from "../i18n/i18nContext";
 
 export default function TopicsPage() {
+  const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -76,11 +78,8 @@ export default function TopicsPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="page-title text-3xl">Biblical Topics</h1>
-        <p className="text-sm opacity-60 mt-1">
-          4,673 topics from Nave&apos;s Topical Bible with 191,787 verse
-          references. &quot;What does the Bible say about...?&quot;
-        </p>
+        <h1 className="page-title text-3xl">{t("topics.title")}</h1>
+        <p className="text-sm opacity-60 mt-1">{t("topics.subtitle")}</p>
       </div>
 
       {/* Search */}
@@ -89,7 +88,7 @@ export default function TopicsPage() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search topics (e.g., faith, love, prayer, forgiveness)..."
+          placeholder={t("topics.searchPlaceholder")}
           className="w-full rounded-lg border border-[var(--color-gold-dark)]/20 px-4 py-3
                      text-sm bg-white focus:outline-none focus:ring-2
                      focus:ring-[var(--color-gold)]/50 focus:border-[var(--color-gold)]/50"
@@ -97,28 +96,28 @@ export default function TopicsPage() {
         />
       </div>
 
-      {loading && <p className="text-sm opacity-50">Searching...</p>}
+      {loading && <p className="text-sm opacity-50">{t("topics.searching")}</p>}
 
       {!loading && query.length >= 2 && topics.length === 0 && (
         <p className="text-sm opacity-50 italic">
-          No topics found for &quot;{query}&quot;.
+          {t("topics.noResults").replace("{query}", query)}
         </p>
       )}
 
       {/* Popular topics when no search */}
       {query.length < 2 && popular.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-sm font-bold opacity-50 mb-3">Popular Topics</h2>
+          <h2 className="text-sm font-bold opacity-50 mb-3">{t("topics.popular")}</h2>
           <div className="flex flex-wrap gap-2">
-            {popular.map((t) => (
+            {popular.map((topic) => (
               <button
-                key={t.slug}
-                onClick={() => setQuery(t.name)}
+                key={topic.slug}
+                onClick={() => setQuery(topic.name)}
                 className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-gold)]/30
                            hover:bg-[var(--color-gold)]/10 transition text-[var(--color-gold-dark)]"
               >
-                {t.name}{" "}
-                <span className="opacity-40">({t.verse_count})</span>
+                {topic.name}{" "}
+                <span className="opacity-40">({topic.verse_count})</span>
               </button>
             ))}
           </div>
@@ -127,9 +126,7 @@ export default function TopicsPage() {
 
       {query.length < 2 && (
         <div className="rounded-lg border border-dashed border-[var(--color-gold-dark)]/30 p-8 text-center">
-          <p className="opacity-60 mb-3">
-            Type at least 2 characters to search 4,673 biblical topics.
-          </p>
+          <p className="opacity-60 mb-3">{t("topics.typeHint")}</p>
           <div className="flex flex-wrap justify-center gap-2">
             {["FAITH", "LOVE", "PRAYER", "FORGIVENESS", "SALVATION", "GRACE", "HOPE", "SIN"].map(
               (w) => (
@@ -150,7 +147,7 @@ export default function TopicsPage() {
       {/* Results */}
       {query.length >= 2 && total > 0 && (
         <p className="text-xs opacity-40 mb-2">
-          {total} topic{total !== 1 ? "s" : ""} found
+          {(total === 1 ? t("topics.foundSingular") : t("topics.found")).replace("{n}", String(total))}
         </p>
       )}
 
@@ -172,7 +169,7 @@ export default function TopicsPage() {
                     {topic.name}
                   </h3>
                   <p className="text-xs opacity-50 mt-0.5">
-                    {topic.verse_count} verse reference{topic.verse_count !== 1 ? "s" : ""}
+                    {(topic.verse_count === 1 ? t("topics.verseRef") : t("topics.verseRefs")).replace("{n}", String(topic.verse_count))}
                   </p>
                 </div>
                 <svg
@@ -186,7 +183,7 @@ export default function TopicsPage() {
               {isOpen && (
                 <div className="px-4 pb-4 border-t border-[var(--color-gold-dark)]/10">
                   {detailLoading && (
-                    <p className="text-xs opacity-50 mt-3">Loading verses...</p>
+                    <p className="text-xs opacity-50 mt-3">{t("topics.loadingVerses")}</p>
                   )}
 
                   {!detailLoading && detail && (
@@ -204,13 +201,17 @@ export default function TopicsPage() {
                           </div>
                         ) : (
                           <div key={v.verse_id} className="text-xs opacity-40">
-                            {v.verse_id} (not in {detail.translation})
+                            {t("topics.notInTranslation")
+                              .replace("{id}", v.verse_id)
+                              .replace("{translation}", detail.translation)}
                           </div>
                         )
                       )}
                       {detail.verse_count > detail.verses.length && (
                         <p className="text-xs opacity-40 pt-2">
-                          Showing {detail.verses.length} of {detail.verse_count} references.
+                          {t("topics.showing")
+                            .replace("{shown}", String(detail.verses.length))
+                            .replace("{total}", String(detail.verse_count))}
                         </p>
                       )}
                     </div>

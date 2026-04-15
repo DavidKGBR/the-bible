@@ -29,7 +29,7 @@ function readerLinkFor(n: VerseNote): string {
 
 export default function NotesPage() {
   const { notes, list, remove } = useVerseNotes();
-  const { locale } = useI18n();
+  const { t, locale } = useI18n();
   const [filter, setFilter] = useState<Filter>("all");
   const [exportOpen, setExportOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -53,8 +53,8 @@ export default function NotesPage() {
   }, [filtered]);
 
   const markdown = useMemo(
-    () => notesToMarkdown(filtered, { title: "Verbum Notes" }),
-    [filtered]
+    () => notesToMarkdown(filtered, { title: t("notes.exportTitle") }),
+    [filtered, t]
   );
 
   const bookCount = groupedByBook.size;
@@ -73,13 +73,15 @@ export default function NotesPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="page-title text-3xl">Notes</h1>
+        <h1 className="page-title text-3xl">{t("notes.title")}</h1>
         <p className="text-sm opacity-60 mt-1">
           {totalCount === 0
-            ? "No notes yet. Open the Reader, click a verse, and pick ✍️ Note."
-            : `${filtered.length} ${filtered.length === 1 ? "note" : "notes"}${
-                filter === "all" ? "" : " (filtered)"
-              } in ${bookCount} ${bookCount === 1 ? "book" : "books"}`}
+            ? t("notes.emptyHint")
+            : (filter === "all" ? t("notes.summary") : t("notes.summaryFiltered"))
+                .replace("{filtered}", String(filtered.length))
+                .replace("{noun}", filtered.length === 1 ? t("notes.note") : t("notes.notes"))
+                .replace("{bookCount}", String(bookCount))
+                .replace("{bookNoun}", bookCount === 1 ? t("notes.book") : t("notes.books"))}
         </p>
       </div>
 
@@ -88,7 +90,7 @@ export default function NotesPage() {
           <FilterChip
             active={filter === "all"}
             onClick={() => setFilter("all")}
-            label={`All (${all.length})`}
+            label={t("notes.filterAll").replace("{n}", String(all.length))}
           />
           {HIGHLIGHT_CATEGORIES.map((cat) => {
             const count = all.filter((n) => n.category === cat).length;
@@ -107,7 +109,10 @@ export default function NotesPage() {
             <FilterChip
               active={filter === "uncategorised"}
               onClick={() => setFilter("uncategorised")}
-              label={`Uncategorised (${all.filter((n) => !n.category).length})`}
+              label={t("notes.filterUncategorised").replace(
+                "{n}",
+                String(all.filter((n) => !n.category).length)
+              )}
             />
           )}
           <div className="ml-auto">
@@ -118,27 +123,27 @@ export default function NotesPage() {
                          transition focus:outline-none focus:ring-2
                          focus:ring-[var(--color-gold)]/50"
             >
-              Export Markdown
+              {t("notes.exportMarkdown")}
             </button>
           </div>
         </div>
       )}
 
       {filtered.length === 0 && totalCount > 0 && (
-        <p className="opacity-50 italic">No notes match this filter.</p>
+        <p className="opacity-50 italic">{t("notes.noMatchFilter")}</p>
       )}
 
       {totalCount === 0 && (
         <div className="rounded-lg border border-dashed border-[var(--color-gold-dark)]/30 p-8 text-center">
           <p className="opacity-60 mb-4">
-            Notes and highlights you save will appear here, grouped by book.
+            {t("notes.emptyState")}
           </p>
           <Link
             to="/reader"
             className="inline-block px-4 py-2 rounded bg-[var(--color-gold)]
                        text-white hover:opacity-90 transition"
           >
-            Open the Reader
+            {t("notes.openReader")}
           </Link>
         </div>
       )}
@@ -162,7 +167,9 @@ export default function NotesPage() {
                 ? localizeBookName(bookNotes[0].book_id, locale, book)
                 : book}
               <span className="ml-2 text-xs opacity-50 font-normal font-body">
-                {bookNotes.length} {bookNotes.length === 1 ? "note" : "notes"}
+                {t("notes.bookNotesCount")
+                  .replace("{n}", String(bookNotes.length))
+                  .replace("{noun}", bookNotes.length === 1 ? t("notes.note") : t("notes.notes"))}
               </span>
             </summary>
             <div className="px-4 pb-4 space-y-3">
@@ -185,10 +192,10 @@ export default function NotesPage() {
             className="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col"
           >
             <div className="flex items-center justify-between px-5 py-3 border-b">
-              <h2 className="font-display font-bold text-lg">Export Markdown</h2>
+              <h2 className="font-display font-bold text-lg">{t("notes.modalTitle")}</h2>
               <button
                 onClick={() => setExportOpen(false)}
-                aria-label="Close"
+                aria-label={t("notes.modalClose")}
                 className="p-1 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/50"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -207,14 +214,14 @@ export default function NotesPage() {
                 onClick={copyMarkdown}
                 className="text-xs px-3 py-1.5 rounded border hover:bg-gray-100 transition"
               >
-                {copied ? "✅ Copied" : "📋 Copy"}
+                {copied ? t("notes.modalCopied") : t("notes.modalCopy")}
               </button>
               <button
                 onClick={() => downloadMarkdown(markdown, "verbum-notes.md")}
                 className="text-xs px-3 py-1.5 rounded bg-[var(--color-gold)]
                            text-white hover:opacity-90 transition"
               >
-                Download .md
+                {t("notes.modalDownload")}
               </button>
             </div>
           </div>
@@ -252,6 +259,7 @@ function FilterChip({
 }
 
 function NoteCard({ note, onDelete }: { note: VerseNote; onDelete: () => void }) {
+  const { t } = useI18n();
   const cat = note.category;
   return (
     <div
@@ -289,9 +297,9 @@ function NoteCard({ note, onDelete }: { note: VerseNote; onDelete: () => void })
         <button
           onClick={onDelete}
           className="text-[11px] opacity-40 hover:opacity-100 hover:text-red-700 transition focus:outline-none focus:underline"
-          title="Delete note"
+          title={t("notes.cardDeleteTitle")}
         >
-          Delete
+          {t("notes.cardDelete")}
         </button>
       </div>
 
@@ -306,15 +314,15 @@ function NoteCard({ note, onDelete }: { note: VerseNote; onDelete: () => void })
       )}
 
       <div className="text-[11px] opacity-40 mt-2 flex items-center gap-3">
-        <span>Added {formatDate(note.created_at)}</span>
+        <span>{t("notes.cardAdded").replace("{date}", formatDate(note.created_at))}</span>
         {note.updated_at > note.created_at && (
-          <span>· Edited {formatDate(note.updated_at)}</span>
+          <span>{t("notes.cardEdited").replace("{date}", formatDate(note.updated_at))}</span>
         )}
         <Link
           to={readerLinkFor(note)}
           className="ml-auto text-[var(--color-gold-dark)] hover:text-[var(--color-ink)] transition"
         >
-          Open in reader →
+          {t("notes.cardOpenInReader")}
         </Link>
       </div>
     </div>

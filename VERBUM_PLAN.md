@@ -464,7 +464,7 @@ A Bíblia hebraica foi projetada para tradição oral com estruturas complexas q
 | 16 | 5D — Camada acadêmica (Tibéria + Koiné) | 🔥🔥🔥🔥🔥 | 🗄️ Backlog — Chirp3-HD suficiente |
 | — | **FASE 6-8 — Legado** | | |
 | 17 | Fase 6 — Engenharia Literária (ChiasmDiagram + modo Structural) | 🔥🔥🔥🔥🔥 | ✅ Concluído |
-| 18 | Fase 7 — Genealogia semântica (chesed → eleos → agape, AT→NT) | 🔥🔥🔥🔥🔥 | 🔲 Planejado |
+| 18 | Fase 7 — Genealogia semântica (chesed → eleos → agape, AT→NT) | 🔥🔥🔥🔥🔥 | ✅ Concluído |
 | 19 | Fase 8 — BigQuery Public Dataset + infraestrutura como legado | 🔥🔥🔥🔥🔥 | 🔲 Planejado |
 
 **Legenda:** 🔲 Planejado · 🚧 Em andamento · ⏸️ Pausado · ✅ Concluído
@@ -721,3 +721,20 @@ entrada lógica — sem depender da memória de conversa.
 - **Commit:** `64aa719 feat: Fase 6 — Literary Engineering (chiasm diagram + structural reader mode)`.
 - **TypeScript clean:** `npx tsc --noEmit` sem erros.
 - **Próxima entrada:** Fase 7 — Genealogia Semântica (rastreio de conceitos AT→NT), ou Tarefa #12 (Deploy + SEO). A decidir na próxima sessão.
+
+### 2026-04-15 — Fase 7 concluída: Genealogia Semântica
+
+- **Contexto:** mesma sessão que a Fase 6. Usuário pediu "Fase 7" imediatamente após conclusão de Fase 6.
+- **Escopo entregue:**
+  - `data/static/semantic_genealogy.json` *(criado)*: 10 conceitos curados com narrativa, nodes, bridges e versículos-chave. Conceitos: chesed/agapē, shalom/eirēnē, emet/alētheia, ruach/pneuma, kabowd/doxa, tsedaqah/dikaiosynē, emunah/pistis, mashiach/Christos, dabar/logos, shuv/metanoia. Cada conceito tem `narrative` de 3-4 parágrafos com pesquisa linguística real.
+  - `src/api/routers/genealogy.py` *(criado)*: `GET /genealogy/concepts` (catálogo) + `GET /genealogy/concepts/{id}` (detalhe enriquecido com counts do DB: ocorrências totais + top 5 livros via `interlinear` table).
+  - `src/api/main.py`: router registrado.
+  - `frontend/src/services/api.ts`: tipos `GenealogyNode`, `GenealogyBridge`, `GenealogyConcept`, `GenealogyConceptSummary` + `fetchGenealogyConcepts()` + `fetchGenealogyConcept()`.
+  - `frontend/src/components/genealogy/ConceptFlow.tsx` *(criado)*: visualização Hebrew→Greek. `WordNode` cards (script original grande com font-hebrew/font-greek, badge Strong's linkado ao word-study, estatísticas de ocorrência, top livros, nota contextual). `BridgeConnector` (seta horizontal com label do tipo de bridge: LXX, teológico, equivalente). Painel de narrativa, versículos-chave como chips linkados ao Reader, links de word-study por palavra.
+  - `frontend/src/pages/GenealogyPage.tsx` *(criado)*: `/genealogy` → grid de cards com cor temática por conceito. `/genealogy/:conceptId` → detalhe com `ConceptFlow` + breadcrumb.
+  - `App.tsx`: rotas `/genealogy` e `/genealogy/:conceptId`.
+  - `Layout.tsx`: nav item "Genealogia Semântica" com ícone de setas bidirecionais.
+  - i18n: `nav.genealogy` em pt/en/es.
+- **Commit:** `d544f96 feat: Fase 7 — Semantic Genealogy (concept journeys from Hebrew to Greek)`.
+- **TypeScript clean:** zero erros.
+- **Próxima entrada:** Fase 8 — BigQuery Public Dataset, ou Tarefa #12 (Deploy + SEO). Única fase restante do roadmap original.

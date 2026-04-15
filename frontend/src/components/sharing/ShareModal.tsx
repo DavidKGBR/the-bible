@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import VerseCardCanvas from "./VerseCardCanvas";
+import { useI18n } from "../../i18n/i18nContext";
 
 interface Props {
   text: string;
@@ -14,6 +15,7 @@ export default function ShareModal({
   translation,
   onClose,
 }: Props) {
+  const { t } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [copied, setCopied] = useState(false);
 
@@ -72,10 +74,10 @@ export default function ShareModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b">
-          <h2 className="font-display font-bold text-lg">Share Verse</h2>
+          <h2 className="font-display font-bold text-lg">{t("sharing.shareVerse")}</h2>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("sharing.close")}
             className="p-1 rounded hover:bg-gray-100 focus:outline-none
                        focus:ring-2 focus:ring-[var(--color-gold)]/50"
           >
@@ -111,14 +113,14 @@ export default function ShareModal({
             onClick={copyToClipboard}
             className="text-xs px-3 py-1.5 rounded border hover:bg-gray-100 transition"
           >
-            {copied ? "✅ Copied!" : "📋 Copy to clipboard"}
+            {copied ? `✅ ${t("sharing.copied")}` : `📋 ${t("sharing.copyClipboard")}`}
           </button>
           <button
             onClick={downloadPng}
             className="text-xs px-3 py-1.5 rounded bg-[var(--color-gold)]
                        text-white hover:opacity-90 transition"
           >
-            Download PNG
+            {t("sharing.downloadPng")}
           </button>
         </div>
       </div>

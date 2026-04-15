@@ -19,6 +19,7 @@ import {
   type PassageLayerKey,
   type PassageWord,
 } from "../services/api";
+import { useI18n } from "../i18n/i18nContext";
 
 /* ── Catalog page ─────────────────────────────────────────────────────────── */
 
@@ -30,15 +31,12 @@ const LAYER_DOT: Record<PassageLayerKey, string> = {
   english:    "bg-blue-400",
 };
 
-const LAYER_LABEL: Record<PassageLayerKey, string> = {
-  aramaic:    "Aramaico",
-  hebrew:     "Hebraico",
-  greek:      "Grego",
-  portuguese: "Português",
-  english:    "English",
-};
+function layerLabel(key: PassageLayerKey, t: (k: string) => string): string {
+  return t(`specialPassage.layer.${key}`);
+}
 
 function CatalogPage() {
+  const { t } = useI18n();
   const [catalog, setCatalog] = useState<SpecialPassageMeta[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,16 +53,15 @@ function CatalogPage() {
     <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
-          Passagens Especiais
+          {t("specialPassage.title")}
         </h1>
         <p className="text-sm text-[var(--color-text-muted)]">
-          Textos curados com múltiplas camadas de língua simultâneas — Aramaico,
-          Grego, Português e Inglês.
+          {t("specialPassage.subtitle")}
         </p>
       </div>
 
       {catalog.length === 0 ? (
-        <p className="text-[var(--color-text-muted)]">Nenhuma passagem disponível.</p>
+        <p className="text-[var(--color-text-muted)]">{t("specialPassage.none")}</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {catalog.map((p) => (
@@ -106,7 +103,7 @@ function CatalogPage() {
                 {p.layers.map((lk) => (
                   <span key={lk} className="inline-flex items-center gap-1 text-[11px] text-[var(--color-text-muted)]">
                     <span className={["w-2 h-2 rounded-full", LAYER_DOT[lk]].join(" ")} />
-                    {LAYER_LABEL[lk]}
+                    {layerLabel(lk, t)}
                   </span>
                 ))}
               </div>
@@ -124,6 +121,7 @@ const PT_TRANSLATIONS = ["nvi", "ra", "acf"] as const;
 const EN_TRANSLATIONS = ["kjv", "bbe", "asv", "web", "darby"] as const;
 
 function PassageDetailPage({ passageId }: { passageId: string }) {
+  const { t } = useI18n();
   const [passage, setPassage] = useState<SpecialPassageResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -137,9 +135,9 @@ function PassageDetailPage({ passageId }: { passageId: string }) {
     setError(null);
     fetchSpecialPassage(passageId, translation, translationEn)
       .then(setPassage)
-      .catch((e) => setError(e.message ?? "Erro ao carregar passagem."))
+      .catch((e) => setError(e.message ?? t("specialPassage.loadError")))
       .finally(() => setLoading(false));
-  }, [passageId, translation, translationEn]);
+  }, [passageId, translation, translationEn, t]);
 
   function handleWordClick(word: PassageWord, layerKey: PassageLayerKey) {
     if (word.strongs_id) {
@@ -156,7 +154,7 @@ function PassageDetailPage({ passageId }: { passageId: string }) {
       {/* Breadcrumb */}
       <nav className="text-xs text-[var(--color-text-muted)] flex gap-1 items-center">
         <Link to="/special-passages" className="hover:text-[var(--color-gold-dark)] transition-colors">
-          Passagens Especiais
+          {t("specialPassage.breadcrumb")}
         </Link>
         <span>›</span>
         <span>{passage?.title ?? passageId}</span>
@@ -183,7 +181,7 @@ function PassageDetailPage({ passageId }: { passageId: string }) {
       <div className="flex gap-4 flex-wrap">
         <div className="flex items-center gap-2">
           <label className="text-xs text-[var(--color-text-muted)] font-medium">
-            Português:
+            {t("specialPassage.ptLabel")}
           </label>
           <select
             value={translation}
@@ -192,15 +190,15 @@ function PassageDetailPage({ passageId }: { passageId: string }) {
                        text-[var(--color-text-primary)] px-2 py-1 focus:outline-none
                        focus:ring-1 focus:ring-[var(--color-gold)]/60"
           >
-            {PT_TRANSLATIONS.map((t) => (
-              <option key={t} value={t}>{t.toUpperCase()}</option>
+            {PT_TRANSLATIONS.map((tr) => (
+              <option key={tr} value={tr}>{tr.toUpperCase()}</option>
             ))}
           </select>
         </div>
 
         <div className="flex items-center gap-2">
           <label className="text-xs text-[var(--color-text-muted)] font-medium">
-            English:
+            {t("specialPassage.enLabel")}
           </label>
           <select
             value={translationEn}
@@ -209,8 +207,8 @@ function PassageDetailPage({ passageId }: { passageId: string }) {
                        text-[var(--color-text-primary)] px-2 py-1 focus:outline-none
                        focus:ring-1 focus:ring-[var(--color-gold)]/60"
           >
-            {EN_TRANSLATIONS.map((t) => (
-              <option key={t} value={t}>{t.toUpperCase()}</option>
+            {EN_TRANSLATIONS.map((tr) => (
+              <option key={tr} value={tr}>{tr.toUpperCase()}</option>
             ))}
           </select>
         </div>

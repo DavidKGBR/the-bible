@@ -12,6 +12,7 @@ import type {
   PassageWord,
   SpecialPassageResult,
 } from "../../services/api";
+import { useI18n } from "../../i18n/i18nContext";
 
 interface Props {
   passage: SpecialPassageResult;
@@ -51,16 +52,17 @@ const LAYER_PILL: Record<
   },
 };
 
-/** Short label for the toggle pills */
-const PILL_LABELS: Record<PassageLayerKey, string> = {
-  aramaic:    "Aramaico",
-  hebrew:     "Hebraico",
-  greek:      "Grego",
-  portuguese: "Português",
-  english:    "English",
+/** i18n key for short pill labels — translated via useI18n(). */
+const PILL_LABEL_KEYS: Record<PassageLayerKey, string> = {
+  aramaic:    "specialPassage.layer.aramaic",
+  hebrew:     "specialPassage.layer.hebrew",
+  greek:      "specialPassage.layer.greek",
+  portuguese: "specialPassage.layer.portuguese",
+  english:    "specialPassage.layer.english",
 };
 
 export default function MultiLayerView({ passage, onWordClick }: Props) {
+  const { t } = useI18n();
   const availableLayers = LAYER_ORDER.filter(
     (k) => (passage.layers[k]?.verse_count ?? 0) > 0
   );
@@ -104,7 +106,7 @@ export default function MultiLayerView({ passage, onWordClick }: Props) {
               ].join(" ")}
             >
               <span className={["w-2 h-2 rounded-full", styles.dot].join(" ")} />
-              {PILL_LABELS[key]}
+              {t(PILL_LABEL_KEYS[key])}
             </button>
           );
         })}

@@ -10,6 +10,7 @@
 import AudioButton from "../common/AudioButton";
 import type { PassageLayerKey, PassageWord } from "../../services/api";
 import type { BiblicalLanguage } from "../../hooks/useWordAudio";
+import { useI18n } from "../../i18n/i18nContext";
 
 interface Props {
   word: PassageWord;
@@ -19,36 +20,38 @@ interface Props {
 }
 
 const PANEL_ACCENT: Record<PassageLayerKey, string> = {
-  aramaic:    "border-amber-500/40  bg-amber-500/5",
-  hebrew:     "border-sky-500/40    bg-sky-500/5",
-  greek:      "border-purple-500/40 bg-purple-500/5",
+  aramaic: "border-amber-500/40  bg-amber-500/5",
+  hebrew: "border-sky-500/40    bg-sky-500/5",
+  greek: "border-purple-500/40 bg-purple-500/5",
   portuguese: "border-emerald-500/40 bg-emerald-500/5",
-  english:    "border-blue-400/40   bg-blue-400/5",
+  english: "border-blue-400/40   bg-blue-400/5",
 };
 
 const SCRIPT_FONT: Partial<Record<PassageLayerKey, string>> = {
   aramaic: "font-aramaic",
-  hebrew:  "font-hebrew",
-  greek:   "font-greek",
+  hebrew: "font-hebrew",
+  greek: "font-greek",
 };
 
 const WORD_LANGUAGE: Partial<Record<PassageLayerKey, BiblicalLanguage>> = {
   aramaic: "aramaic",
-  hebrew:  "hebrew",
-  greek:   "greek",
+  hebrew: "hebrew",
+  greek: "greek",
 };
 
-const SOURCE_LABEL: Partial<Record<PassageLayerKey, string>> = {
-  aramaic: "Peshitta — Aramaico Siríaco",
-  hebrew:  "WLC — Texto Massorético",
-  greek:   "SBLGNT — Grego Koiné",
+const SOURCE_LABEL_KEY: Partial<Record<PassageLayerKey, string>> = {
+  aramaic: "passageWord.source.aramaic",
+  hebrew: "passageWord.source.hebrew",
+  greek: "passageWord.source.greek",
 };
 
 export default function PassageWordPanel({ word, layerKey, layerLabel, onClose }: Props) {
+  const { t } = useI18n();
   const isRtl = layerKey === "aramaic" || layerKey === "hebrew";
   const scriptFont = SCRIPT_FONT[layerKey] ?? "";
   const lang = WORD_LANGUAGE[layerKey];
-  const sourceLabel = SOURCE_LABEL[layerKey] ?? layerLabel;
+  const sourceLabelKey = SOURCE_LABEL_KEY[layerKey];
+  const sourceLabel = sourceLabelKey ? t(sourceLabelKey) : layerLabel;
 
   return (
     <div
@@ -74,7 +77,7 @@ export default function PassageWordPanel({ word, layerKey, layerLabel, onClose }
           onClick={onClose}
           className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]
                      transition-colors rounded-lg p-1 hover:bg-[var(--color-surface-hover)]"
-          aria-label="Fechar"
+          aria-label={t("passageWord.closeAria")}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -122,7 +125,7 @@ export default function PassageWordPanel({ word, layerKey, layerLabel, onClose }
         {word.gloss && (
           <div className="flex flex-col gap-1">
             <span className="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-              Significado
+              {t("passageWord.meaning")}
             </span>
             <p className="text-lg font-medium text-[var(--color-text-primary)]">
               {word.gloss}
@@ -133,7 +136,7 @@ export default function PassageWordPanel({ word, layerKey, layerLabel, onClose }
         {/* Fonte */}
         <div className="flex flex-col gap-1">
           <span className="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-            Fonte
+            {t("passageWord.source")}
           </span>
           <p className="text-sm text-[var(--color-text-secondary)]">{sourceLabel}</p>
         </div>
@@ -141,8 +144,7 @@ export default function PassageWordPanel({ word, layerKey, layerLabel, onClose }
         {/* Nota sobre áudio proxy (aramaico) */}
         {layerKey === "aramaic" && word.audio_url && (
           <p className="text-[11px] text-[var(--color-text-muted)] italic border-t border-[var(--color-border)] pt-3">
-            Pronúncia via proxy Árabe (fonética Semítica aproximada).
-            Gravação autêntica em pesquisa — ver roadmap.
+            {t("passageWord.aramaicAudioNote")}
           </p>
         )}
       </div>

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { searchDictionary, type DictEntry } from "../services/api";
+import { useI18n } from "../i18n/i18nContext";
 
 export default function DictionaryPage() {
+  const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
   const [results, setResults] = useState<DictEntry[]>([]);
@@ -36,11 +38,8 @@ export default function DictionaryPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="page-title text-3xl">Bible Dictionary</h1>
-        <p className="text-sm opacity-60 mt-1">
-          ~6,000 entries from Easton's (1897) &amp; Smith's (1863) Bible
-          Dictionaries. Public domain.
-        </p>
+        <h1 className="page-title text-3xl">{t("dictionary.title")}</h1>
+        <p className="text-sm opacity-60 mt-1">{t("dictionary.subtitle")}</p>
       </div>
 
       {/* Search */}
@@ -49,7 +48,7 @@ export default function DictionaryPage() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search people, places, concepts…"
+          placeholder={t("dictionary.searchPlaceholder")}
           className="w-full rounded-lg border border-[var(--color-gold-dark)]/20 px-4 py-3
                      text-sm bg-white focus:outline-none focus:ring-2
                      focus:ring-[var(--color-gold)]/50 focus:border-[var(--color-gold)]/50"
@@ -57,17 +56,17 @@ export default function DictionaryPage() {
         />
       </div>
 
-      {loading && <p className="text-sm opacity-50">Searching…</p>}
+      {loading && <p className="text-sm opacity-50">{t("dictionary.searching")}</p>}
 
       {!loading && query.length >= 2 && results.length === 0 && (
-        <p className="text-sm opacity-50 italic">No entries found for "{query}".</p>
+        <p className="text-sm opacity-50 italic">
+          {t("dictionary.noResults").replace("{query}", query)}
+        </p>
       )}
 
       {query.length < 2 && (
         <div className="rounded-lg border border-dashed border-[var(--color-gold-dark)]/30 p-8 text-center">
-          <p className="opacity-60 mb-3">
-            Type at least 2 characters to search the dictionary.
-          </p>
+          <p className="opacity-60 mb-3">{t("dictionary.typeHint")}</p>
           <div className="flex flex-wrap justify-center gap-2">
             {["Jerusalem", "David", "Sabbath", "Passover", "Tabernacle", "Covenant"].map(
               (w) => (
@@ -137,7 +136,7 @@ export default function DictionaryPage() {
                   {entry.text_easton && (
                     <div className="mt-3">
                       <h4 className="text-[10px] uppercase tracking-wider font-bold text-[var(--color-gold-dark)] opacity-60 mb-1">
-                        Easton's Bible Dictionary
+                        {t("dictionary.easton")}
                       </h4>
                       <p className="text-sm leading-relaxed font-body">{entry.text_easton}</p>
                     </div>
@@ -145,7 +144,7 @@ export default function DictionaryPage() {
                   {entry.text_smith && (
                     <div>
                       <h4 className="text-[10px] uppercase tracking-wider font-bold text-[var(--color-new-testament)] opacity-60 mb-1">
-                        Smith's Bible Dictionary
+                        {t("dictionary.smith")}
                       </h4>
                       <p className="text-sm leading-relaxed font-body">{entry.text_smith}</p>
                     </div>
@@ -155,7 +154,7 @@ export default function DictionaryPage() {
                       to={`/search?q=${encodeURIComponent(entry.name)}`}
                       className="text-[var(--color-gold-dark)] hover:underline"
                     >
-                      Search in Bible →
+                      {t("dictionary.searchInBible")}
                     </Link>
                   </div>
                 </div>

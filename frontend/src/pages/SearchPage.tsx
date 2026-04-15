@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { searchVerses, type SearchResult } from "../services/api";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useI18n } from "../i18n/i18nContext";
 
 const KEYWORD_SUGGESTIONS = [
   "love",
@@ -53,6 +54,7 @@ function verseIdToReaderLink(verseId: string): string {
 }
 
 export default function SearchPage() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -100,14 +102,14 @@ export default function SearchPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h2 className="page-title text-3xl mb-4">Verse Search</h2>
+      <h2 className="page-title text-3xl mb-4">{t("search.title")}</h2>
 
       <form onSubmit={handleSubmit} className="flex gap-3 mb-6">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search verses (e.g., love, beginning, faith)..."
+          placeholder={t("search.placeholderLong")}
           className="flex-1 border rounded-lg px-4 py-2 bg-white focus:outline-none
                      focus:ring-2 focus:ring-[var(--color-gold)]/50
                      focus:border-[var(--color-gold)]/60"
@@ -118,18 +120,18 @@ export default function SearchPage() {
                      hover:opacity-90 transition focus:outline-none
                      focus:ring-2 focus:ring-[var(--color-gold)]/60"
         >
-          Search
+          {t("search.submit")}
         </button>
       </form>
 
-      {loading && <LoadingSpinner text="Searching..." />}
+      {loading && <LoadingSpinner text={t("search.searching")} />}
 
       {/* Empty state: suggestions + popular verses */}
       {!searched && !loading && (
         <div className="space-y-8 fade-in">
           <section>
             <h3 className="text-xs uppercase tracking-[0.2em] opacity-50 mb-3 font-display">
-              Try searching for
+              {t("search.trySearchingFor")}
             </h3>
             <div className="flex flex-wrap gap-2">
               {KEYWORD_SUGGESTIONS.map((tag) => (
@@ -149,7 +151,7 @@ export default function SearchPage() {
 
           <section>
             <h3 className="text-xs uppercase tracking-[0.2em] opacity-50 mb-3 font-display">
-              Popular verses
+              {t("search.popularVerses")}
             </h3>
             <div className="space-y-2">
               {POPULAR_VERSES.map((v) => (
@@ -181,13 +183,15 @@ export default function SearchPage() {
 
       {searched && !loading && (
         <p className="text-sm opacity-60 mb-4">
-          {totalResults} results for &quot;{query}&quot;
+          {t("search.resultsFor")
+            .replace("{total}", String(totalResults))
+            .replace("{query}", query)}
         </p>
       )}
 
       {searched && !loading && results.length === 0 && (
         <p className="text-sm opacity-50 bg-white border rounded p-4 text-center">
-          No verses match your query. Try another keyword.
+          {t("search.noResults")}
         </p>
       )}
 
@@ -227,7 +231,7 @@ export default function SearchPage() {
                 </span>
                 <span
                   className={`text-xs px-2 py-0.5 rounded shrink-0 ${sClass}`}
-                  aria-label={`Sentiment: ${r.sentiment_label}`}
+                  aria-label={t("search.sentimentLabel").replace("{label}", r.sentiment_label)}
                 >
                   <span aria-hidden className="mr-1">{sIcon}</span>
                   {r.sentiment_label}

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useI18n } from "../i18n/i18nContext";
 
 const BASE = "/api/v1";
 
@@ -65,6 +66,7 @@ const smallIcon = new L.Icon({
 // ── Zoom-aware marker layer ────────────────────────────────────────────────
 
 function MarkerLayer({ features }: { features: GeoFeature[] }) {
+  const { t } = useI18n();
   const map = useMap();
   const [zoom, setZoom] = useState(map.getZoom());
 
@@ -106,14 +108,15 @@ function MarkerLayer({ features }: { features: GeoFeature[] }) {
               )}
               <br />
               <span className="text-xs opacity-60">
-                {f.properties.verse_count} verse{f.properties.verse_count !== 1 ? "s" : ""}
+                {(f.properties.verse_count === 1 ? t("map.verseCountSingular") : t("map.verseCount"))
+                  .replace("{n}", String(f.properties.verse_count))}
               </span>
               <br />
               <Link
                 to={`/places?q=${encodeURIComponent(f.properties.name)}`}
                 className="text-xs text-blue-600 hover:underline"
               >
-                View details →
+                {t("map.viewDetails")}
               </Link>
             </div>
           </Popup>
@@ -126,6 +129,7 @@ function MarkerLayer({ features }: { features: GeoFeature[] }) {
 // ── Main Map Page ──────────────────────────────────────────────────────────
 
 export default function MapPage() {
+  const { t } = useI18n();
   const [geojson, setGeojson] = useState<GeoJSON | null>(null);
   const [routes, setRoutes] = useState<BibleRoute[]>([]);
   const [activeRoutes, setActiveRoutes] = useState<Set<string>>(new Set());
@@ -170,9 +174,9 @@ export default function MapPage() {
       <div className="px-4 py-3 border-b border-[var(--color-gold-dark)]/10 bg-white shrink-0">
         <div className="flex items-center justify-between max-w-none">
           <div>
-            <h1 className="page-title text-xl">Biblical Map</h1>
+            <h1 className="page-title text-xl">{t("map.title")}</h1>
             <p className="text-xs opacity-50">
-              {sortedFeatures.length.toLocaleString()} places with coordinates from OpenBible Geocoding
+              {t("map.subtitle").replace("{n}", sortedFeatures.length.toLocaleString())}
             </p>
           </div>
         </div>
@@ -191,14 +195,14 @@ export default function MapPage() {
                   onChange={(e) => setShowPlaces(e.target.checked)}
                   className="rounded"
                 />
-                <span>Show place markers</span>
+                <span>{t("map.showPlaces")}</span>
               </label>
             </div>
 
             {/* Routes */}
             <div>
               <h3 className="text-[10px] uppercase tracking-wider font-bold opacity-50 mb-2">
-                Biblical Journeys
+                {t("map.journeys")}
               </h3>
               <div className="space-y-1.5">
                 {routes.map((route) => (
@@ -233,7 +237,7 @@ export default function MapPage() {
             {activeRoutes.size > 0 && (
               <div>
                 <h3 className="text-[10px] uppercase tracking-wider font-bold opacity-50 mb-2">
-                  Active Routes
+                  {t("map.activeRoutes")}
                 </h3>
                 {routes
                   .filter((r) => activeRoutes.has(r.id))
@@ -247,7 +251,7 @@ export default function MapPage() {
                         {route.name}
                       </div>
                       <div className="text-[10px] opacity-40 ml-5.5 mt-0.5">
-                        {route.waypoints.length} waypoints
+                        {t("map.waypoints").replace("{n}", String(route.waypoints.length))}
                       </div>
                     </div>
                   ))}
@@ -260,7 +264,7 @@ export default function MapPage() {
         <div className="flex-1 relative">
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-[1000]">
-              <p className="text-sm opacity-50">Loading map data...</p>
+              <p className="text-sm opacity-50">{t("map.loading")}</p>
             </div>
           )}
           <MapContainer

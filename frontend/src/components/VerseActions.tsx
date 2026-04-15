@@ -12,6 +12,7 @@ import NoteEditor from "./notes/NoteEditor";
 import CommentaryPanel from "./reader/CommentaryPanel";
 import ShareModal from "./sharing/ShareModal";
 import { useTranslationIdsCsv } from "../hooks/useTranslations";
+import { useI18n } from "../i18n/i18nContext";
 
 interface Props {
   verseId: string;
@@ -38,6 +39,7 @@ export default function VerseActions({
   verse,
   initialTab = "none",
 }: Props) {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { isBookmarked, toggle } = useBookmarks();
   const { get: getNote } = useVerseNotes();
@@ -132,7 +134,7 @@ export default function VerseActions({
               : "hover:bg-gray-100"
           }`}
         >
-          🔗 Cross-refs
+          🔗 {t("verseActions.btn.crossrefs")}
         </button>
         <button
           onClick={loadExplain}
@@ -142,7 +144,7 @@ export default function VerseActions({
               : "hover:bg-gray-100"
           }`}
         >
-          🤖 Explain
+          🤖 {t("verseActions.btn.explain")}
         </button>
         <button
           onClick={() => setTab(tab === "commentary" ? "none" : "commentary")}
@@ -152,7 +154,7 @@ export default function VerseActions({
               : "hover:bg-gray-100"
           }`}
         >
-          📚 Commentary
+          📚 {t("verseActions.btn.commentary")}
         </button>
         <button
           onClick={loadCompare}
@@ -162,11 +164,11 @@ export default function VerseActions({
               : "hover:bg-gray-100"
           }`}
         >
-          🔀 Compare
+          🔀 {t("verseActions.btn.compare")}
         </button>
         <button
           onClick={() => setTab(tab === "notes" ? "none" : "notes")}
-          title={hasNote ? "Edit note" : "Add note"}
+          title={hasNote ? t("verseActions.note.edit") : t("verseActions.note.add")}
           className={`text-xs px-3 py-1 rounded border transition ${
             tab === "notes"
               ? "bg-[var(--color-gold)] text-white border-[var(--color-gold)]"
@@ -175,30 +177,30 @@ export default function VerseActions({
                 : "hover:bg-gray-100"
           }`}
         >
-          {hasNote ? "✍️ Note •" : "✍️ Note"}
+          {hasNote ? `✍️ ${t("verseActions.btn.noteWith")}` : `✍️ ${t("verseActions.btn.note")}`}
         </button>
         <button
           onClick={handleBookmark}
-          title={bookmarked ? "Remove bookmark" : "Save bookmark"}
+          title={bookmarked ? t("verseActions.bookmark.remove") : t("verseActions.bookmark.save")}
           className={`text-xs px-3 py-1 rounded border transition ${
             bookmarked
               ? "bg-amber-100 text-amber-800 border-amber-300"
               : "hover:bg-gray-100"
           }`}
         >
-          {bookmarked ? "★ Saved" : "☆ Save"}
+          {bookmarked ? `★ ${t("verseActions.btn.saved")}` : `☆ ${t("verseActions.btn.save")}`}
         </button>
         <button
           onClick={copyVerse}
           className="text-xs px-3 py-1 rounded border hover:bg-gray-100 transition"
         >
-          {copied ? "✅ Copied" : "📋 Copy"}
+          {copied ? `✅ ${t("verseActions.btn.copied")}` : `📋 ${t("verseActions.btn.copy")}`}
         </button>
         <button
           onClick={() => setShareOpen(true)}
           className="text-xs px-3 py-1 rounded border hover:bg-gray-100 transition"
         >
-          🖼️ Share
+          🖼️ {t("verseActions.btn.share")}
         </button>
       </div>
 
@@ -215,13 +217,13 @@ export default function VerseActions({
       {tab === "crossrefs" && (
         <div className="bg-white border rounded p-3 text-sm">
           {loading ? (
-            <p className="opacity-50">Loading cross-references...</p>
+            <p className="opacity-50">{t("verseActions.crossrefs.loading")}</p>
           ) : crossrefs.length === 0 ? (
-            <p className="opacity-50">No cross-references found.</p>
+            <p className="opacity-50">{t("verseActions.crossrefs.none")}</p>
           ) : (
             <div className="space-y-2">
               <p className="text-xs font-bold opacity-60 mb-2">
-                {crossrefs.length} cross-references
+                {t("verseActions.crossrefs.count").replace("{n}", String(crossrefs.length))}
               </p>
               {crossrefs.slice(0, 10).map((cr) => (
                 <div
@@ -249,7 +251,7 @@ export default function VerseActions({
               ))}
               {crossrefs.length > 10 && (
                 <p className="text-xs opacity-50 pt-1">
-                  + {crossrefs.length - 10} more
+                  {t("verseActions.crossrefs.more").replace("{n}", String(crossrefs.length - 10))}
                 </p>
               )}
             </div>
@@ -285,9 +287,9 @@ export default function VerseActions({
       {tab === "compare" && (
         <div className="bg-white border rounded p-3 text-sm">
           {loading ? (
-            <p className="opacity-50">Loading translations...</p>
+            <p className="opacity-50">{t("verseActions.compare.loading")}</p>
           ) : Object.keys(translations).length === 0 ? (
-            <p className="opacity-50">No translations found.</p>
+            <p className="opacity-50">{t("verseActions.compare.none")}</p>
           ) : (
             <div className="space-y-2">
               {Object.entries(translations).map(([tid, txt]) => (

@@ -6,8 +6,10 @@ import {
   type CompareResult,
 } from "../services/api";
 import { useTranslationIds } from "../hooks/useTranslations";
+import { useI18n } from "../i18n/i18nContext";
 
 export default function ComparePage() {
+  const { t } = useI18n();
   const [presets, setPresets] = useState<ComparePreset[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [result, setResult] = useState<CompareResult | null>(null);
@@ -60,16 +62,15 @@ export default function ComparePage() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="page-title text-3xl">Passage Comparator</h1>
+        <h1 className="page-title text-3xl">{t("compare.title")}</h1>
         <p className="text-sm opacity-60 mt-1">
-          Compare parallel passages side by side — synoptic Gospels, duplicate
-          narratives in Kings/Chronicles, and more.
+          {t("compare.subtitle")}
         </p>
       </div>
 
       {/* Translation selector */}
       <div className="flex items-center gap-3 mb-4">
-        <span className="text-xs opacity-50">Translation:</span>
+        <span className="text-xs opacity-50">{t("compare.translationLabel")}</span>
         {translationIds.map((t) => (
           <button
             key={t}
@@ -101,7 +102,9 @@ export default function ComparePage() {
               {preset.title}
             </div>
             <div className="text-[10px] opacity-50 mt-1">
-              {preset.passage_count} passages · {preset.labels.join(", ")}
+              {t("compare.presetMeta")
+                .replace("{count}", String(preset.passage_count))
+                .replace("{labels}", preset.labels.join(", "))}
             </div>
           </button>
         ))}
@@ -110,12 +113,12 @@ export default function ComparePage() {
       {!selected && (
         <div className="rounded-lg border border-dashed border-[var(--color-gold-dark)]/30 p-8 text-center">
           <p className="opacity-60">
-            Select a parallel passage above to compare side by side.
+            {t("compare.selectPrompt")}
           </p>
         </div>
       )}
 
-      {loading && <p className="text-sm opacity-50">Loading passages...</p>}
+      {loading && <p className="text-sm opacity-50">{t("compare.loading")}</p>}
 
       {/* Parallel columns */}
       {!loading && result && (
@@ -141,7 +144,9 @@ export default function ComparePage() {
                 <div className={`px-3 py-2 ${colBgs[i % colBgs.length]}`}>
                   <div className="font-bold text-sm">{col.label}</div>
                   <div className="text-[10px] opacity-50">
-                    {col.verse_count} verses · {col.range}
+                    {t("compare.columnMeta")
+                      .replace("{count}", String(col.verse_count))
+                      .replace("{range}", col.range)}
                   </div>
                 </div>
 
@@ -157,7 +162,7 @@ export default function ComparePage() {
                   ))}
                   {col.verses.length === 0 && (
                     <p className="text-xs opacity-40 italic">
-                      No verses found for this translation.
+                      {t("compare.noVersesForTranslation")}
                     </p>
                   )}
                 </div>

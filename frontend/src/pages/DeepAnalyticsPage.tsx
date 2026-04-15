@@ -13,28 +13,29 @@ import { localizeBookName } from "../i18n/bookNames";
 type Tab = "hapax" | "richness";
 
 export default function DeepAnalyticsPage() {
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("hapax");
 
   return (
     <div className="max-w-5xl mx-auto">
-      <h1 className="text-2xl font-display font-bold mb-1">Deep Analytics</h1>
+      <h1 className="text-2xl font-display font-bold mb-1">{t("analytics.title")}</h1>
       <p className="text-sm opacity-60 mb-6">
-        Hapax legomena, vocabulary richness, and lexical fingerprints.
+        {t("analytics.subtitle")}
       </p>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
-        {(["hapax", "richness"] as Tab[]).map((t) => (
+        {(["hapax", "richness"] as Tab[]).map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              tab === t
+              tab === tabKey
                 ? "bg-[var(--color-gold)] text-white"
                 : "bg-black/5 hover:bg-black/10"
             }`}
           >
-            {t === "hapax" ? "Hapax Legomena" : "Vocabulary Richness"}
+            {tabKey === "hapax" ? t("analytics.tab.hapax") : t("analytics.tab.richness")}
           </button>
         ))}
       </div>
@@ -46,6 +47,7 @@ export default function DeepAnalyticsPage() {
 }
 
 function HapaxTab() {
+  const { t } = useI18n();
   const [data, setData] = useState<HapaxResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [langFilter, setLangFilter] = useState<string>("");
@@ -58,12 +60,19 @@ function HapaxTab() {
       .finally(() => setLoading(false));
   }, [langFilter]);
 
-  if (loading) return <LoadingSpinner text="Finding hapax legomena..." />;
+  if (loading) return <LoadingSpinner text={t("analytics.hapaxLoading")} />;
+
+  const langLabel = (l: string): string =>
+    l === "hebrew"
+      ? t("analytics.lang.hebrew")
+      : l === "greek"
+        ? t("analytics.lang.greek")
+        : t("analytics.lang.all");
 
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
-        <span className="text-sm opacity-50">Language:</span>
+        <span className="text-sm opacity-50">{t("analytics.languageLabel")}</span>
         {["", "hebrew", "greek"].map((l) => (
           <button
             key={l}
@@ -74,10 +83,12 @@ function HapaxTab() {
                 : "bg-black/5 hover:bg-black/10"
             }`}
           >
-            {l || "All"}
+            {langLabel(l)}
           </button>
         ))}
-        <span className="ml-auto text-xs opacity-40">{data.length} words found</span>
+        <span className="ml-auto text-xs opacity-40">
+          {t("analytics.wordsFound").replace("{n}", String(data.length))}
+        </span>
       </div>
 
       <div className="space-y-2">
@@ -120,7 +131,7 @@ function HapaxTab() {
 }
 
 function RichnessTab() {
-  const { locale } = useI18n();
+  const { t, locale } = useI18n();
   const [books, setBooks] = useState<VocabRichnessBook[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -132,7 +143,7 @@ function RichnessTab() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <LoadingSpinner text="Computing vocabulary richness..." />;
+  if (loading) return <LoadingSpinner text={t("analytics.richnessLoading")} />;
 
   const maxRichness = books[0]?.richness || 1;
 
@@ -154,7 +165,11 @@ function RichnessTab() {
                     : "var(--color-new-testament)",
                 opacity: 0.7,
               }}
-              title={`${localizeBookName(b.book_id, locale, b.book_name)}: ${b.richness} richness (${b.unique_words} unique / ${b.total_words} total)`}
+              title={t("analytics.richnessTooltip")
+                .replace("{book}", localizeBookName(b.book_id, locale, b.book_name))
+                .replace("{richness}", String(b.richness))
+                .replace("{unique}", String(b.unique_words))
+                .replace("{total}", String(b.total_words))}
             />
           </div>
           <span className="text-xs tabular-nums opacity-50 w-14 text-right">

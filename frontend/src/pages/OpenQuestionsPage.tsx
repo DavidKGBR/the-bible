@@ -7,8 +7,10 @@ import {
   type OpenQuestionDetail,
 } from "../services/api";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useI18n } from "../i18n/i18nContext";
 
 export default function OpenQuestionsPage() {
+  const { t } = useI18n();
   const [questions, setQuestions] = useState<OpenQuestion[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [catFilter, setCatFilter] = useState("");
@@ -44,9 +46,9 @@ export default function OpenQuestionsPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-display font-bold mb-1">Open Questions</h1>
+      <h1 className="text-2xl font-display font-bold mb-1">{t("questions.title")}</h1>
       <p className="text-sm opacity-60 mb-6">
-        Unresolved scholarly debates — multiple perspectives, no easy answers.
+        {t("questions.subtitle")}
       </p>
 
       {/* Category filter */}
@@ -59,7 +61,7 @@ export default function OpenQuestionsPage() {
               : "bg-black/5 hover:bg-black/10"
           }`}
         >
-          All
+          {t("questions.filterAll")}
         </button>
         {categories.map((c) => (
           <button
@@ -77,7 +79,7 @@ export default function OpenQuestionsPage() {
       </div>
 
       {loading ? (
-        <LoadingSpinner text="Loading questions..." />
+        <LoadingSpinner text={t("questions.loadingList")} />
       ) : (
         <div className="space-y-3">
           {questions.map((q) => (
@@ -102,7 +104,8 @@ export default function OpenQuestionsPage() {
                       {q.difficulty}
                     </span>
                     <span className="text-[10px] opacity-30">
-                      {q.verse_refs.length} verse{q.verse_refs.length !== 1 && "s"}
+                      {(q.verse_refs.length === 1 ? t("questions.verse") : t("questions.verses"))
+                        .replace("{n}", String(q.verse_refs.length))}
                     </span>
                   </div>
                 </div>
@@ -111,7 +114,7 @@ export default function OpenQuestionsPage() {
               {expanded === q.id && (
                 <div className="px-4 pb-4 border-t border-[var(--color-gold)]/10">
                   {detailLoading ? (
-                    <p className="text-sm opacity-50 py-3 animate-pulse">Loading...</p>
+                    <p className="text-sm opacity-50 py-3 animate-pulse">{t("questions.loadingDetail")}</p>
                   ) : detail ? (
                     <div className="pt-3 space-y-4">
                       <p className="text-sm leading-relaxed opacity-80">
@@ -122,7 +125,7 @@ export default function OpenQuestionsPage() {
                       {detail.perspectives && detail.perspectives.length > 0 && (
                         <div className="space-y-2">
                           <h4 className="text-[10px] uppercase tracking-wider font-bold opacity-40">
-                            Perspectives
+                            {t("questions.perspectives")}
                           </h4>
                           {detail.perspectives.map((p, i) => (
                             <div

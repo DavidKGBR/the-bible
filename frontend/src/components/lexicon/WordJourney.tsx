@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useI18n } from "../../i18n/i18nContext";
 
 interface EraData {
   era: string;
@@ -27,6 +28,7 @@ const ERA_COLORS: Record<string, string> = {
 };
 
 export default function WordJourney({ strongsId }: { strongsId: string }) {
+  const { t } = useI18n();
   const [data, setData] = useState<JourneyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,14 +43,14 @@ export default function WordJourney({ strongsId }: { strongsId: string }) {
         return r.json();
       })
       .then(setData)
-      .catch(() => setError("Could not load word journey."))
+      .catch(() => setError(t("lexicon.journey.loadError")))
       .finally(() => setLoading(false));
-  }, [strongsId]);
+  }, [strongsId, t]);
 
   if (loading)
-    return <p className="text-sm opacity-50 animate-pulse">Loading journey...</p>;
+    return <p className="text-sm opacity-50 animate-pulse">{t("lexicon.journey.loading")}</p>;
   if (error || !data || data.journey.length === 0)
-    return <p className="text-sm opacity-50">No journey data available.</p>;
+    return <p className="text-sm opacity-50">{t("lexicon.journey.noData")}</p>;
 
   const maxOcc = Math.max(...data.journey.map((e) => e.total_occurrences));
 
@@ -65,7 +67,9 @@ export default function WordJourney({ strongsId }: { strongsId: string }) {
               backgroundColor: ERA_COLORS[era.era] || "#666",
               minWidth: "2rem",
             }}
-            title={`${era.era}: ${era.total_occurrences} occurrences`}
+            title={t("lexicon.journey.eraTooltip")
+              .replace("{era}", era.era)
+              .replace("{n}", String(era.total_occurrences))}
           >
             {era.total_occurrences > 0 && era.era.slice(0, 4)}
           </div>
@@ -82,7 +86,12 @@ export default function WordJourney({ strongsId }: { strongsId: string }) {
           <div className="flex items-baseline justify-between mb-2">
             <h4 className="font-display font-bold text-sm">{era.era}</h4>
             <span className="text-xs opacity-50 tabular-nums">
-              {era.total_occurrences}× in {era.book_count} book{era.book_count !== 1 && "s"}
+              {(era.book_count === 1
+                ? t("lexicon.journey.occurrencesOne")
+                : t("lexicon.journey.occurrences")
+              )
+                .replace("{n}", String(era.total_occurrences))
+                .replace("{books}", String(era.book_count))}
             </span>
           </div>
 
@@ -101,7 +110,7 @@ export default function WordJourney({ strongsId }: { strongsId: string }) {
           {era.top_glosses.length > 0 && (
             <div className="mb-2">
               <span className="text-[10px] uppercase tracking-wider opacity-40 mr-2">
-                Meanings:
+                {t("lexicon.journey.meanings")}
               </span>
               {era.top_glosses.map((g, i) => (
                 <span key={g.gloss} className="text-xs">
@@ -117,7 +126,7 @@ export default function WordJourney({ strongsId }: { strongsId: string }) {
           {era.top_books.length > 0 && (
             <div>
               <span className="text-[10px] uppercase tracking-wider opacity-40 mr-2">
-                Books:
+                {t("lexicon.journey.books")}
               </span>
               {era.top_books.map((b, i) => (
                 <span key={b.book_id} className="text-xs opacity-70">
@@ -132,12 +141,12 @@ export default function WordJourney({ strongsId }: { strongsId: string }) {
           {/* Semantic tags */}
           {era.top_semantic_tags.length > 0 && (
             <div className="mt-1 flex flex-wrap gap-1">
-              {era.top_semantic_tags.map((t) => (
+              {era.top_semantic_tags.map((tag) => (
                 <span
-                  key={t.tag}
+                  key={tag.tag}
                   className="text-[10px] px-2 py-0.5 rounded-full bg-black/5 opacity-60"
                 >
-                  {t.tag}
+                  {tag.tag}
                 </span>
               ))}
             </div>

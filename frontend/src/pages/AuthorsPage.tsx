@@ -9,6 +9,7 @@ import {
   type AuthorBookStats,
 } from "../services/api";
 import AuthorCompare from "../components/authors/AuthorCompare";
+import { useI18n } from "../i18n/i18nContext";
 
 // ── Period parser ──────────────────────────────────────────────────────────
 
@@ -38,6 +39,7 @@ function parsePeriod(period: string): { start: number; end: number } | null {
 }
 
 export default function AuthorsPage() {
+  const { t } = useI18n();
   const [authors, setAuthors] = useState<Author[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "OT" | "NT">("all");
@@ -85,10 +87,9 @@ export default function AuthorsPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="page-title text-3xl">Biblical Authors</h1>
+        <h1 className="page-title text-3xl">{t("authors.title")}</h1>
         <p className="text-sm opacity-60 mt-1">
-          33 traditional authors behind the 66 books of the Bible.
-          Vocabulary stats computed from Strong's interlinear data.
+          {t("authors.subtitle")}
         </p>
       </div>
 
@@ -96,10 +97,10 @@ export default function AuthorsPage() {
       {!loading && authors.length > 0 && (
         <div className="flex gap-3 mb-5 flex-wrap">
           {[
-            { label: "Authors", value: authors.length },
-            { label: "Books", value: totalBooks },
-            { label: "Old Testament", value: `${otCount} authors` },
-            { label: "New Testament", value: `${ntCount} authors` },
+            { label: t("authors.stats.authors"), value: authors.length },
+            { label: t("authors.stats.books"), value: totalBooks },
+            { label: t("authors.stats.ot"), value: t("authors.stats.nAuthors").replace("{n}", String(otCount)) },
+            { label: t("authors.stats.nt"), value: t("authors.stats.nAuthors").replace("{n}", String(ntCount)) },
           ].map((s) => (
             <div
               key={s.label}
@@ -133,7 +134,11 @@ export default function AuthorsPage() {
                 : "border-[var(--color-gold)]/30 hover:bg-[var(--color-gold)]/10 text-[var(--color-gold-dark)]"
             }`}
           >
-            {f === "all" ? "All" : f === "OT" ? "Old Testament" : "New Testament"}
+            {f === "all"
+              ? t("authors.filter.all")
+              : f === "OT"
+                ? t("authors.filter.ot")
+                : t("authors.filter.nt")}
           </button>
         ))}
         <span className="w-px h-4 bg-gray-200 mx-1" />
@@ -148,11 +153,11 @@ export default function AuthorsPage() {
               : "border-blue-200 hover:bg-blue-50 text-blue-500"
           }`}
         >
-          {compareMode ? "Cancel Compare" : "Compare"}
+          {compareMode ? t("authors.compare.cancel") : t("authors.compare.toggle")}
         </button>
         {compareMode && compareSelection.length > 0 && (
           <span className="text-[10px] opacity-50">
-            {compareSelection.length}/2 selected
+            {t("authors.compare.selected").replace("{n}", String(compareSelection.length))}
           </span>
         )}
       </div>
@@ -173,7 +178,7 @@ export default function AuthorsPage() {
         );
       })()}
 
-      {loading && <p className="text-sm opacity-50">Loading authors...</p>}
+      {loading && <p className="text-sm opacity-50">{t("authors.loading")}</p>}
 
       {/* Author cards */}
       <div className="space-y-3">
@@ -235,7 +240,7 @@ export default function AuthorsPage() {
                   </p>
                   {!isOpen && (
                     <p className="text-sm opacity-60 mt-1 line-clamp-1">
-                      {author.books.length} book{author.books.length !== 1 ? "s" : ""}: {author.books.join(", ")}
+                      {author.books.length} {author.books.length !== 1 ? t("authors.books") : t("authors.book")}: {author.books.join(", ")}
                     </p>
                   )}
                 </div>
@@ -258,7 +263,7 @@ export default function AuthorsPage() {
                   {/* Books */}
                   <div>
                     <h4 className="text-[10px] uppercase tracking-wider font-bold opacity-50 mb-2">
-                      Books Written
+                      {t("authors.booksWritten")}
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {author.books.map((bookId) => (
@@ -276,12 +281,12 @@ export default function AuthorsPage() {
 
                   {/* Vocabulary stats */}
                   {detailLoading && (
-                    <p className="text-xs opacity-50">Loading vocabulary stats...</p>
+                    <p className="text-xs opacity-50">{t("authors.loadingVocab")}</p>
                   )}
                   {!detailLoading && detail?.stats && detail.stats.unique_strongs > 0 && (
                     <div>
                       <h4 className="text-[10px] uppercase tracking-wider font-bold opacity-50 mb-2">
-                        Vocabulary Fingerprint
+                        {t("authors.vocabFingerprint")}
                       </h4>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                         <div className="text-center p-2 rounded bg-[var(--color-gold)]/5">
@@ -289,7 +294,7 @@ export default function AuthorsPage() {
                             {detail.stats.unique_strongs.toLocaleString()}
                           </div>
                           <div className="text-[9px] uppercase tracking-wider opacity-50">
-                            Unique words
+                            {t("authors.uniqueWords")}
                           </div>
                         </div>
                         <div className="text-center p-2 rounded bg-[var(--color-gold)]/5">
@@ -297,7 +302,7 @@ export default function AuthorsPage() {
                             {detail.stats.total_words.toLocaleString()}
                           </div>
                           <div className="text-[9px] uppercase tracking-wider opacity-50">
-                            Total words
+                            {t("authors.totalWords")}
                           </div>
                         </div>
                         <div className="text-center p-2 rounded bg-[var(--color-gold)]/5">
@@ -305,7 +310,7 @@ export default function AuthorsPage() {
                             {detail.stats.total_verses.toLocaleString()}
                           </div>
                           <div className="text-[9px] uppercase tracking-wider opacity-50">
-                            Verses
+                            {t("authors.verses")}
                           </div>
                         </div>
                         <div className="text-center p-2 rounded bg-[var(--color-gold)]/5">
@@ -315,7 +320,7 @@ export default function AuthorsPage() {
                               : "—"}%
                           </div>
                           <div className="text-[9px] uppercase tracking-wider opacity-50">
-                            Vocab Richness
+                            {t("authors.vocabRichness")}
                           </div>
                         </div>
                       </div>
@@ -324,7 +329,7 @@ export default function AuthorsPage() {
                       {detail.stats.top_words && detail.stats.top_words.length > 0 && (
                         <div>
                           <h4 className="text-[10px] uppercase tracking-wider font-bold opacity-50 mb-1">
-                            Most Used Words
+                            {t("authors.mostUsedWords")}
                           </h4>
                           <div className="flex flex-wrap gap-1.5">
                             {detail.stats.top_words.map((w, i) => (
@@ -333,7 +338,7 @@ export default function AuthorsPage() {
                                 to={`/word-study/${w.strongs_id}`}
                                 className="text-[11px] px-2 py-0.5 rounded bg-[var(--color-gold)]/10
                                            text-[var(--color-gold-dark)] hover:bg-[var(--color-gold)]/20 transition"
-                                title={`${w.strongs_id} — ${w.occurrences} occurrences`}
+                                title={`${w.strongs_id} — ${w.occurrences} ${t("authors.occurrences")}`}
                               >
                                 {w.gloss} <span className="opacity-40">({w.occurrences})</span>
                               </Link>
@@ -361,6 +366,7 @@ export default function AuthorsPage() {
 // ── Author Timeline ────────────────────────────────────────────────────────
 
 function AuthorTimeline({ authors }: { authors: Author[] }) {
+  const { t } = useI18n();
   const items = useMemo(() => {
     const parsed = authors
       .map((a) => ({ author: a, range: parsePeriod(a.period) }))
@@ -387,17 +393,17 @@ function AuthorTimeline({ authors }: { authors: Author[] }) {
 
   // Era markers
   const eras = [
-    { label: "Patriarchs", year: -2000 },
-    { label: "Exodus", year: -1400 },
-    { label: "Kings", year: -1000 },
-    { label: "Exile", year: -586 },
-    { label: "NT", year: 0 },
+    { label: t("authors.era.patriarchs"), year: -2000 },
+    { label: t("authors.era.exodus"), year: -1400 },
+    { label: t("authors.era.kings"), year: -1000 },
+    { label: t("authors.era.exile"), year: -586 },
+    { label: t("authors.era.nt"), year: 0 },
   ].filter((e) => e.year >= minYear && e.year <= minYear + span);
 
   return (
     <div className="mb-5 p-4 rounded-lg border bg-white">
       <h4 className="text-[10px] uppercase tracking-wider font-bold opacity-50 mb-3">
-        Historical Timeline
+        {t("authors.historicalTimeline")}
       </h4>
 
       {/* Era markers */}
@@ -442,20 +448,20 @@ function AuthorTimeline({ authors }: { authors: Author[] }) {
       {/* Year axis */}
       <div className="relative h-4 mt-1">
         <span className="absolute left-0 text-[9px] opacity-40">
-          {Math.abs(minYear)} BC
+          {Math.abs(minYear)} {t("common.bc")}
         </span>
         <span className="absolute right-0 text-[9px] opacity-40">
-          {Math.abs(minYear + span)} {minYear + span < 0 ? "BC" : "AD"}
+          {Math.abs(minYear + span)} {minYear + span < 0 ? t("common.bc") : t("common.ad")}
         </span>
       </div>
 
       {/* Legend */}
       <div className="flex gap-4 text-[9px] opacity-40 mt-1">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-emerald-400" /> Old Testament
+          <span className="w-2 h-2 rounded-full bg-emerald-400" /> {t("authors.stats.ot")}
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-[var(--color-gold)]" /> New Testament
+          <span className="w-2 h-2 rounded-full bg-[var(--color-gold)]" /> {t("authors.stats.nt")}
         </span>
       </div>
     </div>
@@ -465,6 +471,7 @@ function AuthorTimeline({ authors }: { authors: Author[] }) {
 // ── Book Stats Breakdown Component ─────────────────────────────────────────
 
 function BookStatsBreakdown({ books }: { books: AuthorBookStats[] }) {
+  const { t } = useI18n();
   const maxWords = Math.max(...books.map((b) => b.total_words), 1);
 
   function sentimentColor(s: number): string {
@@ -474,15 +481,15 @@ function BookStatsBreakdown({ books }: { books: AuthorBookStats[] }) {
   }
 
   function sentimentLabel(s: number): string {
-    if (s > 0.05) return "positive";
-    if (s < -0.05) return "negative";
-    return "neutral";
+    if (s > 0.05) return t("authors.sentiment.positive");
+    if (s < -0.05) return t("authors.sentiment.negative");
+    return t("authors.sentiment.neutral");
   }
 
   return (
     <div>
       <h4 className="text-[10px] uppercase tracking-wider font-bold opacity-50 mb-2">
-        Books Breakdown
+        {t("authors.booksBreakdown")}
       </h4>
       <div className="space-y-2">
         {books.map((b) => {
@@ -503,17 +510,17 @@ function BookStatsBreakdown({ books }: { books: AuthorBookStats[] }) {
                     style={{ width: `${Math.max(pct, 2)}%` }}
                   />
                   <span className="absolute inset-0 flex items-center px-2 text-[10px] font-medium text-[var(--color-ink)]">
-                    {b.total_words.toLocaleString()} words
+                    {b.total_words.toLocaleString()} {t("common.words")}
                   </span>
                 </div>
                 <span className="text-[10px] opacity-40 w-20 text-right shrink-0">
-                  {b.total_chapters} ch · {b.total_verses} vs
+                  {b.total_chapters} {t("authors.chUnit")} · {b.total_verses} {t("authors.vsUnit")}
                 </span>
               </div>
               {/* Hover detail */}
               <div className="hidden group-hover:flex gap-4 ml-15 mt-0.5 text-[10px] opacity-50 pl-15">
-                <span>{b.avg_words_per_verse?.toFixed(1)} words/verse</span>
-                <span>Sentiment: {sentimentLabel(b.avg_sentiment)} ({b.avg_sentiment?.toFixed(3)})</span>
+                <span>{b.avg_words_per_verse?.toFixed(1)} {t("authors.wordsPerVerseUnit")}</span>
+                <span>{t("authors.sentimentLabel")}: {sentimentLabel(b.avg_sentiment)} ({b.avg_sentiment?.toFixed(3)})</span>
                 <span>{b.category}</span>
               </div>
             </div>
@@ -521,9 +528,9 @@ function BookStatsBreakdown({ books }: { books: AuthorBookStats[] }) {
         })}
       </div>
       <div className="flex gap-4 mt-2 text-[9px] opacity-40">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400" /> Positive</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" /> Neutral</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400" /> Negative</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400" /> {t("authors.sentimentLegend.positive")}</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" /> {t("authors.sentimentLegend.neutral")}</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400" /> {t("authors.sentimentLegend.negative")}</span>
       </div>
     </div>
   );

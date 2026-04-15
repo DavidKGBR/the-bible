@@ -6,31 +6,33 @@ import {
   type QuotationEdge,
 } from "../services/api";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useI18n } from "../i18n/i18nContext";
 
 type Tab = "heatmap" | "graph";
 
 export default function IntertextualityPage() {
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("heatmap");
 
   return (
     <div className="max-w-6xl mx-auto">
-      <h1 className="text-2xl font-display font-bold mb-1">Intertextuality</h1>
+      <h1 className="text-2xl font-display font-bold mb-1">{t("intertextuality.title")}</h1>
       <p className="text-sm opacity-60 mb-6">
-        How the Old Testament and New Testament reference each other.
+        {t("intertextuality.subtitle")}
       </p>
 
       <div className="flex gap-2 mb-6">
-        {(["heatmap", "graph"] as Tab[]).map((t) => (
+        {(["heatmap", "graph"] as Tab[]).map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              tab === t
+              tab === tabKey
                 ? "bg-[var(--color-gold)] text-white"
                 : "bg-black/5 hover:bg-black/10"
             }`}
           >
-            {t === "heatmap" ? "Citation Heatmap" : "Citation Graph"}
+            {tabKey === "heatmap" ? t("intertextuality.tab.heatmap") : t("intertextuality.tab.graph")}
           </button>
         ))}
       </div>
@@ -42,6 +44,7 @@ export default function IntertextualityPage() {
 }
 
 function HeatmapTab() {
+  const { t } = useI18n();
   const [cells, setCells] = useState<HeatmapCell[]>([]);
   const [otBooks, setOtBooks] = useState<string[]>([]);
   const [ntBooks, setNtBooks] = useState<string[]>([]);
@@ -59,7 +62,7 @@ function HeatmapTab() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <LoadingSpinner text="Building heatmap..." />;
+  if (loading) return <LoadingSpinner text={t("intertextuality.heatmap.loading")} />;
 
   const maxCount = Math.max(...cells.map((c) => c.count), 1);
 
@@ -74,7 +77,9 @@ function HeatmapTab() {
       <table className="text-[10px] border-collapse">
         <thead>
           <tr>
-            <th className="p-1 sticky left-0 bg-white z-10">OT \ NT</th>
+            <th className="p-1 sticky left-0 bg-white z-10">
+              {t("intertextuality.heatmap.otAxis")} \ {t("intertextuality.heatmap.ntAxis")}
+            </th>
             {ntBooks.map((nt) => (
               <th
                 key={nt}
@@ -98,7 +103,14 @@ function HeatmapTab() {
                   <td
                     key={nt}
                     className="p-0 w-5 h-5"
-                    title={count > 0 ? `${ot} → ${nt}: ${count} refs` : ""}
+                    title={
+                      count > 0
+                        ? t("intertextuality.heatmap.tooltip")
+                            .replace("{ot}", ot)
+                            .replace("{nt}", nt)
+                            .replace("{count}", String(count))
+                        : ""
+                    }
                   >
                     {count > 0 && (
                       <div
@@ -120,6 +132,7 @@ function HeatmapTab() {
 }
 
 function GraphTab() {
+  const { t } = useI18n();
   const [edges, setEdges] = useState<QuotationEdge[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -131,7 +144,7 @@ function GraphTab() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <LoadingSpinner text="Loading citation graph..." />;
+  if (loading) return <LoadingSpinner text={t("intertextuality.graph.loading")} />;
 
   // Aggregate edges by book pair
   const pairs: Record<string, { source: string; target: string; count: number; topVotes: number }> =
@@ -151,8 +164,7 @@ function GraphTab() {
   return (
     <div>
       <p className="text-xs opacity-50 mb-4">
-        Top OT→NT cross-reference pairs by number of connections ({edges.length} total
-        citations)
+        {t("intertextuality.graph.summary").replace("{total}", String(edges.length))}
       </p>
       <div className="space-y-1.5">
         {sorted.slice(0, 50).map((p) => (

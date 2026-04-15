@@ -8,41 +8,66 @@ import {
   type FamilyMember,
   type PersonEvent,
 } from "../services/api";
-
-const RELATION_LABELS: Record<string, string> = {
-  father: "Father",
-  mother: "Mother",
-  spouse: "Spouse",
-  child: "Children",
-  sibling: "Siblings",
-  half_sibling: "Half-Siblings",
-};
+import { useI18n } from "../i18n/i18nContext";
 
 const RELATION_ORDER = ["father", "mother", "spouse", "sibling", "half_sibling", "child"];
 
+// Relation slug → i18n key
+const RELATION_KEYS: Record<string, string> = {
+  father: "people.relations.father",
+  mother: "people.relations.mother",
+  spouse: "people.relations.spouse",
+  child: "people.relations.child",
+  sibling: "people.relations.sibling",
+  half_sibling: "people.relations.halfSibling",
+};
+
 // ── Featured figures for empty state ─────────────────────────────────────────
+// `name` stays in English because the DB is searched by the English name.
+// `occupationKey` is resolved via i18n at render time.
 
 const FEATURED_PEOPLE = [
-  { slug: "jesus_905", name: "Jesus Christ", occupation: "Messiah", verses: 1831 },
-  { slug: "david_994", name: "David", occupation: "King of Israel", verses: 896 },
-  { slug: "moses_2108", name: "Moses", occupation: "Prophet & Lawgiver", verses: 774 },
-  { slug: "abraham_58", name: "Abraham", occupation: "Patriarch", verses: 277 },
-  { slug: "paul_2479", name: "Paul", occupation: "Apostle", verses: 179 },
-  { slug: "daniel_975", name: "Daniel", occupation: "Prophet", verses: 72 },
-  { slug: "esther_1343", name: "Esther", occupation: "Queen of Persia", verses: 46 },
-  { slug: "mary_1938", name: "Mary", occupation: "Mother of Jesus", verses: 21 },
+  { slug: "jesus_905", name: "Jesus Christ", occupationKey: "people.occupation.messiah", verses: 1831 },
+  { slug: "david_994", name: "David", occupationKey: "people.occupation.kingOfIsrael", verses: 896 },
+  { slug: "moses_2108", name: "Moses", occupationKey: "people.occupation.prophetLawgiver", verses: 774 },
+  { slug: "abraham_58", name: "Abraham", occupationKey: "people.occupation.patriarch", verses: 277 },
+  { slug: "paul_2479", name: "Paul", occupationKey: "people.occupation.apostle", verses: 179 },
+  { slug: "daniel_975", name: "Daniel", occupationKey: "people.occupation.prophet", verses: 72 },
+  { slug: "esther_1343", name: "Esther", occupationKey: "people.occupation.queenOfPersia", verses: 46 },
+  { slug: "mary_1938", name: "Mary", occupationKey: "people.occupation.motherOfJesus", verses: 21 },
 ];
 
 // ── Year formatting helper ───────────────────────────────────────────────────
 
-function yearLabel(y: number | null): string {
+function yearLabel(y: number | null, t: (k: string) => string): string {
   if (y == null) return "?";
-  return `${Math.abs(y)} ${y < 0 ? "BC" : "AD"}`;
+  return `${Math.abs(y)} ${y < 0 ? t("common.bc") : t("common.ad")}`;
+}
+
+// ── Description cleanup ──────────────────────────────────────────────────────
+// Theographic text has:
+//   - U+FFFD replacement chars (mangled NBSP between ref numbers)
+//   - Runs of 2+ spaces around parenthetical verse refs
+//   - Leading whitespace and lowercase initial letter
+//   - Stray spaces before punctuation
+
+function cleanDescription(raw: string): string {
+  let s = raw
+    .replace(/\uFFFD/g, " ") // replacement char → space
+    .replace(/\s+/g, " ")    // collapse all whitespace runs
+    .replace(/\s+([.,;:!?])/g, "$1") // no space before punctuation
+    .replace(/\(\s+/g, "(")  // no space after (
+    .replace(/\s+\)/g, ")")  // no space before )
+    .trim();
+  // Capitalize first letter
+  if (s.length > 0) s = s[0].toUpperCase() + s.slice(1);
+  return s;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
 export default function PeoplePage() {
+  const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
   const [people, setPeople] = useState<BiblicalPerson[]>([]);
@@ -139,10 +164,9 @@ export default function PeoplePage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="page-title text-3xl">People of the Bible</h1>
+        <h1 className="page-title text-3xl">{t("people.title")}</h1>
         <p className="text-sm opacity-60 mt-1">
-          3,000+ people from the Theographic dataset. Search, explore family
-          trees, and discover connections.
+          {t("people.subtitle")}
         </p>
       </div>
 
@@ -152,7 +176,7 @@ export default function PeoplePage() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name (e.g., Moses, David, Esther)..."
+          placeholder={t("people.searchPlaceholder")}
           className="w-full rounded-lg border border-[var(--color-gold-dark)]/20 px-4 py-3
                      text-sm bg-white focus:outline-none focus:ring-2
                      focus:ring-[var(--color-gold)]/50 focus:border-[var(--color-gold)]/50"
@@ -172,25 +196,31 @@ export default function PeoplePage() {
                 : "border-[var(--color-gold)]/30 hover:bg-[var(--color-gold)]/10 text-[var(--color-gold-dark)]"
             }`}
           >
-            {g || "All"}
+            {g === null
+              ? t("people.filter.all")
+              : g === "Male"
+                ? t("people.filter.male")
+                : t("people.filter.female")}
           </button>
         ))}
         <span className="text-xs opacity-40 self-center ml-2">
-          {total.toLocaleString()} results
+          {t("people.results").replace("{n}", total.toLocaleString())}
         </span>
       </div>
 
-      {loading && <p className="text-sm opacity-50">Searching...</p>}
+      {loading && <p className="text-sm opacity-50">{t("people.searching")}</p>}
 
       {!loading && people.length === 0 && query.length >= 2 && (
-        <p className="text-sm opacity-50 italic">No people found for &quot;{query}&quot;.</p>
+        <p className="text-sm opacity-50 italic">
+          {t("people.noResults").replace("{query}", query)}
+        </p>
       )}
 
       {/* Featured figures (empty state) */}
       {!loading && people.length === 0 && !query && (
         <div className="mb-8">
           <h3 className="text-[10px] uppercase tracking-wider font-bold opacity-50 mb-3">
-            Key Figures
+            {t("people.keyFigures")}
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {FEATURED_PEOPLE.map((fp) => (
@@ -205,10 +235,10 @@ export default function PeoplePage() {
                                group-hover:text-[var(--color-gold-dark)] transition">
                   {fp.name}
                 </div>
-                <div className="text-[10px] opacity-50 mt-0.5">{fp.occupation}</div>
+                <div className="text-[10px] opacity-50 mt-0.5">{t(fp.occupationKey)}</div>
                 <div className="text-[10px] mt-1">
                   <span className="text-[var(--color-gold-dark)] font-bold">{fp.verses}</span>
-                  <span className="opacity-40"> verses</span>
+                  <span className="opacity-40"> {t("people.verses")}</span>
                 </div>
               </button>
             ))}
@@ -257,7 +287,11 @@ export default function PeoplePage() {
                           ? "bg-blue-100 text-blue-700"
                           : "bg-pink-100 text-pink-700"
                       }`}>
-                        {person.gender}
+                        {person.gender === "Male"
+                          ? t("people.filter.male")
+                          : person.gender === "Female"
+                            ? t("people.filter.female")
+                            : person.gender}
                       </span>
                     )}
                     {person.tribe && (
@@ -268,13 +302,13 @@ export default function PeoplePage() {
                   </div>
                   {aliases && (
                     <p className="text-[11px] opacity-40 italic mt-0.5">
-                      Also: {aliases.join(", ")}
+                      {t("people.alsoKnownAs")} {aliases.join(", ")}
                     </p>
                   )}
                   <p className="text-xs opacity-50 mt-0.5">
-                    {person.verse_count} verse{person.verse_count !== 1 ? "s" : ""}
+                    {person.verse_count} {person.verse_count !== 1 ? t("people.verses") : t("people.verse")}
                     {person.occupation && ` · ${person.occupation}`}
-                    {person.birth_year && ` · ${yearLabel(person.birth_year)}`}
+                    {person.birth_year && ` · ${yearLabel(person.birth_year, t)}`}
                   </p>
                 </div>
                 <svg
@@ -293,7 +327,7 @@ export default function PeoplePage() {
                   {/* Description */}
                   {person.description && (
                     <p className="text-sm leading-relaxed font-body">
-                      {person.description}
+                      {cleanDescription(person.description)}
                     </p>
                   )}
 
@@ -301,7 +335,7 @@ export default function PeoplePage() {
                   {person.books_mentioned && Array.isArray(person.books_mentioned) && person.books_mentioned.length > 0 && (
                     <div>
                       <h4 className="text-[10px] uppercase tracking-wider font-bold opacity-50 mb-2">
-                        Appears in
+                        {t("people.appearsIn")}
                       </h4>
                       <div className="flex flex-wrap gap-1.5">
                         {person.books_mentioned.map((bookId) => (
@@ -320,18 +354,18 @@ export default function PeoplePage() {
 
                   {/* Family tree */}
                   {familyLoading && (
-                    <p className="text-xs opacity-50">Loading family & events...</p>
+                    <p className="text-xs opacity-50">{t("people.loadingFamily")}</p>
                   )}
                   {!familyLoading && family && Object.keys(family).length > 0 && (
                     <div>
                       <h4 className="text-[10px] uppercase tracking-wider font-bold opacity-50 mb-2">
-                        Family
+                        {t("people.family")}
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {RELATION_ORDER.filter((rel) => family[rel]?.length).map((rel) => (
                           <div key={rel} className="rounded p-2 bg-[var(--color-gold)]/5">
                             <div className="text-[9px] uppercase tracking-wider opacity-50 mb-1">
-                              {RELATION_LABELS[rel] || rel}
+                              {RELATION_KEYS[rel] ? t(RELATION_KEYS[rel]) : rel}
                             </div>
                             <div className="flex flex-wrap gap-1">
                               {family[rel].map((member) => (
@@ -353,7 +387,7 @@ export default function PeoplePage() {
                     </div>
                   )}
                   {!familyLoading && family && Object.keys(family).length === 0 && (
-                    <p className="text-xs opacity-40 italic">No family relations recorded.</p>
+                    <p className="text-xs opacity-40 italic">{t("people.noFamily")}</p>
                   )}
 
                   {/* Events timeline */}
@@ -367,19 +401,19 @@ export default function PeoplePage() {
                       to={`/search?q=${encodeURIComponent(person.name)}`}
                       className="text-[var(--color-gold-dark)] hover:underline"
                     >
-                      Search in Bible →
+                      {t("people.actions.search")}
                     </Link>
                     <Link
                       to={`/dictionary?q=${encodeURIComponent(person.name)}`}
                       className="text-[var(--color-gold-dark)] hover:underline"
                     >
-                      Dictionary →
+                      {t("people.actions.dictionary")}
                     </Link>
                     <Link
                       to={`/timeline`}
                       className="text-[var(--color-gold-dark)] hover:underline"
                     >
-                      Timeline →
+                      {t("people.actions.timeline")}
                     </Link>
                   </div>
                 </div>
@@ -395,13 +429,14 @@ export default function PeoplePage() {
 // ── Lifespan Bar ─────────────────────────────────────────────────────────────
 
 function LifespanBar({ person }: { person: BiblicalPerson }) {
+  const { t } = useI18n();
   const start = person.birth_year ?? person.min_year;
   const end = person.death_year ?? person.max_year;
 
   if (start == null && end == null) return null;
 
   const isBirthDeath = person.birth_year != null && person.death_year != null;
-  const label = isBirthDeath ? "Lifespan" : "Active Period";
+  const label = isBirthDeath ? t("people.lifespan") : t("people.activePeriod");
   const span = start != null && end != null ? Math.abs(end - start) : null;
 
   return (
@@ -411,17 +446,17 @@ function LifespanBar({ person }: { person: BiblicalPerson }) {
       </div>
       <div className="flex items-center gap-2">
         <span className="text-xs font-medium text-[var(--color-gold-dark)]">
-          {start != null ? yearLabel(start) : "?"}
+          {start != null ? yearLabel(start, t) : "?"}
         </span>
         <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-[var(--color-gold)]/40 to-[var(--color-gold)]/20 relative">
           {span != null && (
             <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-[var(--color-gold-dark)]">
-              {span > 0 ? `${span} years` : ""}
+              {span > 0 ? `${span} ${t("people.years")}` : ""}
             </span>
           )}
         </div>
         <span className="text-xs font-medium text-[var(--color-gold-dark)]">
-          {end != null ? yearLabel(end) : "?"}
+          {end != null ? yearLabel(end, t) : "?"}
         </span>
       </div>
     </div>
@@ -431,13 +466,14 @@ function LifespanBar({ person }: { person: BiblicalPerson }) {
 // ── Events Timeline ──────────────────────────────────────────────────────────
 
 function EventsTimeline({ events }: { events: PersonEvent[] }) {
+  const { t } = useI18n();
   const [showAll, setShowAll] = useState(false);
   const visible = showAll ? events : events.slice(0, 6);
 
   return (
     <div>
       <h4 className="text-[10px] uppercase tracking-wider font-bold opacity-50 mb-2">
-        Life Events ({events.length})
+        {t("people.events.title").replace("{n}", String(events.length))}
       </h4>
       <div className="relative ml-3">
         {/* Vertical line */}
@@ -456,7 +492,7 @@ function EventsTimeline({ events }: { events: PersonEvent[] }) {
                   </span>
                   {evt.start_year != null && (
                     <span className="text-[10px] font-bold text-[var(--color-gold-dark)]">
-                      {yearLabel(evt.start_year)}
+                      {yearLabel(evt.start_year, t)}
                     </span>
                   )}
                   {evt.era && (
@@ -519,7 +555,7 @@ function EventsTimeline({ events }: { events: PersonEvent[] }) {
             onClick={() => setShowAll(true)}
             className="text-[11px] text-[var(--color-gold)] hover:underline mt-2 ml-5"
           >
-            Show all {events.length} events →
+            {t("people.events.showAll").replace("{n}", String(events.length))}
           </button>
         )}
       </div>

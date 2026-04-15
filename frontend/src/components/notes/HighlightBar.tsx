@@ -3,6 +3,7 @@ import {
   CATEGORY_LABELS,
   type HighlightCategory,
 } from "../../hooks/useVerseNotes";
+import { useI18n } from "../../i18n/i18nContext";
 
 interface Props {
   value?: HighlightCategory;
@@ -16,17 +17,19 @@ const SIZE_CLASSES: Record<NonNullable<Props["size"]>, string> = {
 };
 
 export default function HighlightBar({ value, onChange, size = "md" }: Props) {
+  const { t } = useI18n();
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {HIGHLIGHT_CATEGORIES.map((cat) => {
         const active = value === cat;
+        const ariaKey = active ? "notes.highlight.activeAria" : "notes.highlight.aria";
         return (
           <button
             key={cat}
             type="button"
             onClick={() => onChange(active ? undefined : cat)}
             title={CATEGORY_LABELS[cat]}
-            aria-label={`${CATEGORY_LABELS[cat]} highlight${active ? " (active)" : ""}`}
+            aria-label={t(ariaKey).replace("{category}", CATEGORY_LABELS[cat])}
             aria-pressed={active}
             className={`${SIZE_CLASSES[size]} rounded-full border-2 transition
                        focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/60
@@ -54,12 +57,12 @@ export default function HighlightBar({ value, onChange, size = "md" }: Props) {
         <button
           type="button"
           onClick={() => onChange(undefined)}
-          title="Clear highlight"
+          title={t("notes.highlight.clear")}
           className={`${SIZE_CLASSES[size]} rounded-full border-2 border-dashed border-[var(--color-gold-dark)]/40
                       text-[var(--color-gold-dark)]/50 text-xs hover:border-[var(--color-gold-dark)]/80
                       hover:text-[var(--color-gold-dark)] transition
                       focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/60`}
-          aria-label="Clear highlight"
+          aria-label={t("notes.highlight.clear")}
         >
           ✕
         </button>

@@ -7,6 +7,7 @@ import {
   type SemanticGraph,
 } from "../services/api";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useI18n } from "../i18n/i18nContext";
 
 // Force layout node extends GraphNode with simulation positions
 interface SimNode extends GraphNode, d3.SimulationNodeDatum {
@@ -21,6 +22,7 @@ interface SimEdge extends d3.SimulationLinkDatum<SimNode> {
 }
 
 export default function SemanticGraphPage() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const svgRef = useRef<SVGSVGElement>(null);
   const [query, setQuery] = useState("G25");
@@ -41,10 +43,10 @@ export default function SemanticGraphPage() {
       setError(null);
       fetchSemanticGraph(center, minShared, 30, excludeCommon)
         .then(setGraph)
-        .catch(() => setError("Failed to load graph. Check the Strong's ID."))
+        .catch(() => setError(t("graph.loadError")))
         .finally(() => setLoading(false));
     },
-    [minShared, excludeCommon]
+    [minShared, excludeCommon, t]
   );
 
   useEffect(() => {
@@ -180,23 +182,22 @@ export default function SemanticGraphPage() {
   return (
     <div className="flex flex-col" style={{ height: "calc(100vh - 80px)" }}>
       <div className="shrink-0 mb-4">
-        <h1 className="page-title text-2xl">Semantic Graph</h1>
+        <h1 className="page-title text-2xl">{t("graph.title")}</h1>
         <p className="text-sm opacity-60 mt-1">
-          Explore word co-occurrence — which Strong's words appear together in
-          the same verses. Node size = shared verses.
+          {t("graph.subtitle")}
         </p>
       </div>
 
       {/* Controls */}
       <div className="flex flex-wrap gap-4 mb-4 items-center shrink-0">
         <label className="flex items-center gap-2 text-sm">
-          Center word:
+          {t("graph.centerLabel")}
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value.toUpperCase())}
             onKeyDown={(e) => e.key === "Enter" && loadGraph(query)}
-            placeholder="G25, H2617…"
+            placeholder={t("graph.centerPlaceholder")}
             className="border rounded px-2 py-1 w-28 text-sm bg-white
                        focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40"
           />
@@ -206,10 +207,10 @@ export default function SemanticGraphPage() {
           className="text-sm px-3 py-1 rounded bg-[var(--color-gold)] text-white
                      hover:opacity-90 transition"
         >
-          Load
+          {t("graph.loadBtn")}
         </button>
         <label className="flex items-center gap-2 text-sm">
-          Min shared: {minShared}
+          {t("graph.minShared").replace("{n}", String(minShared))}
           <input
             type="range"
             min={2}
@@ -225,11 +226,11 @@ export default function SemanticGraphPage() {
             checked={excludeCommon}
             onChange={(e) => setExcludeCommon(e.target.checked)}
           />
-          Hide common words
+          {t("graph.hideCommon")}
         </label>
       </div>
 
-      {loading && <LoadingSpinner text="Building graph..." />}
+      {loading && <LoadingSpinner text={t("graph.building")} />}
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
       {/* Graph */}
@@ -251,7 +252,7 @@ export default function SemanticGraphPage() {
             <div className="opacity-70">{tooltip.node.gloss}</div>
             {tooltip.node.shared ? (
               <div className="opacity-50 mt-0.5">
-                {tooltip.node.shared} shared verses
+                {t("graph.tooltip").replace("{n}", String(tooltip.node.shared))}
               </div>
             ) : null}
           </div>
@@ -265,21 +266,21 @@ export default function SemanticGraphPage() {
                 className="inline-block w-3 h-3 rounded-full"
                 style={{ backgroundColor: "#c4a265" }}
               />
-              Center
+              {t("graph.legendCenter")}
             </span>
             <span className="flex items-center gap-1">
               <span
                 className="inline-block w-3 h-3 rounded-full"
                 style={{ backgroundColor: "#4a7c59" }}
               />
-              Hebrew
+              {t("graph.legendHebrew")}
             </span>
             <span className="flex items-center gap-1">
               <span
                 className="inline-block w-3 h-3 rounded-full"
                 style={{ backgroundColor: "#6b4c9a" }}
               />
-              Greek
+              {t("graph.legendGreek")}
             </span>
           </div>
         )}

@@ -5,14 +5,26 @@ import {
   type TimelineEvent,
   type TimelineEra,
 } from "../services/api";
+import { useI18n } from "../i18n/i18nContext";
 
-function yearLabel(year: number): string {
-  if (year < 0) return `${Math.abs(year)} BC`;
-  if (year === 0) return "1 BC";
-  return `${year} AD`;
+function yearLabel(year: number, t: (k: string) => string): string {
+  const bc = t("common.bc");
+  const ad = t("common.ad");
+  if (year < 0) return `${Math.abs(year)} ${bc}`;
+  if (year === 0) return `1 ${bc}`;
+  return `${year} ${ad}`;
 }
 
-function EraBar({ eras, yearMin, yearMax }: { eras: TimelineEra[]; yearMin: number; yearMax: number }) {
+function EraBar({
+  eras,
+  yearMin,
+  yearMax,
+}: {
+  eras: TimelineEra[];
+  yearMin: number;
+  yearMax: number;
+}) {
+  const { t } = useI18n();
   const span = yearMax - yearMin;
   return (
     <div className="relative h-6 rounded-full overflow-hidden bg-gray-100 mb-6">
@@ -30,7 +42,7 @@ function EraBar({ eras, yearMin, yearMax }: { eras: TimelineEra[]; yearMin: numb
               backgroundColor: era.color,
               opacity: 0.8,
             }}
-            title={`${era.name} (${yearLabel(era.start)} – ${yearLabel(era.end)})`}
+            title={`${era.name} (${yearLabel(era.start, t)} – ${yearLabel(era.end, t)})`}
           >
             {width > 8 && era.name}
           </div>
@@ -53,6 +65,7 @@ function EventDot({
   onClick: () => void;
   isSelected: boolean;
 }) {
+  const { t } = useI18n();
   const span = yearMax - yearMin;
   const left = ((event.year - yearMin) / span) * 100;
   const isBiblical = event.type === "biblical";
@@ -64,7 +77,7 @@ function EventDot({
         isSelected ? "scale-150 z-20" : "z-10"
       }`}
       style={{ left: `${left}%`, top: isBiblical ? "20%" : "60%" }}
-      title={`${event.title} (${yearLabel(event.year)})`}
+      title={`${event.title} (${yearLabel(event.year, t)})`}
     >
       <div
         className={`w-2.5 h-2.5 rounded-full border-2 ${
@@ -78,6 +91,7 @@ function EventDot({
 }
 
 export default function TimelinePage() {
+  const { t } = useI18n();
   const [data, setData] = useState<CombinedTimeline | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
@@ -99,22 +113,19 @@ export default function TimelinePage() {
     if (showSecular) allEvents.push(...data.secular);
   }
 
-  const presets: { label: string; range: [number, number] }[] = [
-    { label: "Full", range: [-2200, 100] },
-    { label: "Patriarchs", range: [-2200, -1400] },
-    { label: "Exodus–Monarchy", range: [-1400, -586] },
-    { label: "Exile–Return", range: [-586, -400] },
-    { label: "NT Era", range: [-100, 100] },
+  const presets: { labelKey: string; range: [number, number] }[] = [
+    { labelKey: "timeline.preset.full", range: [-2200, 100] },
+    { labelKey: "timeline.preset.patriarchs", range: [-2200, -1400] },
+    { labelKey: "timeline.preset.exodusMonarchy", range: [-1400, -586] },
+    { labelKey: "timeline.preset.exileReturn", range: [-586, -400] },
+    { labelKey: "timeline.preset.ntEra", range: [-100, 100] },
   ];
 
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-6">
-        <h1 className="page-title text-3xl">Biblical Timeline</h1>
-        <p className="text-sm opacity-60 mt-1">
-          Biblical events alongside secular history from ~2200 BC to 100 AD.
-          Click any dot to see details.
-        </p>
+        <h1 className="page-title text-3xl">{t("timeline.title")}</h1>
+        <p className="text-sm opacity-60 mt-1">{t("timeline.subtitle")}</p>
       </div>
 
       {/* Controls */}
@@ -122,7 +133,7 @@ export default function TimelinePage() {
         {/* Era presets */}
         {presets.map((p) => (
           <button
-            key={p.label}
+            key={p.labelKey}
             onClick={() => {
               setYearRange(p.range);
               setSelectedEvent(null);
@@ -133,7 +144,7 @@ export default function TimelinePage() {
                 : "border-[var(--color-gold)]/30 hover:bg-[var(--color-gold)]/10 text-[var(--color-gold-dark)]"
             }`}
           >
-            {p.label}
+            {t(p.labelKey)}
           </button>
         ))}
 
@@ -147,7 +158,7 @@ export default function TimelinePage() {
             onChange={(e) => setShowBiblical(e.target.checked)}
             className="rounded"
           />
-          Biblical ({data?.biblical.length ?? 0})
+          {t("timeline.toggle.biblical")} ({data?.biblical.length ?? 0})
         </label>
         <label className="flex items-center gap-1.5 text-xs cursor-pointer">
           <input
@@ -156,11 +167,11 @@ export default function TimelinePage() {
             onChange={(e) => setShowSecular(e.target.checked)}
             className="rounded"
           />
-          Secular ({data?.secular.length ?? 0})
+          {t("timeline.toggle.secular")} ({data?.secular.length ?? 0})
         </label>
       </div>
 
-      {loading && <p className="text-sm opacity-50">Loading timeline...</p>}
+      {loading && <p className="text-sm opacity-50">{t("timeline.loading")}</p>}
 
       {!loading && data && (
         <>
@@ -171,10 +182,10 @@ export default function TimelinePage() {
           <div className="relative h-32 mb-4 rounded-lg bg-[var(--color-gold)]/5 border border-[var(--color-gold-dark)]/10 overflow-hidden">
             {/* Track labels */}
             <div className="absolute left-2 top-1 text-[8px] uppercase tracking-wider opacity-30">
-              Biblical
+              {t("timeline.track.biblical")}
             </div>
             <div className="absolute left-2 bottom-1 text-[8px] uppercase tracking-wider opacity-30">
-              Secular
+              {t("timeline.track.secular")}
             </div>
 
             {/* Center line */}
@@ -207,7 +218,7 @@ export default function TimelinePage() {
                     className="absolute bottom-0 text-[8px] opacity-30 -translate-x-1/2"
                     style={{ left: `${left}%` }}
                   >
-                    {yearLabel(y)}
+                    {yearLabel(y, t)}
                   </div>
                 );
               }
@@ -232,7 +243,7 @@ export default function TimelinePage() {
                       {selectedEvent.type === "biblical" ? selectedEvent.era : selectedEvent.category}
                     </span>
                   </div>
-                  <p className="text-sm opacity-60">{yearLabel(selectedEvent.year)}</p>
+                  <p className="text-sm opacity-60">{yearLabel(selectedEvent.year, t)}</p>
                 </div>
                 <button
                   onClick={() => setSelectedEvent(null)}
@@ -250,14 +261,14 @@ export default function TimelinePage() {
 
               {selectedEvent.participants && selectedEvent.participants.length > 0 && (
                 <div className="mt-2">
-                  <span className="text-[9px] uppercase tracking-wider opacity-50">Participants: </span>
+                  <span className="text-[9px] uppercase tracking-wider opacity-50">{t("timeline.participants")} </span>
                   <span className="text-xs">{selectedEvent.participants.join(", ")}</span>
                 </div>
               )}
 
               {selectedEvent.locations && selectedEvent.locations.length > 0 && (
                 <div className="mt-1">
-                  <span className="text-[9px] uppercase tracking-wider opacity-50">Locations: </span>
+                  <span className="text-[9px] uppercase tracking-wider opacity-50">{t("timeline.locations")} </span>
                   <span className="text-xs">{selectedEvent.locations.join(", ")}</span>
                 </div>
               )}
@@ -267,7 +278,10 @@ export default function TimelinePage() {
           {/* Events list below */}
           <div>
             <h2 className="text-sm font-bold mb-2 opacity-60">
-              {allEvents.length} events in range {yearLabel(yearRange[0])} – {yearLabel(yearRange[1])}
+              {t("timeline.eventsInRange")
+                .replace("{n}", String(allEvents.length))
+                .replace("{from}", yearLabel(yearRange[0], t))
+                .replace("{to}", yearLabel(yearRange[1], t))}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {allEvents
@@ -284,13 +298,13 @@ export default function TimelinePage() {
                     }`}
                   >
                     <span className="font-medium">{evt.title}</span>
-                    <span className="opacity-40 ml-1">{yearLabel(evt.year)}</span>
+                    <span className="opacity-40 ml-1">{yearLabel(evt.year, t)}</span>
                     <span className={`ml-1 text-[8px] px-1 rounded ${
                       evt.type === "biblical"
                         ? "bg-[var(--color-gold)]/10 text-[var(--color-gold-dark)]"
                         : "bg-gray-100 text-gray-500"
                     }`}>
-                      {evt.type === "biblical" ? "B" : "S"}
+                      {evt.type === "biblical" ? t("timeline.typeBiblicalShort") : t("timeline.typeSecularShort")}
                     </span>
                   </button>
                 ))}

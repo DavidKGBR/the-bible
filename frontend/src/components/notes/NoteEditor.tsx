@@ -5,6 +5,7 @@ import {
 } from "../../hooks/useVerseNotes";
 import HighlightBar from "./HighlightBar";
 import { formatRelative } from "../../utils/dateFormat";
+import { useI18n } from "../../i18n/i18nContext";
 
 interface Props {
   verseId: string;
@@ -31,6 +32,7 @@ export default function NoteEditor({
   verse,
   onSaved,
 }: Props) {
+  const { t } = useI18n();
   const { get, upsert, remove } = useVerseNotes();
   const existing = get(verseId);
 
@@ -88,7 +90,7 @@ export default function NoteEditor({
     <div className="bg-white border rounded p-3 text-sm space-y-3">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="text-xs uppercase tracking-wider opacity-50 font-display">
-          Note
+          {t("notes.editor.label")}
         </div>
         <HighlightBar value={category} onChange={setCategory} size="sm" />
       </div>
@@ -99,7 +101,7 @@ export default function NoteEditor({
         onChange={(e) => setNoteText(e.target.value.slice(0, MAX_LENGTH))}
         onKeyDown={handleKeyDown}
         rows={5}
-        placeholder="Record a thought, question, or connection…"
+        placeholder={t("notes.editor.placeholder")}
         className="w-full rounded border border-[var(--color-gold-dark)]/20 px-3 py-2
                    text-sm leading-relaxed bg-[var(--color-parchment)]/40
                    focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/50
@@ -113,7 +115,7 @@ export default function NoteEditor({
           <span className="tabular-nums">{MAX_LENGTH}</span>
           {existing && (
             <span className="ml-3">
-              Last edit: {formatRelative(existing.updated_at)}
+              {t("notes.editor.lastEdit").replace("{when}", formatRelative(existing.updated_at))}
             </span>
           )}
         </div>
@@ -126,7 +128,7 @@ export default function NoteEditor({
                          hover:bg-red-50 transition focus:outline-none
                          focus:ring-2 focus:ring-red-300"
             >
-              Delete
+              {t("notes.editor.delete")}
             </button>
           )}
           <button
@@ -138,13 +140,13 @@ export default function NoteEditor({
                        disabled:cursor-not-allowed focus:outline-none
                        focus:ring-2 focus:ring-[var(--color-gold)]/60"
           >
-            Save
+            {t("notes.editor.save")}
           </button>
         </div>
       </div>
 
       <p className="text-[11px] opacity-40">
-        Tip: Ctrl/Cmd + Enter saves. Notes are stored on this device only.
+        {t("notes.editor.tip")}
       </p>
     </div>
   );

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useBookmarks, type Bookmark } from "../hooks/useBookmarks";
 import { formatDate } from "../utils/dateFormat";
+import { useI18n } from "../i18n/i18nContext";
 
 const SUGGESTED_VERSES: Array<Omit<Bookmark, "added_at">> = [
   {
@@ -32,13 +33,14 @@ function verseLink(verseId: string, translation?: string): string {
 }
 
 export default function BookmarksPage() {
+  const { t } = useI18n();
   const { bookmarks, toggle, remove } = useBookmarks();
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h2 className="page-title text-3xl mb-2">Bookmarks</h2>
+      <h2 className="page-title text-3xl mb-2">{t("bookmarks.title")}</h2>
       <p className="font-body text-sm opacity-60 mb-6">
-        Verses you've saved · stored locally on this device
+        {t("bookmarks.subtitle")}
       </p>
 
       {bookmarks.length === 0 ? (
@@ -46,7 +48,7 @@ export default function BookmarksPage() {
           <div className="text-center mb-5">
             <div className="text-5xl mb-2 opacity-30">☆</div>
             <p className="opacity-70 font-body">
-              No bookmarks yet. Try starting with one of these:
+              {t("bookmarks.emptyTitle")}
             </p>
           </div>
           <div className="space-y-2">
@@ -73,9 +75,9 @@ export default function BookmarksPage() {
                              text-amber-700 bg-amber-50 hover:bg-amber-100
                              transition focus:outline-none focus:ring-2
                              focus:ring-[var(--color-gold)]/40"
-                  aria-label={`Bookmark ${v.reference}`}
+                  aria-label={t("bookmarks.saveAria").replace("{reference}", v.reference ?? v.verse_id)}
                 >
-                  ★ Save
+                  {t("bookmarks.save")}
                 </button>
               </div>
             ))}
@@ -86,7 +88,7 @@ export default function BookmarksPage() {
               className="text-sm text-[var(--color-gold)] hover:text-[var(--color-gold-dark)]
                          transition"
             >
-              or browse the Reader →
+              {t("bookmarks.browseReader")}
             </Link>
           </div>
         </div>
@@ -117,16 +119,16 @@ export default function BookmarksPage() {
                     </p>
                   )}
                   <p className="text-xs opacity-40 mt-2">
-                    Saved {formatDate(b.added_at)}
+                    {t("bookmarks.savedOn").replace("{date}", formatDate(b.added_at))}
                   </p>
                 </div>
                 <button
                   onClick={() => remove(b.verse_id)}
                   className="text-xs opacity-0 group-hover:opacity-100 text-red-600
                              hover:bg-red-50 px-2 py-1 rounded transition"
-                  title="Remove bookmark"
+                  title={t("bookmarks.removeTitle")}
                 >
-                  Remove
+                  {t("bookmarks.remove")}
                 </button>
               </div>
             </div>

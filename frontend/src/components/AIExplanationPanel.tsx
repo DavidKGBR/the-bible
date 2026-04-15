@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { explainVerse, type AIExplanation } from "../services/api";
+import { useI18n } from "../i18n/i18nContext";
 
 interface Props {
   verseId: string;
@@ -16,6 +17,7 @@ function cacheKey(verseId: string, translation: string, language: Lang): string 
 }
 
 export default function AIExplanationPanel({ verseId, translation }: Props) {
+  const { t } = useI18n();
   const [language, setLanguage] = useState<Lang>("en");
   const [data, setData] = useState<AIExplanation | null>(
     () => cache.get(cacheKey(verseId, translation, "en")) || null
@@ -41,9 +43,7 @@ export default function AIExplanationPanel({ verseId, translation }: Props) {
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Unknown error";
       if (msg.includes("Gemini API key")) {
-        setError(
-          "AI explanations require GEMINI_API_KEY in your backend .env. Add it and restart the API."
-        );
+        setError(t("ai.errorApiKey"));
       } else {
         setError(msg);
       }
@@ -87,7 +87,7 @@ export default function AIExplanationPanel({ verseId, translation }: Props) {
     <div className="bg-gradient-to-br from-white to-amber-50/30 border border-[var(--color-gold)]/30 rounded p-3 text-sm">
       {/* Language toggle */}
       <div className="flex gap-2 mb-3 items-center">
-        <span className="text-xs opacity-50">🤖 AI Explanation</span>
+        <span className="text-xs opacity-50">🤖 {t("ai.header")}</span>
         <div className="ml-auto flex gap-1">
           {(["en", "pt-br"] as Lang[]).map((l) => (
             <button
@@ -112,10 +112,10 @@ export default function AIExplanationPanel({ verseId, translation }: Props) {
             className="text-xs px-4 py-2 rounded bg-[var(--color-gold)] text-white
                        hover:opacity-90 transition"
           >
-            ✨ Generate explanation
+            ✨ {t("ai.generateBtn")}
           </button>
           <p className="text-xs opacity-50 mt-2">
-            Powered by Gemini · Cached on backend
+            {t("ai.poweredBy")}
           </p>
         </div>
       )}
@@ -129,7 +129,7 @@ export default function AIExplanationPanel({ verseId, translation }: Props) {
           <div className="h-3 bg-gray-200 rounded w-full"></div>
           <div className="h-3 bg-gray-200 rounded w-4/5"></div>
           <p className="text-xs opacity-40 italic pt-2">
-            Asking Gemini... (first call may take a few seconds)
+            {t("ai.asking")}
           </p>
         </div>
       )}
@@ -144,7 +144,7 @@ export default function AIExplanationPanel({ verseId, translation }: Props) {
         <div className="space-y-3 fade-in">
           <section>
             <h4 className="font-bold text-xs text-[var(--color-gold)] uppercase tracking-wider mb-1">
-              Explanation
+              {t("ai.section.explanation")}
             </h4>
             <p className="text-xs leading-relaxed">{data.explanation}</p>
           </section>
@@ -152,7 +152,7 @@ export default function AIExplanationPanel({ verseId, translation }: Props) {
           {data.context && (
             <section>
               <h4 className="font-bold text-xs text-[var(--color-gold)] uppercase tracking-wider mb-1">
-                Historical Context
+                {t("ai.section.context")}
               </h4>
               <p className="text-xs leading-relaxed opacity-80">{data.context}</p>
             </section>
@@ -161,7 +161,7 @@ export default function AIExplanationPanel({ verseId, translation }: Props) {
           {data.key_words && data.key_words.length > 0 && (
             <section>
               <h4 className="font-bold text-xs text-[var(--color-gold)] uppercase tracking-wider mb-1">
-                Key Words
+                {t("ai.section.keyWords")}
               </h4>
               {renderKeyWords(data.key_words)}
             </section>
@@ -170,7 +170,7 @@ export default function AIExplanationPanel({ verseId, translation }: Props) {
           {data.application && (
             <section>
               <h4 className="font-bold text-xs text-[var(--color-gold)] uppercase tracking-wider mb-1">
-                Application
+                {t("ai.section.application")}
               </h4>
               <p className="text-xs leading-relaxed italic opacity-80">
                 {data.application}

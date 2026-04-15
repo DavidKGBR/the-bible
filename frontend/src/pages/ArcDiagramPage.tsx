@@ -3,6 +3,8 @@ import { useArcData } from "../hooks/useArcData";
 import ArcDiagram from "../components/ArcDiagram/ArcDiagram";
 import ArcDetailPanel from "../components/ArcDiagram/ArcDetailPanel";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useI18n } from "../i18n/i18nContext";
+import { localizeBookName } from "../i18n/bookNames";
 
 interface SelectedArc {
   sourceBook: string;
@@ -11,6 +13,7 @@ interface SelectedArc {
 }
 
 export default function ArcDiagramPage() {
+  const { t, locale } = useI18n();
   const { books, arcs, totalCrossrefs, loading, error, filters, setFilters } =
     useArcData();
   const [selectedArc, setSelectedArc] = useState<SelectedArc | null>(null);
@@ -42,42 +45,43 @@ export default function ArcDiagramPage() {
   return (
     <div>
       <h2 className="text-2xl font-bold mb-2 text-[var(--color-ink)]">
-        Cross-Reference Arc Diagram
+        {t("arc.pageTitle")}
       </h2>
       <p className="text-sm opacity-60 mb-4">
-        {totalCrossrefs.toLocaleString()} total cross-references &middot;{" "}
-        {arcs.length} arcs shown &middot; Inspired by Chris Harrison
+        {t("arc.pageSubtitle")
+          .replace("{total}", totalCrossrefs.toLocaleString())
+          .replace("{arcs}", String(arcs.length))}
       </p>
 
       {/* Filter controls */}
       <div className="flex flex-wrap gap-4 mb-4 items-center">
         <label className="flex items-center gap-2 text-sm">
-          Source book:
+          {t("arc.sourceBook")}
           <select
             value={filters.sourceBook}
             onChange={(e) => setFilters({ sourceBook: e.target.value })}
             className="border rounded px-2 py-1 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40"
           >
-            <option value="">All books</option>
+            <option value="">{t("arc.allBooks")}</option>
             {books.map((b) => (
               <option key={b.book_id} value={b.book_id}>
-                {b.book_name}
+                {localizeBookName(b.book_id, locale, b.book_name)}
               </option>
             ))}
           </select>
         </label>
 
         <label className="flex items-center gap-2 text-sm">
-          Target book:
+          {t("arc.targetBook")}
           <select
             value={filters.targetBook}
             onChange={(e) => setFilters({ targetBook: e.target.value })}
             className="border rounded px-2 py-1 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40"
           >
-            <option value="">All books</option>
+            <option value="">{t("arc.allBooks")}</option>
             {books.map((b) => (
               <option key={b.book_id} value={b.book_id}>
-                {b.book_name}
+                {localizeBookName(b.book_id, locale, b.book_name)}
               </option>
             ))}
           </select>
@@ -90,12 +94,12 @@ export default function ArcDiagramPage() {
                        hover:opacity-90 transition focus:outline-none
                        focus:ring-2 focus:ring-[var(--color-gold)]/60"
           >
-            Show connections →
+            {t("arc.showConnections")}
           </button>
         )}
 
         <label className="flex items-center gap-2 text-sm">
-          Color by:
+          {t("arc.colorBy")}
           <select
             value={filters.colorBy}
             onChange={(e) =>
@@ -105,14 +109,14 @@ export default function ArcDiagramPage() {
             }
             className="border rounded px-2 py-1 bg-white text-sm"
           >
-            <option value="distance">Arc distance</option>
-            <option value="testament">Testament</option>
-            <option value="category">Book category</option>
+            <option value="distance">{t("arc.colorBy.distance")}</option>
+            <option value="testament">{t("arc.colorBy.testament")}</option>
+            <option value="category">{t("arc.colorBy.category")}</option>
           </select>
         </label>
 
         <label className="flex items-center gap-2 text-sm">
-          Min connections: {filters.minConnections}
+          {t("arc.minConnections").replace("{n}", String(filters.minConnections))}
           <input
             type="range"
             min={1}
@@ -133,7 +137,7 @@ export default function ArcDiagramPage() {
       )}
 
       {loading ? (
-        <LoadingSpinner text="Loading cross-references..." />
+        <LoadingSpinner text={t("arc.loading")} />
       ) : (
         <div className="flex flex-col lg:flex-row border rounded bg-white overflow-hidden"
              style={{ height: "calc(100vh - 200px)", minHeight: 500 }}>
