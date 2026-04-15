@@ -98,18 +98,15 @@ export default function LayerColumn({ layerKey, layer, onWordClick }: Props) {
                   <div
                     key={word.word_position}
                     onClick={() => onWordClick?.(word, layerKey)}
-                    role={word.strongs_id ? "button" : undefined}
-                    tabIndex={word.strongs_id ? 0 : undefined}
-                    onKeyDown={word.strongs_id
-                      ? (e) => { if (e.key === "Enter" || e.key === " ") onWordClick?.(word, layerKey); }
-                      : undefined}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onWordClick?.(word, layerKey); }}
                     className={[
                       "group flex flex-col items-center rounded-lg px-2 py-1.5 gap-0.5",
                       "border border-transparent hover:border-[var(--color-border)]",
-                      "hover:bg-[var(--color-surface-hover)] transition-colors",
-                      word.strongs_id ? "cursor-pointer" : "cursor-default",
+                      "hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer",
                     ].join(" ")}
-                    title={word.strongs_id ? `Strong's ${word.strongs_id}` : undefined}
+                    title={word.strongs_id ? `Strong's ${word.strongs_id}` : word.gloss ?? undefined}
                   >
                     {/* Script */}
                     <span

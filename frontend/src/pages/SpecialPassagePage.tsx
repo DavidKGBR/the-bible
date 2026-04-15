@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import MultiLayerView from "../components/special-passages/MultiLayerView";
 import WordDetailPanel from "../components/lexicon/WordDetailPanel";
+import PassageWordPanel from "../components/special-passages/PassageWordPanel";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import {
   fetchSpecialPassageCatalog,
@@ -129,6 +130,7 @@ function PassageDetailPage({ passageId }: { passageId: string }) {
   const [translation, setTranslation] = useState("nvi");
   const [translationEn, setTranslationEn] = useState("kjv");
   const [selectedStrongs, setSelectedStrongs] = useState<string | null>(null);
+  const [selectedWord, setSelectedWord] = useState<{ word: PassageWord; layerKey: PassageLayerKey } | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -139,8 +141,14 @@ function PassageDetailPage({ passageId }: { passageId: string }) {
       .finally(() => setLoading(false));
   }, [passageId, translation, translationEn]);
 
-  function handleWordClick(word: PassageWord, _layerKey: PassageLayerKey) {
-    if (word.strongs_id) setSelectedStrongs(word.strongs_id);
+  function handleWordClick(word: PassageWord, layerKey: PassageLayerKey) {
+    if (word.strongs_id) {
+      setSelectedWord(null);
+      setSelectedStrongs(word.strongs_id);
+    } else {
+      setSelectedStrongs(null);
+      setSelectedWord({ word, layerKey });
+    }
   }
 
   return (
@@ -219,11 +227,21 @@ function PassageDetailPage({ passageId }: { passageId: string }) {
         <MultiLayerView passage={passage} onWordClick={handleWordClick} />
       )}
 
-      {/* Word detail panel (Strong's) */}
+      {/* Strong's panel (Greek / Hebrew words) */}
       {selectedStrongs && (
         <WordDetailPanel
           strongsId={selectedStrongs}
           onClose={() => setSelectedStrongs(null)}
+        />
+      )}
+
+      {/* Passage word panel (Aramaic / words without Strong's) */}
+      {selectedWord && passage && (
+        <PassageWordPanel
+          word={selectedWord.word}
+          layerKey={selectedWord.layerKey}
+          layerLabel={passage.layers[selectedWord.layerKey]?.label ?? selectedWord.layerKey}
+          onClose={() => setSelectedWord(null)}
         />
       )}
     </div>

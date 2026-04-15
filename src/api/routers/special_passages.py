@@ -142,7 +142,7 @@ _LAYER_META: dict[str, dict[str, str | None]] = {
         "language_code": "arc",
         "direction": "rtl",
         "source": "Peshitta",
-        "audio_note": "Áudio em desenvolvimento — Camada 2",
+        "audio_note": None,
     },
     "hebrew": {
         "label": "Hebraico (WLC)",
