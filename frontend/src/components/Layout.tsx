@@ -70,20 +70,25 @@ export default function Layout() {
         </p>
       </Link>
       {/* Language selector */}
-      <div className="flex items-center gap-1 mb-4 px-1">
+      <div
+        className="grid grid-cols-3 gap-1 mb-4 -ml-1"
+        role="group"
+        aria-label="Language"
+      >
         {LOCALES.map((loc) => (
           <button
             key={loc.code}
             onClick={() => setLocale(loc.code)}
-            className={`text-lg px-1.5 py-0.5 rounded transition ${
+            className={`text-[11px] font-medium px-1 py-1.5 rounded text-center transition truncate ${
               locale === loc.code
-                ? "bg-[var(--color-gold)]/20 ring-1 ring-[var(--color-gold)]/40"
-                : "opacity-50 hover:opacity-100"
+                ? "bg-[var(--color-gold)]/20 text-[var(--color-gold)] ring-1 ring-[var(--color-gold)]/40"
+                : "opacity-60 hover:opacity-100"
             }`}
-            title={loc.label}
             aria-label={`Switch to ${loc.label}`}
+            aria-pressed={locale === loc.code}
+            title={loc.label}
           >
-            {loc.flag}
+            {loc.label}
           </button>
         ))}
       </div>

@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { fetchExplorerPresets, type ExplorerPreset } from "../../services/api";
 import { useI18n } from "../../i18n/i18nContext";
+import { localized } from "../../i18n/localized";
+import PresetIcon from "../icons/PresetIcon";
 
 interface Props {
   onSelect: (preset: ExplorerPreset) => void;
 }
 
 export default function PresetExplorations({ onSelect }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [presets, setPresets] = useState<ExplorerPreset[]>([]);
 
   useEffect(() => {
@@ -38,13 +40,15 @@ export default function PresetExplorations({ onSelect }: Props) {
                        hover:border-[var(--color-gold)] hover:bg-[var(--color-gold)]/5
                        transition group"
           >
-            <div className="text-2xl mb-2">{p.icon}</div>
+            <div className="mb-2 text-[var(--color-gold-dark)] group-hover:text-[var(--color-gold)] transition">
+              <PresetIcon name={p.icon} className="w-7 h-7" />
+            </div>
             <div className="font-display font-bold text-sm text-[var(--color-ink)]
                            group-hover:text-[var(--color-gold-dark)] transition">
-              {p.label}
+              {localized(p, locale, "label")}
             </div>
             <p className="text-[11px] opacity-50 mt-1 line-clamp-2">
-              {p.description}
+              {localized(p, locale, "description")}
             </p>
           </button>
         ))}

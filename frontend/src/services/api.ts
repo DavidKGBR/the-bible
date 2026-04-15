@@ -412,6 +412,8 @@ export async function fetchTopic(slug: string, translation = "kjv"): Promise<Top
 export interface ComparePreset {
   id: string;
   title: string;
+  title_pt?: string;
+  title_es?: string;
   passage_count: number;
   labels: string[];
 }
@@ -434,6 +436,8 @@ export interface CompareColumn {
 export interface CompareResult {
   id?: string;
   title?: string;
+  title_pt?: string;
+  title_es?: string;
   translation: string;
   columns: CompareColumn[];
 }
@@ -1168,7 +1172,12 @@ export interface ExplorerPresetEntry {
 export interface ExplorerPreset {
   id: string;
   label: string;
+  label_pt?: string;
+  label_es?: string;
   description: string;
+  description_pt?: string;
+  description_es?: string;
+  /** Semantic icon name (e.g. "heart", "scroll") — rendered by PresetIcon. */
   icon: string;
   entry_nodes: ExplorerPresetEntry[];
 }

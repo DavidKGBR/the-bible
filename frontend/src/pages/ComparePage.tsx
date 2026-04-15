@@ -7,9 +7,10 @@ import {
 } from "../services/api";
 import { useTranslationIds } from "../hooks/useTranslations";
 import { useI18n } from "../i18n/i18nContext";
+import { localized } from "../i18n/localized";
 
 export default function ComparePage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [presets, setPresets] = useState<ComparePreset[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [result, setResult] = useState<CompareResult | null>(null);
@@ -99,7 +100,7 @@ export default function ComparePage() {
             }`}
           >
             <div className="font-medium text-sm text-[var(--color-ink)]">
-              {preset.title}
+              {localized(preset, locale, "title")}
             </div>
             <div className="text-[10px] opacity-50 mt-1">
               {t("compare.presetMeta")
@@ -125,7 +126,7 @@ export default function ComparePage() {
         <div>
           {result.title && (
             <h2 className="text-lg font-display font-bold text-[var(--color-ink)] mb-4">
-              {result.title}
+              {localized(result, locale, "title")}
             </h2>
           )}
 

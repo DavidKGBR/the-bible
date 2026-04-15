@@ -77,13 +77,17 @@ def _fetch_passage(conn: object, range_str: str, translation: str) -> list[dict]
 
 @router.get("/compare/presets")
 def list_presets() -> dict:
-    """List available preset parallel passage comparisons."""
+    """List available preset parallel passage comparisons.
+
+    Each preset includes localized title fields (title_pt, title_es) when
+    available; the frontend uses `localized()` to pick the right field
+    based on the active locale, with EN fallback.
+    """
     return {
         "count": len(_PARALLELS),
         "presets": [
             {
-                "id": p["id"],
-                "title": p["title"],
+                **p,  # includes id, title, title_pt, title_es
                 "passage_count": len(p["passages"]),
                 "labels": [ps["label"] for ps in p["passages"]],
             }
@@ -117,8 +121,7 @@ def get_preset(
             )
 
         return {
-            "id": preset["id"],
-            "title": preset["title"],
+            **preset,  # includes id, title, title_pt, title_es
             "translation": translation,
             "columns": columns,
         }

@@ -7,10 +7,10 @@ export type Locale = "en" | "pt" | "es";
 
 const TRANSLATIONS: Record<Locale, Record<string, string>> = { en, pt, es };
 
-export const LOCALES: { code: Locale; label: string; flag: string }[] = [
-  { code: "en", label: "English", flag: "🇺🇸" },
-  { code: "pt", label: "Português", flag: "🇧🇷" },
-  { code: "es", label: "Español", flag: "🇪🇸" },
+export const LOCALES: { code: Locale; label: string }[] = [
+  { code: "en", label: "English" },
+  { code: "pt", label: "Português" },
+  { code: "es", label: "Español" },
 ];
 
 interface I18nContextType {
