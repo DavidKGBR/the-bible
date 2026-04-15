@@ -113,6 +113,34 @@
         "portuguese": "Tradução portuguesa moderna",
         "english": "Tradução inglesa clássica"
       }
+    },
+    {
+      "id": "proverbs_8",
+      "title": "A Sabedoria Viva",
+      "title_en": "Wisdom as Co-Architect",
+      "reference": "Provérbios 8:22-31",
+      "badge": "Sabedoria",
+      "description": "A Sabedoria como co-arquiteta da criação — presente antes do mundo, tecendo ordem e beleza ao lado do Criador.",
+      "layers": ["hebrew", "portuguese", "english"],
+      "layer_notes": {
+        "hebrew": "WLC — חׇכְמָה (ḥokmāh), a Sabedoria personificada no Hebraico Bíblico",
+        "portuguese": "Tradução portuguesa moderna",
+        "english": "Tradução inglesa clássica"
+      }
+    },
+    {
+      "id": "beatitudes",
+      "title": "As Bem-Aventuranças",
+      "title_en": "The Beatitudes",
+      "reference": "Mateus 5:3-12",
+      "badge": "Sermão",
+      "description": "A subversão radical dos valores do mundo: os humildes, os que choram e os perseguidos como os verdadeiramente bem-aventurados.",
+      "layers": ["greek", "portuguese", "english"],
+      "layer_notes": {
+        "greek": "SBLGNT — μακάριοι (makárioi), \"bem-aventurados\" em Grego Koiné",
+        "portuguese": "Tradução portuguesa moderna",
+        "english": "Tradução inglesa clássica"
+      }
     }
   ]
 }

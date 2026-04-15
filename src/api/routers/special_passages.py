@@ -108,6 +108,22 @@ _PASSAGE_VERSES: dict[str, dict[str, object]] = {
         "original_language": "greek",
         "has_aramaic": False,
     },
+    "proverbs_8": {
+        "book_id": "PRO",
+        "chapter": 8,
+        "verse_start": 22,
+        "verse_end": 31,
+        "original_language": "hebrew",
+        "has_aramaic": False,
+    },
+    "beatitudes": {
+        "book_id": "MAT",
+        "chapter": 5,
+        "verse_start": 3,
+        "verse_end": 12,
+        "original_language": "greek",
+        "has_aramaic": False,
+    },
 }
 
 # Translation sets
