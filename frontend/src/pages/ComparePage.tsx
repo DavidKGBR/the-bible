@@ -68,7 +68,7 @@ export default function ComparePage() {
       {/* Translation selector */}
       <div className="flex items-center gap-3 mb-4">
         <span className="text-xs opacity-50">Translation:</span>
-        {["kjv", "asv", "bbe", "web", "darby"].map((t) => (
+        {["kjv", "asv", "bbe", "web", "darby", "nvi", "ra", "acf", "rvr", "apee", "neue"].map((t) => (
           <button
             key={t}
             onClick={() => setTranslation(t)}

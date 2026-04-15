@@ -7,7 +7,7 @@ import LoadingSpinner from "./common/LoadingSpinner";
 import { useI18n } from "../i18n/i18nContext";
 import { useBooks, localizeBookName } from "../i18n/bookNames";
 
-const TRANSLATIONS = ["kjv", "bbe", "nvi", "ra", "acf", "rvr", "apee", "asv", "web", "darby"];
+const TRANSLATIONS = ["kjv", "bbe", "nvi", "ra", "acf", "rvr", "apee", "asv", "web", "darby", "neue"];
 
 export default function ParallelView() {
   const { t, locale } = useI18n();

@@ -13,7 +13,7 @@ import { useVerseNotes } from "../../hooks/useVerseNotes";
 import { parseKjvAnnotations } from "../reader/kjvAnnotations";
 import { useI18n } from "../../i18n/i18nContext";
 
-const TRANSLATIONS = ["kjv", "bbe", "nvi", "ra", "acf", "rvr", "apee", "asv", "web", "darby"];
+const TRANSLATIONS = ["kjv", "bbe", "nvi", "ra", "acf", "rvr", "apee", "asv", "web", "darby", "neue"];
 
 /** Approximate max chars per page — keeps pages balanced. */
 const CHARS_PER_PAGE = 1400;

@@ -8,7 +8,7 @@ import LoadingSpinner from "../components/common/LoadingSpinner";
 
 const DEFAULT_TRANSLATIONS = ["kjv", "nvi", "rvr", "bbe", "acf"];
 const ALL_TRANSLATIONS = [
-  "kjv", "bbe", "asv", "web", "darby", "nvi", "ra", "acf", "rvr", "apee",
+  "kjv", "bbe", "asv", "web", "darby", "nvi", "ra", "acf", "rvr", "apee", "neue",
 ];
 
 export default function TranslationDivergencePage() {
