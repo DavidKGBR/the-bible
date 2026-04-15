@@ -17,6 +17,7 @@ data/processed/*.csv
 data/analytics/*.csv
 data/analytics/*.duckdb
 data/analytics/*.duckdb.wal
+data/audio/
 
 # ─── IDE ──────────────────────────────────────────────────────────────────────
 .vscode/
