@@ -20,12 +20,20 @@ Uso:
 
 from __future__ import annotations
 
+import io
 import logging
 import os
+import sys
 import time
 from pathlib import Path
 
 import duckdb
+
+# Força UTF-8 no stdout/stderr — necessário no Windows (cp1252 não suporta emojis)
+if sys.stdout and hasattr(sys.stdout, "buffer"):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+if sys.stderr and hasattr(sys.stderr, "buffer"):
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 logger = logging.getLogger(__name__)
 
@@ -158,7 +166,7 @@ def generate_all(
     from rich.console import Console
     from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, MofNCompleteColumn
 
-    console = Console()
+    console = Console(highlight=False)
     conn = duckdb.connect(db_path, read_only=True)
 
     # Carrega entradas do DuckDB
