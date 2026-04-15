@@ -8,6 +8,8 @@
 import AudioButton from "../common/AudioButton";
 import type { PassageLayer, PassageLayerKey, PassageWord } from "../../services/api";
 import type { BiblicalLanguage } from "../../hooks/useWordAudio";
+import { useI18n } from "../../i18n/i18nContext";
+import { localized } from "../../i18n/localized";
 
 interface Props {
   layerKey: PassageLayerKey;
@@ -46,6 +48,7 @@ const SCRIPT_FONT: Partial<Record<PassageLayerKey, string>> = {
 };
 
 export default function LayerColumn({ layerKey, layer, onWordClick }: Props) {
+  const { locale } = useI18n();
   const isWordLevel = layerKey === "aramaic" || layerKey === "hebrew" || layerKey === "greek";
   const isRtl = layer.direction === "rtl";
   const scriptFont = SCRIPT_FONT[layerKey] ?? "";
@@ -94,7 +97,9 @@ export default function LayerColumn({ layerKey, layer, onWordClick }: Props) {
                 ].join(" ")}
                 dir={isRtl ? "rtl" : "ltr"}
               >
-                {verse.words.map((word) => (
+                {verse.words.map((word) => {
+                  const localizedGloss = localized(word, locale, "gloss");
+                  return (
                   <div
                     key={word.word_position}
                     onClick={() => onWordClick?.(word, layerKey)}
@@ -106,7 +111,7 @@ export default function LayerColumn({ layerKey, layer, onWordClick }: Props) {
                       "border border-transparent hover:border-[var(--color-border)]",
                       "hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer",
                     ].join(" ")}
-                    title={word.strongs_id ? `Strong's ${word.strongs_id}` : word.gloss ?? undefined}
+                    title={word.strongs_id ? `Strong's ${word.strongs_id}` : (localizedGloss || undefined)}
                   >
                     {/* Script */}
                     <span
@@ -127,9 +132,9 @@ export default function LayerColumn({ layerKey, layer, onWordClick }: Props) {
                     )}
 
                     {/* Gloss */}
-                    {word.gloss && (
+                    {localizedGloss && (
                       <span className="text-[10px] text-[var(--color-text-secondary)] leading-tight text-center max-w-[80px] truncate">
-                        {word.gloss}
+                        {localizedGloss}
                       </span>
                     )}
 
@@ -146,7 +151,8 @@ export default function LayerColumn({ layerKey, layer, onWordClick }: Props) {
                       </div>
                     )}
                   </div>
-                ))}
+                );
+                })}
               </div>
             ) : (
               /* Full-text verse */

@@ -11,6 +11,7 @@ import AudioButton from "../common/AudioButton";
 import type { PassageLayerKey, PassageWord } from "../../services/api";
 import type { BiblicalLanguage } from "../../hooks/useWordAudio";
 import { useI18n } from "../../i18n/i18nContext";
+import { localized } from "../../i18n/localized";
 
 interface Props {
   word: PassageWord;
@@ -46,8 +47,9 @@ const SOURCE_LABEL_KEY: Partial<Record<PassageLayerKey, string>> = {
 };
 
 export default function PassageWordPanel({ word, layerKey, layerLabel, onClose }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const isRtl = layerKey === "aramaic" || layerKey === "hebrew";
+  const localizedGloss = localized(word, locale, "gloss");
   const scriptFont = SCRIPT_FONT[layerKey] ?? "";
   const lang = WORD_LANGUAGE[layerKey];
   const sourceLabelKey = SOURCE_LABEL_KEY[layerKey];
@@ -122,13 +124,13 @@ export default function PassageWordPanel({ word, layerKey, layerLabel, onClose }
         </div>
 
         {/* Significado */}
-        {word.gloss && (
+        {localizedGloss && (
           <div className="flex flex-col gap-1">
             <span className="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
               {t("passageWord.meaning")}
             </span>
             <p className="text-lg font-medium text-[var(--color-text-primary)]">
-              {word.gloss}
+              {localizedGloss}
             </p>
           </div>
         )}

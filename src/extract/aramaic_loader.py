@@ -42,7 +42,13 @@ def load_passage(json_path: Path, db_path: str = DEFAULT_DB) -> int:
                     "word_position": word["word_position"],
                     "script": word["script"],
                     "transliteration": word.get("transliteration"),
+                    # `gloss` is the EN source of truth; `_pt`/`_es` are
+                    # parallel localizations. Older JSON files that only had
+                    # `gloss` (in PT) should be migrated during R2.a; this
+                    # loader treats missing _pt/_es as null without failing.
                     "gloss": word.get("gloss"),
+                    "gloss_pt": word.get("gloss_pt"),
+                    "gloss_es": word.get("gloss_es"),
                     "audio_url": word.get("audio_url"),
                     "source": source,
                 }

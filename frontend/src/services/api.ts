@@ -1344,7 +1344,10 @@ export interface PassageWord {
   word_position: number;
   script: string;
   transliteration: string | null;
+  /** EN gloss (source of truth for aramaic layer). */
   gloss: string | null;
+  gloss_pt?: string | null;
+  gloss_es?: string | null;
   audio_url: string | null;
   strongs_id: string | null;
 }

@@ -204,7 +204,7 @@ def get_special_passage(
         aramaic_rows = db.execute(
             """
             SELECT verse_ref, verse_number, word_position, script,
-                   transliteration, gloss, audio_url
+                   transliteration, gloss, gloss_pt, gloss_es, audio_url
             FROM   aramaic_verses
             WHERE  passage_id = ?
             ORDER  BY verse_number, word_position
@@ -214,7 +214,7 @@ def get_special_passage(
 
         aramaic_verses: dict[str, dict] = {}
         for row in aramaic_rows:
-            vref, vnum, wpos, script, translit, gloss, audio_url = row
+            vref, vnum, wpos, script, translit, gloss, gloss_pt, gloss_es, audio_url = row
             if vref not in aramaic_verses:
                 aramaic_verses[vref] = {"verse_ref": vref, "verse_number": vnum, "words": []}
             aramaic_verses[vref]["words"].append(
@@ -223,6 +223,8 @@ def get_special_passage(
                     "script": script,
                     "transliteration": translit,
                     "gloss": gloss,
+                    "gloss_pt": gloss_pt,
+                    "gloss_es": gloss_es,
                     "audio_url": audio_url,
                     "strongs_id": None,
                 }

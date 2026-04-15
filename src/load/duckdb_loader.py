@@ -649,7 +649,13 @@ class DuckDBLoader:
         return count
 
     def _ensure_aramaic_verses_table(self) -> None:
-        """Create the aramaic_verses table for Special Passages seed data."""
+        """Create the aramaic_verses table for Special Passages seed data.
+
+        The `gloss` column is the EN source of truth; `gloss_pt` and `gloss_es`
+        hold parallel translations (populated from the JSON seed files).
+        For DBs that predate the `_pt`/`_es` columns, the ALTER statements
+        below add them idempotently.
+        """
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS aramaic_verses (
                 passage_id      VARCHAR NOT NULL,
@@ -659,11 +665,21 @@ class DuckDBLoader:
                 script          VARCHAR NOT NULL,
                 transliteration VARCHAR,
                 gloss           VARCHAR,
+                gloss_pt        VARCHAR,
+                gloss_es        VARCHAR,
                 audio_url       VARCHAR,
                 source          VARCHAR NOT NULL DEFAULT 'peshitta',
                 PRIMARY KEY (passage_id, verse_ref, word_position)
             );
         """)
+        # Backfill columns for pre-existing DuckDB files (idempotent).
+        # DuckDB does not support "ADD COLUMN IF NOT EXISTS", so we swallow
+        # the "column already exists" error via contextlib.suppress.
+        import contextlib
+
+        for col in ("gloss_pt", "gloss_es"):
+            with contextlib.suppress(Exception):
+                self.conn.execute(f"ALTER TABLE aramaic_verses ADD COLUMN {col} VARCHAR")
         self.conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_aramaic_passage "
             "ON aramaic_verses(passage_id, verse_ref);"
@@ -683,11 +699,13 @@ class DuckDBLoader:
         self.conn.execute("""
             INSERT INTO aramaic_verses (
                 passage_id, verse_ref, verse_number, word_position,
-                script, transliteration, gloss, audio_url, source
+                script, transliteration, gloss, gloss_pt, gloss_es,
+                audio_url, source
             )
             SELECT
                 passage_id, verse_ref, verse_number, word_position,
-                script, transliteration, gloss, audio_url, source
+                script, transliteration, gloss, gloss_pt, gloss_es,
+                audio_url, source
             FROM df
         """)
         count_row = self.conn.execute(
