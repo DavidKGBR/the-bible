@@ -23,6 +23,7 @@ from src.api.routers import (
     devotional,
     emotional,
     explorer,
+    genealogy,
     home,
     intertextuality,
     lexicon,
@@ -76,6 +77,7 @@ app.include_router(intertextuality.router, prefix="/api/v1", tags=["Intertextual
 app.include_router(open_questions.router, prefix="/api/v1", tags=["Open Questions"])
 app.include_router(threads.router, prefix="/api/v1", tags=["Semantic Threads"])
 app.include_router(structure.router, prefix="/api/v1", tags=["Literary Structure"])
+app.include_router(genealogy.router, prefix="/api/v1", tags=["Semantic Genealogy"])
 app.include_router(emotional.router, prefix="/api/v1", tags=["Emotional Landscape"])
 app.include_router(home.router, prefix="/api/v1", tags=["Home"])
 app.include_router(community.router, prefix="/api/v1", tags=["Community Notes"])

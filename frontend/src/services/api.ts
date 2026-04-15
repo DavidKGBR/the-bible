@@ -1364,3 +1364,63 @@ export function fetchSpecialPassage(
   );
 }
 
+// ── Semantic Genealogy ────────────────────────────────────────────────────────
+
+export interface GenealogyNode {
+  strongs_id: string;
+  language: "hebrew" | "greek";
+  word: string;
+  transliteration: string;
+  gloss: string;
+  testament: "OT" | "NT";
+  key_verses: string[];
+  note: string;
+  // enriched by backend
+  occurrence_count?: number;
+  top_books?: { book_id: string; count: number }[];
+  short_definition?: string;
+  lexicon_transliteration?: string;
+  original_script?: string;
+}
+
+export interface GenealogyBridge {
+  from: string;
+  to: string;
+  type: "lxx_translation" | "theological_development" | "semantic_equivalence" | "root_cognate";
+  note: string;
+}
+
+export interface GenealogyConcept {
+  id: string;
+  concept: string;
+  concept_en: string;
+  tagline: string;
+  color: string;
+  icon: string;
+  nodes: GenealogyNode[];
+  bridges: GenealogyBridge[];
+  narrative: string;
+}
+
+export interface GenealogyConceptSummary {
+  id: string;
+  concept: string;
+  concept_en: string;
+  tagline: string;
+  color: string;
+  icon: string;
+  node_count: number;
+  strongs_ids: string[];
+}
+
+export async function fetchGenealogyConcepts(): Promise<GenealogyConceptSummary[]> {
+  const data = await fetchJson<{ concepts: GenealogyConceptSummary[] }>(
+    `${BASE}/genealogy/concepts`
+  );
+  return data.concepts;
+}
+
+export function fetchGenealogyConcept(id: string): Promise<GenealogyConcept> {
+  return fetchJson(`${BASE}/genealogy/concepts/${id}`);
+}
+

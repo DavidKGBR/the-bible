@@ -1,0 +1,318 @@
+/**
+ * ConceptFlow — Visualização da jornada semântica de um conceito.
+ *
+ * Exibe o fluxo Hebrew → Greek com:
+ * - Cartões de palavra (WordNode) para cada termo
+ * - Conectores com tipo de ponte (LXX / teológico / equivalente)
+ * - Narrativa explicativa
+ * - Versículos-chave
+ */
+
+import { Link } from "react-router-dom";
+import type { GenealogyConcept, GenealogyNode, GenealogyBridge } from "../../services/api";
+
+// ── Color themes ──────────────────────────────────────────────────────────
+
+const COLOR_MAP: Record<string, { border: string; bg: string; badge: string; dot: string; text: string }> = {
+  rose:    { border: "border-rose-500/40",    bg: "bg-rose-500/5",    badge: "bg-rose-500/15 text-rose-700 dark:text-rose-300",    dot: "bg-rose-500",    text: "text-rose-700 dark:text-rose-300" },
+  sky:     { border: "border-sky-500/40",     bg: "bg-sky-500/5",     badge: "bg-sky-500/15 text-sky-700 dark:text-sky-300",       dot: "bg-sky-500",     text: "text-sky-700 dark:text-sky-300" },
+  amber:   { border: "border-amber-500/40",   bg: "bg-amber-500/5",   badge: "bg-amber-500/15 text-amber-700 dark:text-amber-300", dot: "bg-amber-500",   text: "text-amber-700 dark:text-amber-300" },
+  violet:  { border: "border-violet-500/40",  bg: "bg-violet-500/5",  badge: "bg-violet-500/15 text-violet-700 dark:text-violet-300", dot: "bg-violet-500", text: "text-violet-700 dark:text-violet-300" },
+  yellow:  { border: "border-yellow-500/40",  bg: "bg-yellow-500/5",  badge: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300", dot: "bg-yellow-500", text: "text-yellow-700 dark:text-yellow-300" },
+  emerald: { border: "border-emerald-500/40", bg: "bg-emerald-500/5", badge: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300", dot: "bg-emerald-500", text: "text-emerald-700 dark:text-emerald-300" },
+  indigo:  { border: "border-indigo-500/40",  bg: "bg-indigo-500/5",  badge: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300", dot: "bg-indigo-500",  text: "text-indigo-700 dark:text-indigo-300" },
+  purple:  { border: "border-purple-500/40",  bg: "bg-purple-500/5",  badge: "bg-purple-500/15 text-purple-700 dark:text-purple-300", dot: "bg-purple-500",  text: "text-purple-700 dark:text-purple-300" },
+  cyan:    { border: "border-cyan-500/40",    bg: "bg-cyan-500/5",    badge: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300",     dot: "bg-cyan-500",    text: "text-cyan-700 dark:text-cyan-300" },
+  orange:  { border: "border-orange-500/40",  bg: "bg-orange-500/5",  badge: "bg-orange-500/15 text-orange-700 dark:text-orange-300", dot: "bg-orange-500",  text: "text-orange-700 dark:text-orange-300" },
+};
+
+function getColors(color: string) {
+  return COLOR_MAP[color] ?? COLOR_MAP["amber"];
+}
+
+// ── Bridge type labels ────────────────────────────────────────────────────
+
+const BRIDGE_LABELS: Record<GenealogyBridge["type"], string> = {
+  lxx_translation:        "LXX →",
+  theological_development: "Teologia NT →",
+  semantic_equivalence:   "Equivalente →",
+  root_cognate:           "Cognato →",
+};
+
+const BRIDGE_STYLE: Record<GenealogyBridge["type"], string> = {
+  lxx_translation:        "border-dashed border-[var(--color-gold)]/60",
+  theological_development: "border-solid border-purple-400/60",
+  semantic_equivalence:   "border-dotted border-sky-400/60",
+  root_cognate:           "border-solid border-emerald-400/60",
+};
+
+// ── Language headers ──────────────────────────────────────────────────────
+
+const LANG_LABEL: Record<"hebrew" | "greek", { lang: string; testament: string; font: string; dir: "rtl" | "ltr" }> = {
+  hebrew: { lang: "Hebraico", testament: "Antigo Testamento", font: "font-hebrew", dir: "rtl" },
+  greek:  { lang: "Grego Koiné", testament: "Novo Testamento", font: "font-greek", dir: "ltr" },
+};
+
+// ── WordNode card ─────────────────────────────────────────────────────────
+
+function WordNode({ node, color }: { node: GenealogyNode; color: string }) {
+  const colors = getColors(color);
+  const langMeta = LANG_LABEL[node.language];
+  const isHebrew = node.language === "hebrew";
+
+  return (
+    <div
+      className={[
+        "flex flex-col gap-3 rounded-xl border p-4",
+        "bg-[var(--color-surface)]",
+        colors.border,
+        colors.bg,
+        "min-w-[200px] max-w-[240px]",
+      ].join(" ")}
+    >
+      {/* Language badge */}
+      <div className="flex items-center gap-1.5">
+        <div className={["w-2 h-2 rounded-full shrink-0", colors.dot].join(" ")} />
+        <span className={["text-[10px] font-semibold tracking-wide", colors.text].join(" ")}>
+          {langMeta.lang}
+        </span>
+        <span className="text-[9px] text-[var(--color-text-muted)]">
+          ({node.testament})
+        </span>
+      </div>
+
+      {/* Original script — large */}
+      <div dir={langMeta.dir} className="flex flex-col items-center gap-1 py-2">
+        <span
+          className={[
+            "text-4xl leading-none select-text",
+            langMeta.font,
+            isHebrew ? "tracking-widest" : "",
+          ].join(" ")}
+        >
+          {node.word}
+        </span>
+        <span className="text-sm italic text-[var(--color-text-secondary)] tracking-wide">
+          {node.transliteration}
+        </span>
+      </div>
+
+      {/* Strong's ID + gloss */}
+      <div className="flex flex-col gap-1">
+        <Link
+          to={`/word-study/${node.strongs_id}`}
+          className={[
+            "text-[10px] font-mono font-bold self-start px-1.5 py-0.5 rounded border",
+            colors.badge,
+            "hover:opacity-80 transition-opacity",
+          ].join(" ")}
+          title={`Abrir estudo de ${node.strongs_id}`}
+        >
+          {node.strongs_id}
+        </Link>
+        <p className="text-xs text-[var(--color-text-primary)] font-medium leading-snug">
+          {node.gloss}
+        </p>
+      </div>
+
+      {/* Occurrence stats */}
+      {node.occurrence_count !== undefined && node.occurrence_count > 0 && (
+        <div className="flex flex-col gap-1 border-t border-[var(--color-border)] pt-2">
+          <span className="text-[10px] text-[var(--color-text-muted)]">
+            {node.occurrence_count.toLocaleString()} ocorrências
+          </span>
+          {node.top_books && node.top_books.length > 0 && (
+            <div className="flex gap-1 flex-wrap">
+              {node.top_books.slice(0, 3).map((b) => (
+                <span
+                  key={b.book_id}
+                  className="text-[9px] px-1.5 py-0.5 rounded bg-[var(--color-surface-hover)]
+                             text-[var(--color-text-muted)]"
+                >
+                  {b.book_id} ({b.count})
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Contextual note */}
+      {node.note && (
+        <p className="text-[10px] text-[var(--color-text-muted)] leading-snug border-t border-[var(--color-border)] pt-2 italic">
+          {node.note}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ── Bridge connector ──────────────────────────────────────────────────────
+
+function BridgeConnector({ bridge, color }: { bridge: GenealogyBridge; color: string }) {
+  const colors = getColors(color);
+
+  return (
+    <div className="flex flex-col items-center gap-1 px-2 py-4 shrink-0 min-w-[100px] max-w-[120px]">
+      {/* Type label */}
+      <span className={["text-[10px] font-semibold", colors.text].join(" ")}>
+        {BRIDGE_LABELS[bridge.type]}
+      </span>
+
+      {/* Arrow line */}
+      <div className="w-full flex items-center">
+        <div className={["flex-1 border-t-2", BRIDGE_STYLE[bridge.type]].join(" ")} />
+        <span className={["text-xs", colors.text].join(" ")}>▶</span>
+      </div>
+
+      {/* Bridge note */}
+      {bridge.note && (
+        <p className="text-[9px] text-[var(--color-text-muted)] text-center leading-snug">
+          {bridge.note}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ── Key verse chip ────────────────────────────────────────────────────────
+
+function VerseChip({ verseRef, color }: { verseRef: string; color: string }) {
+  const colors = getColors(color);
+  // Format "JHN.3.16" → "Jo 3:16"
+  const parts = verseRef.split(".");
+  const display = parts.length === 3 ? `${parts[0]} ${parts[1]}:${parts[2]}` : verseRef;
+
+  return (
+    <Link
+      to={`/reader?book=${parts[0]}&chapter=${parts[1]}`}
+      className={[
+        "text-[10px] px-2 py-0.5 rounded-full border transition-opacity hover:opacity-70",
+        colors.badge,
+        colors.border,
+      ].join(" ")}
+      title={`Abrir ${display} no leitor`}
+    >
+      {display}
+    </Link>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────
+
+interface Props {
+  concept: GenealogyConcept;
+}
+
+export default function ConceptFlow({ concept }: Props) {
+  const colors = getColors(concept.color);
+
+  const hebrewNodes = concept.nodes.filter((n) => n.language === "hebrew");
+  const greekNodes  = concept.nodes.filter((n) => n.language === "greek");
+
+  // All key verses from all nodes, de-duplicated
+  const allKeyVerses = [...new Set(concept.nodes.flatMap((n) => n.key_verses))];
+
+  return (
+    <div className="flex flex-col gap-8">
+
+      {/* Flow diagram */}
+      <div className="flex flex-col gap-4">
+        {/* Column headers */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1">
+            <div className="w-2 h-2 rounded-full bg-sky-500" />
+            <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
+              Antigo Testamento — Hebraico
+            </span>
+          </div>
+          <div className="w-24" />
+          <div className="flex items-center gap-2 flex-1">
+            <div className="w-2 h-2 rounded-full bg-purple-500" />
+            <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
+              Novo Testamento — Grego
+            </span>
+          </div>
+        </div>
+
+        {/* Nodes + connectors — horizontal flow */}
+        <div className="flex items-start gap-0 overflow-x-auto pb-2">
+          {/* Hebrew column */}
+          <div className="flex flex-col gap-3 shrink-0">
+            {hebrewNodes.map((node) => (
+              <WordNode key={node.strongs_id} node={node} color={concept.color} />
+            ))}
+          </div>
+
+          {/* Bridge area */}
+          <div className="flex flex-col gap-3 shrink-0">
+            {concept.bridges.map((bridge, i) => (
+              <BridgeConnector key={i} bridge={bridge} color={concept.color} />
+            ))}
+          </div>
+
+          {/* Greek column */}
+          <div className="flex flex-col gap-3 shrink-0">
+            {greekNodes.map((node) => (
+              <WordNode key={node.strongs_id} node={node} color={concept.color} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Narrative */}
+      <div
+        className={[
+          "rounded-xl border p-5 flex flex-col gap-2",
+          colors.border,
+          colors.bg,
+        ].join(" ")}
+      >
+        <div className="flex items-center gap-2">
+          <span className={["text-base font-bold", colors.text].join(" ")}>
+            {concept.icon}
+          </span>
+          <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
+            A Jornada do Conceito
+          </span>
+        </div>
+        <p className="text-sm text-[var(--color-text-primary)] leading-relaxed">
+          {concept.narrative}
+        </p>
+      </div>
+
+      {/* Key verses */}
+      {allKeyVerses.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <span className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
+            Versículos-Chave
+          </span>
+          <div className="flex gap-2 flex-wrap">
+            {allKeyVerses.map((vref) => (
+              <VerseChip key={vref} verseRef={vref} color={concept.color} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Word study links */}
+      <div className="flex gap-2 flex-wrap pt-1 border-t border-[var(--color-border)]">
+        {concept.nodes.map((node) => (
+          <Link
+            key={node.strongs_id}
+            to={`/word-study/${node.strongs_id}`}
+            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg
+                       border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]
+                       transition-colors text-[var(--color-text-secondary)]"
+          >
+            <span className={["text-xs", LANG_LABEL[node.language].font].join(" ")}>
+              {node.word}
+            </span>
+            <span>({node.strongs_id})</span>
+            <span>→ Estudo →</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
