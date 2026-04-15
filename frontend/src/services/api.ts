@@ -676,11 +676,19 @@ export async function fetchPersonEvents(
 export interface Author {
   author_id: string;
   name: string;
+  name_pt?: string;
+  name_es?: string;
   period: string;
+  period_pt?: string;
+  period_es?: string;
   testament: string;
   books: string[];
   literary_style: string;
+  literary_style_pt?: string;
+  literary_style_es?: string;
   description: string;
+  description_pt?: string;
+  description_es?: string;
 }
 
 export interface AuthorTopWord {

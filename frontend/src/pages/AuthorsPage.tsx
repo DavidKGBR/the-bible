@@ -10,6 +10,7 @@ import {
 } from "../services/api";
 import AuthorCompare from "../components/authors/AuthorCompare";
 import { useI18n } from "../i18n/i18nContext";
+import { localized } from "../i18n/localized";
 
 // ── Period parser ──────────────────────────────────────────────────────────
 
@@ -39,7 +40,7 @@ function parsePeriod(period: string): { start: number; end: number } | null {
 }
 
 export default function AuthorsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [authors, setAuthors] = useState<Author[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "OT" | "NT">("all");
@@ -225,7 +226,7 @@ export default function AuthorsPage() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="font-display font-bold text-[var(--color-ink)]">
-                      {author.name}
+                      {localized(author, locale, "name")}
                     </h3>
                     <span className={`text-[9px] px-1.5 py-0.5 rounded ${
                       author.testament === "OT"
@@ -236,7 +237,7 @@ export default function AuthorsPage() {
                     </span>
                   </div>
                   <p className="text-xs opacity-50 mt-0.5">
-                    {author.period} · {author.literary_style}
+                    {localized(author, locale, "period")} · {localized(author, locale, "literary_style")}
                   </p>
                   {!isOpen && (
                     <p className="text-sm opacity-60 mt-1 line-clamp-1">
@@ -257,7 +258,7 @@ export default function AuthorsPage() {
                 <div className="px-4 pb-4 space-y-4 border-t border-[var(--color-gold-dark)]/10">
                   {/* Description */}
                   <p className="text-sm leading-relaxed font-body mt-3">
-                    {author.description}
+                    {localized(author, locale, "description")}
                   </p>
 
                   {/* Books */}
@@ -366,7 +367,7 @@ export default function AuthorsPage() {
 // ── Author Timeline ────────────────────────────────────────────────────────
 
 function AuthorTimeline({ authors }: { authors: Author[] }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const items = useMemo(() => {
     const parsed = authors
       .map((a) => ({ author: a, range: parsePeriod(a.period) }))
@@ -433,12 +434,12 @@ function AuthorTimeline({ authors }: { authors: Author[] }) {
                          hover:opacity-100 ${isOT ? "bg-emerald-400/60" : "bg-[var(--color-gold)]/60"}
                          group`}
               style={{ left: `${left}%`, width: `${width}%`, minWidth: "4px" }}
-              title={`${author.name} — ${author.period}`}
+              title={`${localized(author, locale, "name")} — ${localized(author, locale, "period")}`}
             >
               {/* Tooltip on hover */}
               <div className="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1
                              bg-[var(--color-ink)] text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-10">
-                {author.name} · {author.period}
+                {localized(author, locale, "name")} · {localized(author, locale, "period")}
               </div>
             </div>
           );

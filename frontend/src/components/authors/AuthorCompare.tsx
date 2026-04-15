@@ -8,6 +8,7 @@ import {
   type AuthorBookStats,
 } from "../../services/api";
 import { useI18n } from "../../i18n/i18nContext";
+import { localized } from "../../i18n/localized";
 
 interface Props {
   authors: [Author, Author];
@@ -21,7 +22,7 @@ interface AuthorData {
 }
 
 export default function AuthorCompare({ authors, onClose }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [data, setData] = useState<[AuthorData, AuthorData]>([
     { detail: null, books: [], loading: true },
     { detail: null, books: [], loading: true },
@@ -87,7 +88,7 @@ export default function AuthorCompare({ authors, onClose }: Props) {
               <div className="pb-3 border-b">
                 <div className="flex items-center gap-2">
                   <h4 className="font-display font-bold text-lg">
-                    {author.name}
+                    {localized(author, locale, "name")}
                   </h4>
                   <span className={`text-[9px] px-1.5 py-0.5 rounded ${
                     author.testament === "OT"
@@ -98,7 +99,7 @@ export default function AuthorCompare({ authors, onClose }: Props) {
                   </span>
                 </div>
                 <p className="text-xs opacity-50 mt-0.5">
-                  {author.period} · {author.literary_style}
+                  {localized(author, locale, "period")} · {localized(author, locale, "literary_style")}
                 </p>
                 <p className="text-xs opacity-40 mt-0.5">
                   {author.books.length} {author.books.length !== 1 ? t("authors.books") : t("authors.book")}: {author.books.join(", ")}
