@@ -68,7 +68,7 @@ def load_all(db_path: str = DEFAULT_DB) -> None:
         count = load_passage(f, db_path)
         total += count
 
-    print(f"✅ {total} palavras aramaicas carregadas de {len(json_files)} passagens.")
+    print(f"OK: {total} palavras aramaicas carregadas de {len(json_files)} passagens.")
 
 
 if __name__ == "__main__":

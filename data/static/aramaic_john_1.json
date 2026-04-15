@@ -1,0 +1,83 @@
+{
+  "passage_id": "john_1",
+  "source": "Peshitta",
+  "license": "Public Domain",
+  "language": "Syriac Aramaic",
+  "notes": "Eastern Peshitta (standard Syriac NT). Transliterations follow Aramaic Designs convention.",
+  "verses": [
+    {
+      "verse_ref": "JHN.1.1",
+      "verse_number": 1,
+      "words": [
+        { "word_position": 1, "script": "ܒܪܫܝܬ",    "transliteration": "b'reshit",   "gloss": "No princípio",   "audio_url": null },
+        { "word_position": 2, "script": "ܐܝܬܘܗܝ",   "transliteration": "ithawhy",    "gloss": "era",            "audio_url": null },
+        { "word_position": 3, "script": "ܗܘܐ",       "transliteration": "hwa",        "gloss": "estava",         "audio_url": null },
+        { "word_position": 4, "script": "ܡܠܬܐ",      "transliteration": "Miltha",     "gloss": "o Verbo",        "audio_url": null },
+        { "word_position": 5, "script": "ܘܗܘ",       "transliteration": "w'hu",       "gloss": "e ele",          "audio_url": null },
+        { "word_position": 6, "script": "ܡܠܬܐ",      "transliteration": "Miltha",     "gloss": "o Verbo",        "audio_url": null },
+        { "word_position": 7, "script": "ܐܝܬܘܗܝ",   "transliteration": "ithawhy",    "gloss": "era",            "audio_url": null },
+        { "word_position": 8, "script": "ܗܘܐ",       "transliteration": "hwa",        "gloss": "estava",         "audio_url": null },
+        { "word_position": 9, "script": "ܠܘܬ",       "transliteration": "lwath",      "gloss": "junto a",        "audio_url": null },
+        { "word_position": 10, "script": "ܐܠܗܐ",     "transliteration": "Alaha",      "gloss": "Deus",           "audio_url": null },
+        { "word_position": 11, "script": "ܘܐܠܗܐ",    "transliteration": "w'Alaha",    "gloss": "e Deus",         "audio_url": null },
+        { "word_position": 12, "script": "ܐܝܬܘܗܝ",   "transliteration": "ithawhy",    "gloss": "era",            "audio_url": null },
+        { "word_position": 13, "script": "ܗܘܐ",       "transliteration": "hwa",        "gloss": "estava",         "audio_url": null },
+        { "word_position": 14, "script": "ܗܘ",        "transliteration": "hu",         "gloss": "ele",            "audio_url": null },
+        { "word_position": 15, "script": "ܡܠܬܐ",      "transliteration": "Miltha",     "gloss": "o Verbo",        "audio_url": null }
+      ]
+    },
+    {
+      "verse_ref": "JHN.1.2",
+      "verse_number": 2,
+      "words": [
+        { "word_position": 1, "script": "ܗܢܐ",       "transliteration": "hana",       "gloss": "Este",           "audio_url": null },
+        { "word_position": 2, "script": "ܐܝܬܘܗܝ",   "transliteration": "ithawhy",    "gloss": "era",            "audio_url": null },
+        { "word_position": 3, "script": "ܗܘܐ",       "transliteration": "hwa",        "gloss": "estava",         "audio_url": null },
+        { "word_position": 4, "script": "ܒܪܫܝܬ",    "transliteration": "b'reshit",   "gloss": "no princípio",   "audio_url": null },
+        { "word_position": 5, "script": "ܠܘܬ",       "transliteration": "lwath",      "gloss": "junto a",        "audio_url": null },
+        { "word_position": 6, "script": "ܐܠܗܐ",      "transliteration": "Alaha",      "gloss": "Deus",           "audio_url": null }
+      ]
+    },
+    {
+      "verse_ref": "JHN.1.3",
+      "verse_number": 3,
+      "words": [
+        { "word_position": 1, "script": "ܟܠ",        "transliteration": "kul",        "gloss": "Tudo",           "audio_url": null },
+        { "word_position": 2, "script": "ܒܐܝܕܗ",    "transliteration": "b'ideh",     "gloss": "por meio dele",  "audio_url": null },
+        { "word_position": 3, "script": "ܗܘܐ",       "transliteration": "hwa",        "gloss": "veio a ser",     "audio_url": null },
+        { "word_position": 4, "script": "ܘܕܠܐ",      "transliteration": "w'dla",      "gloss": "e sem",          "audio_url": null },
+        { "word_position": 5, "script": "ܗܘ",        "transliteration": "hu",         "gloss": "ele",            "audio_url": null },
+        { "word_position": 6, "script": "ܡܕܡ",       "transliteration": "medem",      "gloss": "coisa alguma",   "audio_url": null },
+        { "word_position": 7, "script": "ܠܐ",        "transliteration": "la",         "gloss": "não",            "audio_url": null },
+        { "word_position": 8, "script": "ܗܘܐ",       "transliteration": "hwa",        "gloss": "veio a ser",     "audio_url": null }
+      ]
+    },
+    {
+      "verse_ref": "JHN.1.4",
+      "verse_number": 4,
+      "words": [
+        { "word_position": 1, "script": "ܒܗ",        "transliteration": "beh",        "gloss": "Nele",           "audio_url": null },
+        { "word_position": 2, "script": "ܚܝܐ",       "transliteration": "khaye",      "gloss": "vida",           "audio_url": null },
+        { "word_position": 3, "script": "ܗܘܐ",       "transliteration": "hwa",        "gloss": "havia",          "audio_url": null },
+        { "word_position": 4, "script": "ܘܚܝܐ",      "transliteration": "w'khaye",    "gloss": "e a vida",       "audio_url": null },
+        { "word_position": 5, "script": "ܐܝܬܝܗܘܢ",  "transliteration": "ithayhin",   "gloss": "era",            "audio_url": null },
+        { "word_position": 6, "script": "ܗܘܘ",       "transliteration": "hwaw",       "gloss": "eram",           "audio_url": null },
+        { "word_position": 7, "script": "ܢܘܗܪܐ",     "transliteration": "nuhra",      "gloss": "a luz",          "audio_url": null },
+        { "word_position": 8, "script": "ܕܒܢܝ",      "transliteration": "d'bnay",     "gloss": "dos filhos",     "audio_url": null },
+        { "word_position": 9, "script": "ܐܢܫܐ",      "transliteration": "anasha",     "gloss": "dos homens",     "audio_url": null }
+      ]
+    },
+    {
+      "verse_ref": "JHN.1.5",
+      "verse_number": 5,
+      "words": [
+        { "word_position": 1, "script": "ܘܢܘܗܪܐ",    "transliteration": "w'nuhra",    "gloss": "E a luz",        "audio_url": null },
+        { "word_position": 2, "script": "ܒܚܫܘܟܐ",    "transliteration": "b'kheshukha","gloss": "nas trevas",     "audio_url": null },
+        { "word_position": 3, "script": "ܡܢܗܪ",      "transliteration": "manhir",     "gloss": "ilumina",        "audio_url": null },
+        { "word_position": 4, "script": "ܘܚܫܘܟܐ",    "transliteration": "w'kheshukha","gloss": "e as trevas",    "audio_url": null },
+        { "word_position": 5, "script": "ܠܐ",        "transliteration": "la",         "gloss": "não",            "audio_url": null },
+        { "word_position": 6, "script": "ܐܕܪܟܗ",     "transliteration": "adrkeh",     "gloss": "a compreenderam","audio_url": null }
+      ]
+    }
+  ]
+}

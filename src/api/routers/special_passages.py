@@ -1,7 +1,16 @@
 """
 ✝️ Special Passages Router
 Passagens curadas com múltiplas camadas de língua simultâneas.
-Aramaico (Peshitta) + Grego (SBLGNT) + Português + Inglês.
+
+Camadas disponíveis:
+  - aramaic:    Peshitta palavra a palavra (da tabela aramaic_verses)
+  - hebrew:     WLC palavra a palavra (da tabela interlinear, language='hebrew')
+  - greek:      SBLGNT palavra a palavra (da tabela interlinear, language='greek')
+  - portuguese: tradução portuguesa verso a verso (da tabela verses)
+  - english:    tradução inglesa verso a verso (da tabela verses)
+
+Cada passagem declara quais camadas possui em _PASSAGE_VERSES.
+O catálogo é servido diretamente do JSON estático.
 
 Endpoints:
     GET /special-passages/catalog
@@ -29,23 +38,79 @@ _CATALOG: dict = {"passages": []}
 if _CATALOG_PATH.exists():
     _CATALOG = json.loads(_CATALOG_PATH.read_text(encoding="utf-8"))
 
-# Passage verse refs — kept here for lookup (expand as new passages added)
+# ── Passage registry ──────────────────────────────────────────────────────────
+# Each entry declares:
+#   book_id, chapter, verse_start, verse_end
+#   original_language: "greek" | "hebrew"   → which interlinear layer to pull
+#   has_aramaic: bool                         → whether aramaic_verses has data
 _PASSAGE_VERSES: dict[str, dict[str, object]] = {
     "lords_prayer": {
         "book_id": "MAT",
         "chapter": 6,
         "verse_start": 9,
         "verse_end": 13,
-    }
+        "original_language": "greek",
+        "has_aramaic": True,
+    },
+    "john_1": {
+        "book_id": "JHN",
+        "chapter": 1,
+        "verse_start": 1,
+        "verse_end": 5,
+        "original_language": "greek",
+        "has_aramaic": True,
+    },
+    "genesis_1": {
+        "book_id": "GEN",
+        "chapter": 1,
+        "verse_start": 1,
+        "verse_end": 5,
+        "original_language": "hebrew",
+        "has_aramaic": False,
+    },
+    "psalm_23": {
+        "book_id": "PSA",
+        "chapter": 23,
+        "verse_start": 1,
+        "verse_end": 6,
+        "original_language": "hebrew",
+        "has_aramaic": False,
+    },
 }
 
-# Translation fallback map: if requested translation is unavailable, use this
+# Translation sets
 _PT_TRANSLATIONS = {"nvi", "ra", "acf"}
 _EN_TRANSLATIONS = {"kjv", "bbe", "asv", "web", "darby"}
 
 
 def _pick_translation(requested: str, available: set[str], fallback: str) -> str:
     return requested if requested in available else fallback
+
+
+# ── Layer metadata by language ─────────────────────────────────────────────────
+_LAYER_META: dict[str, dict[str, str | None]] = {
+    "aramaic": {
+        "label": "Aramaico (Peshitta)",
+        "language_code": "arc",
+        "direction": "rtl",
+        "source": "Peshitta",
+        "audio_note": "Áudio em desenvolvimento — Camada 2",
+    },
+    "hebrew": {
+        "label": "Hebraico (WLC)",
+        "language_code": "he",
+        "direction": "rtl",
+        "source": "WLC",
+        "audio_note": None,
+    },
+    "greek": {
+        "label": "Grego Koiné (SBLGNT)",
+        "language_code": "el",
+        "direction": "ltr",
+        "source": "SBLGNT",
+        "audio_note": None,
+    },
+}
 
 
 @router.get("/special-passages/catalog")
@@ -61,13 +126,10 @@ def get_special_passage(
     translation_en: str = Query("kjv", description="Tradução inglesa (kjv, bbe, asv, web, darby)"),
 ) -> dict:
     """
-    Retorna uma passagem especial com todas as camadas de língua.
+    Retorna uma passagem especial com as camadas de língua disponíveis.
 
-    Camadas:
-    - aramaic: texto Peshitta palavra por palavra (da tabela aramaic_verses)
-    - greek:   texto SBLGNT palavra por palavra (da tabela interlinear)
-    - portuguese: texto de tradução portuguesa verso a verso
-    - english: texto de tradução inglesa verso a verso
+    NT (lords_prayer, john_1):  aramaic + greek + portuguese + english
+    AT (genesis_1, psalm_23):   hebrew + portuguese + english
     """
     if passage_id not in _PASSAGE_VERSES:
         raise HTTPException(status_code=404, detail=f"Passagem '{passage_id}' não encontrada")
@@ -80,69 +142,97 @@ def get_special_passage(
     chapter: int = info["chapter"]  # type: ignore[assignment]
     v_start: int = info["verse_start"]  # type: ignore[assignment]
     v_end: int = info["verse_end"]  # type: ignore[assignment]
+    orig_lang: str = info["original_language"]  # type: ignore[assignment]
+    has_aramaic: bool = info["has_aramaic"]  # type: ignore[assignment]
 
     pt_trans = _pick_translation(translation, _PT_TRANSLATIONS, "nvi")
     en_trans = _pick_translation(translation_en, _EN_TRANSLATIONS, "kjv")
 
     db = get_db()
+    layers: dict[str, dict] = {}
 
-    # ── Camada Aramaica (Peshitta, palavra por palavra) ───────────────────────
-    aramaic_rows = db.execute(
-        """
-        SELECT verse_ref, verse_number, word_position, script,
-               transliteration, gloss, audio_url
-        FROM   aramaic_verses
-        WHERE  passage_id = ?
-        ORDER  BY verse_number, word_position
-        """,
-        [passage_id],
-    ).fetchall()
+    # ── Camada Aramaica (Peshitta, opcional) ─────────────────────────────────
+    if has_aramaic:
+        aramaic_rows = db.execute(
+            """
+            SELECT verse_ref, verse_number, word_position, script,
+                   transliteration, gloss, audio_url
+            FROM   aramaic_verses
+            WHERE  passage_id = ?
+            ORDER  BY verse_number, word_position
+            """,
+            [passage_id],
+        ).fetchall()
 
-    aramaic_verses: dict[str, dict] = {}
-    for row in aramaic_rows:
-        vref, vnum, wpos, script, translit, gloss, audio_url = row
-        if vref not in aramaic_verses:
-            aramaic_verses[vref] = {"verse_ref": vref, "verse_number": vnum, "words": []}
-        aramaic_verses[vref]["words"].append({
-            "word_position": wpos,
-            "script": script,
-            "transliteration": translit,
-            "gloss": gloss,
-            "audio_url": audio_url,
-            "strongs_id": None,
-        })
+        aramaic_verses: dict[str, dict] = {}
+        for row in aramaic_rows:
+            vref, vnum, wpos, script, translit, gloss, audio_url = row
+            if vref not in aramaic_verses:
+                aramaic_verses[vref] = {"verse_ref": vref, "verse_number": vnum, "words": []}
+            aramaic_verses[vref]["words"].append({
+                "word_position": wpos,
+                "script": script,
+                "transliteration": translit,
+                "gloss": gloss,
+                "audio_url": audio_url,
+                "strongs_id": None,
+            })
 
-    # ── Camada Grega (SBLGNT, palavra por palavra via interlinear) ────────────
+        aramaic_sorted = sorted(aramaic_verses.values(), key=lambda v: v["verse_number"])
+        m = _LAYER_META["aramaic"]
+        layers["aramaic"] = {
+            "label": m["label"],
+            "language_code": m["language_code"],
+            "direction": m["direction"],
+            "source": m["source"],
+            "audio_note": m["audio_note"],
+            "verse_count": len(aramaic_sorted),
+            "verses": aramaic_sorted,
+        }
+
+    # ── Camada Original (Grego ou Hebraico, via interlinear) ─────────────────
     verse_ids = [f"{book_id}.{chapter}.{v}" for v in range(v_start, v_end + 1)]
     placeholders = ", ".join(["?" for _ in verse_ids])
-    greek_rows = db.execute(
+    orig_rows = db.execute(
         f"""
         SELECT verse_id, word_position, original_word, transliteration,
                gloss, strongs_id
         FROM   interlinear
         WHERE  verse_id IN ({placeholders})
-          AND  language = 'greek'
+          AND  language = ?
         ORDER  BY verse_id, word_position
         """,
-        verse_ids,
+        verse_ids + [orig_lang],
     ).fetchall()
 
-    greek_verses: dict[str, dict] = {}
-    for row in greek_rows:
+    orig_verses: dict[str, dict] = {}
+    for row in orig_rows:
         vref, wpos, script, translit, gloss, strongs_id = row
         vnum = int(vref.split(".")[-1])
-        if vref not in greek_verses:
-            greek_verses[vref] = {"verse_ref": vref, "verse_number": vnum, "words": []}
-        greek_verses[vref]["words"].append({
+        if vref not in orig_verses:
+            orig_verses[vref] = {"verse_ref": vref, "verse_number": vnum, "words": []}
+        orig_verses[vref]["words"].append({
             "word_position": wpos,
             "script": script,
             "transliteration": translit,
             "gloss": gloss,
-            "audio_url": None,   # AudioButton will resolve via /strongs endpoint
+            "audio_url": None,
             "strongs_id": strongs_id,
         })
 
-    # ── Camada Moderna: Português e Inglês (verso a verso) ───────────────────
+    orig_sorted = sorted(orig_verses.values(), key=lambda v: v["verse_number"])
+    m = _LAYER_META[orig_lang]
+    layers[orig_lang] = {
+        "label": m["label"],
+        "language_code": m["language_code"],
+        "direction": m["direction"],
+        "source": m["source"],
+        "audio_note": m["audio_note"],
+        "verse_count": len(orig_sorted),
+        "verses": orig_sorted,
+    }
+
+    # ── Camadas Modernas: Português e Inglês ──────────────────────────────────
     modern_rows = db.execute(
         """
         SELECT translation_id, verse, text
@@ -167,16 +257,29 @@ def get_special_passage(
         else:
             en_verses.append(entry)
 
-    db.close()
-
-    # ── Monta a response ───────────────────────────────────────────────────────
-    layer_notes = meta.get("layer_notes", {})
-
-    # Sort verses by verse_number (not by verse_id string, which is lexicographic)
-    aramaic_sorted = sorted(aramaic_verses.values(), key=lambda v: v["verse_number"])
-    greek_sorted = sorted(greek_verses.values(), key=lambda v: v["verse_number"])
     pt_sorted = sorted(pt_verses, key=lambda v: v["verse_number"])
     en_sorted = sorted(en_verses, key=lambda v: v["verse_number"])
+
+    layers["portuguese"] = {
+        "label": f"Português ({pt_trans.upper()})",
+        "language_code": "pt",
+        "direction": "ltr",
+        "source": pt_trans,
+        "audio_note": None,
+        "verse_count": len(pt_sorted),
+        "verses": pt_sorted,
+    }
+    layers["english"] = {
+        "label": f"English ({en_trans.upper()})",
+        "language_code": "en",
+        "direction": "ltr",
+        "source": en_trans,
+        "audio_note": None,
+        "verse_count": len(en_sorted),
+        "verses": en_sorted,
+    }
+
+    db.close()
 
     return {
         "id": passage_id,
@@ -185,42 +288,5 @@ def get_special_passage(
         "reference": meta.get("reference", ""),
         "translation": pt_trans,
         "translation_en": en_trans,
-        "layers": {
-            "aramaic": {
-                "label": "Aramaico (Peshitta)",
-                "language_code": "arc",
-                "direction": "rtl",
-                "source": "Peshitta",
-                "audio_note": "Áudio em desenvolvimento — Camada 2",
-                "verse_count": len(aramaic_sorted),
-                "verses": aramaic_sorted,
-            },
-            "greek": {
-                "label": "Grego Koiné (SBLGNT)",
-                "language_code": "el",
-                "direction": "ltr",
-                "source": "SBLGNT",
-                "audio_note": None,
-                "verse_count": len(greek_sorted),
-                "verses": greek_sorted,
-            },
-            "portuguese": {
-                "label": f"Português ({pt_trans.upper()})",
-                "language_code": "pt",
-                "direction": "ltr",
-                "source": pt_trans,
-                "audio_note": None,
-                "verse_count": len(pt_sorted),
-                "verses": pt_sorted,
-            },
-            "english": {
-                "label": f"English ({en_trans.upper()})",
-                "language_code": "en",
-                "direction": "ltr",
-                "source": en_trans,
-                "audio_note": None,
-                "verse_count": len(en_sorted),
-                "verses": en_sorted,
-            },
-        },
+        "layers": layers,
     }

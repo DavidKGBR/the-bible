@@ -18,6 +18,7 @@ interface Props {
 /** Border + accent color por camada. */
 const LAYER_COLORS: Record<PassageLayerKey, string> = {
   aramaic:    "border-amber-500  bg-amber-500/5",
+  hebrew:     "border-sky-500    bg-sky-500/5",
   greek:      "border-purple-500 bg-purple-500/5",
   portuguese: "border-emerald-500 bg-emerald-500/5",
   english:    "border-blue-400   bg-blue-400/5",
@@ -25,6 +26,7 @@ const LAYER_COLORS: Record<PassageLayerKey, string> = {
 
 const LAYER_BADGE: Record<PassageLayerKey, string> = {
   aramaic:    "bg-amber-500/15  text-amber-700  dark:text-amber-300",
+  hebrew:     "bg-sky-500/15    text-sky-700    dark:text-sky-300",
   greek:      "bg-purple-500/15 text-purple-700 dark:text-purple-300",
   portuguese: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
   english:    "bg-blue-400/15   text-blue-700   dark:text-blue-300",
@@ -32,17 +34,19 @@ const LAYER_BADGE: Record<PassageLayerKey, string> = {
 
 const WORD_LANGUAGE: Partial<Record<PassageLayerKey, BiblicalLanguage>> = {
   aramaic: "aramaic",
+  hebrew:  "hebrew",
   greek:   "greek",
 };
 
 /** Font classes for script rendering */
 const SCRIPT_FONT: Partial<Record<PassageLayerKey, string>> = {
   aramaic: "font-aramaic",
+  hebrew:  "font-hebrew",
   greek:   "font-greek",
 };
 
 export default function LayerColumn({ layerKey, layer, onWordClick }: Props) {
-  const isWordLevel = layerKey === "aramaic" || layerKey === "greek";
+  const isWordLevel = layerKey === "aramaic" || layerKey === "hebrew" || layerKey === "greek";
   const isRtl = layer.direction === "rtl";
   const scriptFont = SCRIPT_FONT[layerKey] ?? "";
   const lang = WORD_LANGUAGE[layerKey];

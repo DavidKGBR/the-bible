@@ -6,11 +6,54 @@
       "title_en": "The Lord's Prayer",
       "reference": "Mateus 6:9-13",
       "badge": "Destaque",
-      "description": "A oração que Jesus ensinou — em 4 tradições simultâneas",
+      "description": "A oração que Jesus ensinou aos discípulos, nas línguas em que foi vivida e transmitida.",
       "layers": ["aramaic", "greek", "portuguese", "english"],
       "layer_notes": {
         "aramaic": "Peshitta — a língua que Jesus falava (Aramaico galileu, séc. I)",
         "greek": "SBLGNT — texto grego original do NT (Koiné, séc. I)",
+        "portuguese": "Tradução portuguesa moderna",
+        "english": "Tradução inglesa clássica"
+      }
+    },
+    {
+      "id": "john_1",
+      "title": "O Logos",
+      "title_en": "The Word",
+      "reference": "João 1:1-5",
+      "badge": "Fundamento",
+      "description": "\"No princípio era o Verbo\" — o prólogo de João no Aramaico original, no Grego Koiné e em línguas modernas.",
+      "layers": ["aramaic", "greek", "portuguese", "english"],
+      "layer_notes": {
+        "aramaic": "Peshitta — ܡܠܬܐ (Miltha), o Verbo encarnado em Aramaico",
+        "greek": "SBLGNT — ὁ Λόγος (ho Logos), o Verbo em Grego Koiné",
+        "portuguese": "Tradução portuguesa moderna",
+        "english": "Tradução inglesa clássica"
+      }
+    },
+    {
+      "id": "genesis_1",
+      "title": "A Criação",
+      "title_en": "In the Beginning",
+      "reference": "Gênesis 1:1-5",
+      "badge": "Origem",
+      "description": "As primeiras palavras da Escritura — בְּרֵאשִׁית בָּרָא אֱלֹהִים — no Hebraico Bíblico e línguas modernas.",
+      "layers": ["hebrew", "portuguese", "english"],
+      "layer_notes": {
+        "hebrew": "WLC — Texto Massorético (Hebraico Bíblico, séc. X d.C.)",
+        "portuguese": "Tradução portuguesa moderna",
+        "english": "Tradução inglesa clássica"
+      }
+    },
+    {
+      "id": "psalm_23",
+      "title": "O Bom Pastor",
+      "title_en": "The Lord Is My Shepherd",
+      "reference": "Salmo 23",
+      "badge": "Clássico",
+      "description": "\"O Senhor é meu pastor\" — o salmo mais amado da humanidade, no Hebraico de Davi e em traduções.",
+      "layers": ["hebrew", "portuguese", "english"],
+      "layer_notes": {
+        "hebrew": "WLC — Texto Massorético com niqqud (pontuação vocálica massorética)",
         "portuguese": "Tradução portuguesa moderna",
         "english": "Tradução inglesa clássica"
       }

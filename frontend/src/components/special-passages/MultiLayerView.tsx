@@ -18,7 +18,7 @@ interface Props {
   onWordClick?: (word: PassageWord, layerKey: PassageLayerKey) => void;
 }
 
-const LAYER_ORDER: PassageLayerKey[] = ["aramaic", "greek", "portuguese", "english"];
+const LAYER_ORDER: PassageLayerKey[] = ["aramaic", "hebrew", "greek", "portuguese", "english"];
 
 const LAYER_PILL: Record<
   PassageLayerKey,
@@ -27,6 +27,11 @@ const LAYER_PILL: Record<
   aramaic: {
     dot:      "bg-amber-500",
     active:   "bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-500/50",
+    inactive: "bg-transparent text-[var(--color-text-muted)] border-[var(--color-border)]",
+  },
+  hebrew: {
+    dot:      "bg-sky-500",
+    active:   "bg-sky-500/20 text-sky-800 dark:text-sky-300 border-sky-500/50",
     inactive: "bg-transparent text-[var(--color-text-muted)] border-[var(--color-border)]",
   },
   greek: {
@@ -49,6 +54,7 @@ const LAYER_PILL: Record<
 /** Short label for the toggle pills */
 const PILL_LABELS: Record<PassageLayerKey, string> = {
   aramaic:    "Aramaico",
+  hebrew:     "Hebraico",
   greek:      "Grego",
   portuguese: "Português",
   english:    "English",
@@ -56,7 +62,7 @@ const PILL_LABELS: Record<PassageLayerKey, string> = {
 
 export default function MultiLayerView({ passage, onWordClick }: Props) {
   const availableLayers = LAYER_ORDER.filter(
-    (k) => passage.layers[k]?.verse_count > 0
+    (k) => (passage.layers[k]?.verse_count ?? 0) > 0
   );
 
   const [visibleLayers, setVisibleLayers] = useState<Set<PassageLayerKey>>(
@@ -111,15 +117,19 @@ export default function MultiLayerView({ passage, onWordClick }: Props) {
           gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))`,
         }}
       >
-        {visibleKeys.map((key) => (
-          <div key={key} className="min-w-0">
-            <LayerColumn
-              layerKey={key}
-              layer={passage.layers[key]}
-              onWordClick={onWordClick}
-            />
-          </div>
-        ))}
+        {visibleKeys.map((key) => {
+          const layer = passage.layers[key];
+          if (!layer) return null;
+          return (
+            <div key={key} className="min-w-0">
+              <LayerColumn
+                layerKey={key}
+                layer={layer}
+                onWordClick={onWordClick}
+              />
+            </div>
+          );
+        })}
       </div>
 
       {/* Mobile override: force single-column stack */}

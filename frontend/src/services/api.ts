@@ -1291,7 +1291,7 @@ export async function explainVerse(
 }
 
 // ── Special Passages ──────────────────────────────────────────────────────────
-export type PassageLayerKey = "aramaic" | "greek" | "portuguese" | "english";
+export type PassageLayerKey = "aramaic" | "hebrew" | "greek" | "portuguese" | "english";
 
 export interface PassageWord {
   word_position: number;
@@ -1326,7 +1326,7 @@ export interface SpecialPassageResult {
   reference: string;
   translation: string;
   translation_en: string;
-  layers: Record<PassageLayerKey, PassageLayer>;
+  layers: Partial<Record<PassageLayerKey, PassageLayer>>;
 }
 
 export interface SpecialPassageMeta {

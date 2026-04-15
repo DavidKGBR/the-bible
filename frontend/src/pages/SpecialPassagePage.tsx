@@ -23,6 +23,7 @@ import {
 
 const LAYER_DOT: Record<PassageLayerKey, string> = {
   aramaic:    "bg-amber-500",
+  hebrew:     "bg-sky-500",
   greek:      "bg-purple-500",
   portuguese: "bg-emerald-500",
   english:    "bg-blue-400",
@@ -30,6 +31,7 @@ const LAYER_DOT: Record<PassageLayerKey, string> = {
 
 const LAYER_LABEL: Record<PassageLayerKey, string> = {
   aramaic:    "Aramaico",
+  hebrew:     "Hebraico",
   greek:      "Grego",
   portuguese: "Português",
   english:    "English",
