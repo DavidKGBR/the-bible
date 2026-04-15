@@ -16,11 +16,29 @@ from src.api.dependencies import get_db
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# Load static devotional plans once at import time
-_PLANS_PATH = Path(__file__).resolve().parents[3] / "data" / "static" / "devotional_plans.json"
-_PLANS: list[dict] = []
-if _PLANS_PATH.exists():
-    _PLANS = json.loads(_PLANS_PATH.read_text(encoding="utf-8"))
+# Load devotional plans per locale — same pattern as Semantic Genealogy.
+# IDs/passages/days are mirrored across locales; only text fields (title,
+# description, reading titles, reflections, original_term.meaning) differ.
+_STATIC_DIR = Path(__file__).resolve().parents[3] / "data" / "static"
+_PLAN_FILES = {
+    "en": _STATIC_DIR / "devotional_plans.json",
+    "pt": _STATIC_DIR / "devotional_plans_pt.json",
+    "es": _STATIC_DIR / "devotional_plans_es.json",
+}
+
+_PLANS_BY_LOCALE: dict[str, list[dict]] = {}
+for _locale, _path in _PLAN_FILES.items():
+    if _path.exists():
+        _PLANS_BY_LOCALE[_locale] = json.loads(_path.read_text(encoding="utf-8"))
+    else:
+        _PLANS_BY_LOCALE[_locale] = []
+
+_DEFAULT_PLANS = _PLANS_BY_LOCALE.get("en", [])
+
+
+def _plans_for(locale: str) -> list[dict]:
+    """Return devotional plans for the locale, falling back to EN when unknown."""
+    return _PLANS_BY_LOCALE.get(locale) or _DEFAULT_PLANS
 
 
 def _parse_range(range_str: str) -> tuple[str, int, int, int, int] | None:
@@ -39,10 +57,13 @@ def _parse_range(range_str: str) -> tuple[str, int, int, int, int] | None:
 
 
 @router.get("/devotional/plans")
-def list_plans() -> dict:
-    """List all available devotional plans."""
+def list_plans(
+    lang: str = Query("en", description="Locale: en | pt | es (fallback to en)"),
+) -> dict:
+    """List all available devotional plans, localized."""
+    plans = _plans_for(lang)
     return {
-        "count": len(_PLANS),
+        "count": len(plans),
         "plans": [
             {
                 "id": p["id"],
@@ -50,15 +71,19 @@ def list_plans() -> dict:
                 "description": p["description"],
                 "days": p["days"],
             }
-            for p in _PLANS
+            for p in plans
         ],
     }
 
 
 @router.get("/devotional/plans/{plan_id}")
-def get_plan(plan_id: str) -> dict:
-    """Get a devotional plan with all daily readings (no verse text)."""
-    plan = next((p for p in _PLANS if p["id"] == plan_id), None)
+def get_plan(
+    plan_id: str,
+    lang: str = Query("en", description="Locale: en | pt | es (fallback to en)"),
+) -> dict:
+    """Get a devotional plan with all daily readings (no verse text), localized."""
+    plans = _plans_for(lang)
+    plan = next((p for p in plans if p["id"] == plan_id), None)
     if not plan:
         raise HTTPException(status_code=404, detail=f"Plan '{plan_id}' not found")
     return plan
@@ -69,9 +94,11 @@ def get_day_reading(
     plan_id: str,
     day: int,
     translation: str = Query("kjv", description="Translation ID"),
+    lang: str = Query("en", description="Locale: en | pt | es (fallback to en)"),
 ) -> dict:
-    """Get a specific day's reading with full verse texts."""
-    plan = next((p for p in _PLANS if p["id"] == plan_id), None)
+    """Get a specific day's reading with full verse texts, localized."""
+    plans = _plans_for(lang)
+    plan = next((p for p in plans if p["id"] == plan_id), None)
     if not plan:
         raise HTTPException(status_code=404, detail=f"Plan '{plan_id}' not found")
 

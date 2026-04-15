@@ -372,22 +372,30 @@ export interface DevotionalDayReading extends DevotionalReading {
   verses: { verse_id: string; book_name: string; chapter: number; verse: number; text: string; reference: string }[];
 }
 
-export async function fetchDevotionalPlans(): Promise<DevotionalPlan[]> {
-  const data = await fetchJson<{ plans: DevotionalPlan[] }>(`${BASE}/devotional/plans`);
+export async function fetchDevotionalPlans(lang: string = "en"): Promise<DevotionalPlan[]> {
+  const data = await fetchJson<{ plans: DevotionalPlan[] }>(
+    `${BASE}/devotional/plans?lang=${encodeURIComponent(lang)}`,
+  );
   return data.plans;
 }
 
-export async function fetchDevotionalPlan(planId: string): Promise<DevotionalPlanFull> {
-  return fetchJson<DevotionalPlanFull>(`${BASE}/devotional/plans/${planId}`);
+export async function fetchDevotionalPlan(
+  planId: string,
+  lang: string = "en",
+): Promise<DevotionalPlanFull> {
+  return fetchJson<DevotionalPlanFull>(
+    `${BASE}/devotional/plans/${planId}?lang=${encodeURIComponent(lang)}`,
+  );
 }
 
 export async function fetchDevotionalDay(
   planId: string,
   day: number,
-  translation = "kjv"
+  translation: string = "kjv",
+  lang: string = "en",
 ): Promise<DevotionalDayReading> {
   return fetchJson<DevotionalDayReading>(
-    `${BASE}/devotional/plans/${planId}/day/${day}?translation=${translation}`
+    `${BASE}/devotional/plans/${planId}/day/${day}?translation=${translation}&lang=${encodeURIComponent(lang)}`,
   );
 }
 

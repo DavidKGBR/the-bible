@@ -8,15 +8,17 @@ import {
   type DevotionalDayReading,
   type OriginalTerm,
 } from "../services/api";
+import { useI18n } from "../i18n/i18nContext";
 
 function OriginalTermCard({ term }: { term: OriginalTerm }) {
+  const { t } = useI18n();
   const isHebrew = term.language === "hebrew";
   return (
     <div className="mx-5 mt-4 rounded-lg border border-[var(--color-gold)]/25 bg-gradient-to-br from-amber-50/60 to-white overflow-hidden">
       <div className="px-4 py-3 flex items-center gap-3">
         {/* Language badge */}
         <span className="shrink-0 text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full bg-[var(--color-gold)]/15 text-[var(--color-gold-dark)]">
-          {isHebrew ? "Hebrew" : "Greek"}
+          {isHebrew ? t("specialPassage.layer.hebrew") : t("specialPassage.layer.greek")}
         </span>
         <span className="text-[10px] text-[var(--color-gold-dark)]/60 font-mono">
           {term.strong}
@@ -45,6 +47,7 @@ function OriginalTermCard({ term }: { term: OriginalTerm }) {
 }
 
 export default function DevotionalPage() {
+  const { t, locale } = useI18n();
   const [plans, setPlans] = useState<DevotionalPlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<DevotionalPlanFull | null>(null);
   const [dayReading, setDayReading] = useState<DevotionalDayReading | null>(null);
@@ -52,17 +55,20 @@ export default function DevotionalPage() {
   const [dayLoading, setDayLoading] = useState(false);
 
   useEffect(() => {
-    fetchDevotionalPlans().then(setPlans).catch(() => {});
-  }, []);
+    fetchDevotionalPlans(locale).then(setPlans).catch(() => {});
+    // Reset any open plan when locale changes so we refetch in the new language
+    setSelectedPlan(null);
+    setDayReading(null);
+  }, [locale]);
 
   const handleSelectPlan = (planId: string) => {
     setLoading(true);
     setDayReading(null);
-    fetchDevotionalPlan(planId)
+    fetchDevotionalPlan(planId, locale)
       .then((plan) => {
         setSelectedPlan(plan);
         // Auto-load day 1
-        return fetchDevotionalDay(planId, 1);
+        return fetchDevotionalDay(planId, 1, "kjv", locale);
       })
       .then(setDayReading)
       .catch(() => {})
@@ -72,7 +78,7 @@ export default function DevotionalPage() {
   const handleSelectDay = (day: number) => {
     if (!selectedPlan) return;
     setDayLoading(true);
-    fetchDevotionalDay(selectedPlan.id, day)
+    fetchDevotionalDay(selectedPlan.id, day, "kjv", locale)
       .then(setDayReading)
       .catch(() => setDayReading(null))
       .finally(() => setDayLoading(false));
@@ -81,11 +87,8 @@ export default function DevotionalPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="page-title text-3xl">Devotional</h1>
-        <p className="text-sm opacity-60 mt-1">
-          Guided devotional plans with daily Scripture readings and reflective
-          questions.
-        </p>
+        <h1 className="page-title text-3xl">{t("devotional.title")}</h1>
+        <p className="text-sm opacity-60 mt-1">{t("devotional.subtitle")}</p>
       </div>
 
       {/* Plan cards */}
@@ -103,14 +106,17 @@ export default function DevotionalPage() {
               </h3>
               <p className="text-sm opacity-60 mt-1">{plan.description}</p>
               <div className="text-xs opacity-40 mt-3">
-                {plan.days} day{plan.days !== 1 ? "s" : ""}
+                {(plan.days === 1 ? t("devotional.day") : t("devotional.days")).replace(
+                  "{n}",
+                  String(plan.days),
+                )}
               </div>
             </button>
           ))}
         </div>
       )}
 
-      {loading && <p className="text-sm opacity-50">Loading plan...</p>}
+      {loading && <p className="text-sm opacity-50">{t("devotional.loadingPlan")}</p>}
 
       {/* Selected plan view */}
       {selectedPlan && !loading && (
@@ -131,7 +137,7 @@ export default function DevotionalPage() {
               className="text-xs px-3 py-1.5 rounded border border-[var(--color-gold)]/30
                          hover:bg-[var(--color-gold)]/10 text-[var(--color-gold-dark)] transition"
             >
-              All Plans
+              {t("devotional.allPlans")}
             </button>
           </div>
 
@@ -153,7 +159,7 @@ export default function DevotionalPage() {
             ))}
           </div>
 
-          {dayLoading && <p className="text-sm opacity-50">Loading reading...</p>}
+          {dayLoading && <p className="text-sm opacity-50">{t("devotional.loadingReading")}</p>}
 
           {/* Day reading */}
           {dayReading && !dayLoading && (
@@ -161,7 +167,9 @@ export default function DevotionalPage() {
               {/* Day header */}
               <div className="px-5 py-4 bg-[var(--color-gold)]/5 border-b border-[var(--color-gold-dark)]/10">
                 <div className="text-[10px] uppercase tracking-wider opacity-40 mb-1">
-                  Day {dayReading.day} of {selectedPlan.days}
+                  {t("devotional.dayOf")
+                    .replace("{day}", String(dayReading.day))
+                    .replace("{total}", String(selectedPlan.days))}
                 </div>
                 <h3 className="font-display font-bold text-lg text-[var(--color-ink)]">
                   {dayReading.title}
@@ -186,7 +194,7 @@ export default function DevotionalPage() {
                 ))}
                 {dayReading.verses.length === 0 && (
                   <p className="text-xs opacity-40 italic">
-                    Verses not available for this translation.
+                    {t("devotional.noVerses")}
                   </p>
                 )}
               </div>
@@ -194,7 +202,7 @@ export default function DevotionalPage() {
               {/* Reflection */}
               <div className="px-5 py-4 bg-amber-50/50 border-t border-[var(--color-gold-dark)]/10">
                 <h4 className="text-[10px] uppercase tracking-wider font-bold text-[var(--color-gold-dark)] opacity-60 mb-2">
-                  Reflection
+                  {t("devotional.reflection")}
                 </h4>
                 <p className="text-sm leading-relaxed italic text-[var(--color-ink)]">
                   {dayReading.reflection}
@@ -208,14 +216,14 @@ export default function DevotionalPage() {
                   disabled={dayReading.day <= 1}
                   className="text-xs text-[var(--color-gold-dark)] hover:underline disabled:opacity-30 disabled:cursor-not-allowed"
                 >
-                  ← Previous Day
+                  {t("devotional.previousDay")}
                 </button>
                 <button
                   onClick={() => handleSelectDay(dayReading.day + 1)}
                   disabled={dayReading.day >= selectedPlan.days}
                   className="text-xs text-[var(--color-gold-dark)] hover:underline disabled:opacity-30 disabled:cursor-not-allowed"
                 >
-                  Next Day →
+                  {t("devotional.nextDay")}
                 </button>
               </div>
             </div>
