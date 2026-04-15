@@ -46,16 +46,14 @@ class DuckDBLoader:
         """Create the database schema with tables and views."""
         logger.info("🏗️  Creating DuckDB schema...")
 
-        # Drop and recreate to handle schema evolution
+        # Drop and recreate pipeline-owned tables to handle schema evolution.
+        # Tables loaded by separate CLI commands (strongs, interlinear, etc.)
+        # use CREATE TABLE IF NOT EXISTS and are NOT dropped here.
         self.conn.execute("DROP TABLE IF EXISTS cross_references;")
         self.conn.execute("DROP TABLE IF EXISTS verses;")
         self.conn.execute("DROP TABLE IF EXISTS book_stats;")
         self.conn.execute("DROP TABLE IF EXISTS chapter_stats;")
         self.conn.execute("DROP TABLE IF EXISTS translations;")
-        self.conn.execute("DROP TABLE IF EXISTS strongs_lexicon;")
-        self.conn.execute("DROP TABLE IF EXISTS original_texts;")
-        self.conn.execute("DROP TABLE IF EXISTS interlinear;")
-        self.conn.execute("DROP TABLE IF EXISTS dictionary_entries;")
 
         self.conn.execute("""
             CREATE TABLE translations (
