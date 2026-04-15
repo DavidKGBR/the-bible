@@ -52,12 +52,12 @@ logger = logging.getLogger(__name__)
 # Árabe Chirp3-HD como proxy fonético para Aramaico Siríaco.
 # ar-XA = Árabe multi-regional (neutro, sem dialeto específico).
 VOICE_LANGUAGE_CODE = "ar-XA"
-VOICE_NAME          = "ar-XA-Chirp3-HD-Orus"   # masculino, neutro
-SPEAKING_RATE       = 0.75    # mais devagar — favorece aprendizado
-SAMPLE_RATE         = 22050
+VOICE_NAME = "ar-XA-Chirp3-HD-Orus"  # masculino, neutro
+SPEAKING_RATE = 0.75  # mais devagar — favorece aprendizado
+SAMPLE_RATE = 22050
 
-AUDIO_DIR  = Path("data/audio")
-DB_PATH    = "data/analytics/bible.duckdb"
+AUDIO_DIR = Path("data/audio")
+DB_PATH = "data/analytics/bible.duckdb"
 RATE_DELAY = 0.05  # 50ms entre requests
 
 
@@ -130,7 +130,8 @@ def generate_all(
     """
     try:
         from rich.console import Console
-        from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, MofNCompleteColumn
+        from rich.progress import BarColumn, MofNCompleteColumn, Progress, SpinnerColumn, TextColumn
+
         rich_available = True
     except ImportError:
         rich_available = False
@@ -139,8 +140,8 @@ def generate_all(
 
     # Carrega palavras ainda sem áudio (ou todas se --force)
     passage_filter = f"AND passage_id = '{passage_id}'" if passage_id else ""
-    audio_filter   = "" if force else "AND (audio_url IS NULL OR audio_url = '')"
-    limit_clause   = f"LIMIT {limit}" if limit else ""
+    audio_filter = "" if force else "AND (audio_url IS NULL OR audio_url = '')"
+    limit_clause = f"LIMIT {limit}" if limit else ""
 
     rows = conn.execute(f"""
         SELECT passage_id, verse_ref, verse_number, word_position,
@@ -159,14 +160,13 @@ def generate_all(
         return {"generated": 0, "skipped": 0, "failed": 0}
 
     print(f"Gerando audio para {len(rows)} palavras aramaicas ({VOICE_NAME})...")
-    print(f"Proxy: Arabe Chirp3-HD como aproximacao fonetica Semitica.")
+    print("Proxy: Arabe Chirp3-HD como aproximacao fonetica Semitica.")
 
     stats = {"generated": 0, "skipped": 0, "failed": 0}
 
     def _process(rows_list: list) -> None:
-        for pid, vref, vnum, wpos, script, translit in rows_list:
+        for pid, _vref, vnum, wpos, script, translit in rows_list:
             out_path = _audio_path(pid, vnum, wpos)
-            label = translit or script or f"v{vnum}w{wpos}"
 
             generated = generate_word(translit or script, out_path, force=force)
 
@@ -193,7 +193,8 @@ def generate_all(
 
     if rich_available:
         from rich.console import Console
-        from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, MofNCompleteColumn
+        from rich.progress import BarColumn, MofNCompleteColumn, Progress, SpinnerColumn, TextColumn
+
         console = Console(highlight=False)
         with Progress(
             SpinnerColumn(),
@@ -217,7 +218,6 @@ def generate_all(
                         [url, pid, vnum, wpos],
                     )
                 else:
-                    (stats["skipped"] if out_path.exists() else stats["failed"]).__class__  # noop
                     if out_path.exists():
                         stats["skipped"] += 1
                     else:
@@ -231,8 +231,10 @@ def generate_all(
 
     total_chars = sum(len((t or s or "").strip()) for _, _, _, _, s, t in rows)
     cost_usd = (total_chars / 1_000_000) * 16
-    print(f"Concluido: {stats['generated']} gerados | "
-          f"{stats['skipped']} pulados | {stats['failed']} falhas")
+    print(
+        f"Concluido: {stats['generated']} gerados | "
+        f"{stats['skipped']} pulados | {stats['failed']} falhas"
+    )
     print(f"Custo estimado: ~${cost_usd:.3f} USD ({total_chars} caracteres)")
     print("LEMBRETE: audio proxy Arabe — ver VERBUM_PLAN.md para roadmap de substituicao.")
     return stats

@@ -25,9 +25,10 @@ PRESETS_PATH = Path("data/static/explorer_presets.json")
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_high_frequency_strongs(conn: object, top_n: int = 30) -> list[str]:
     """Return the top-N most frequent Strong's IDs (articles, conjunctions, etc.)."""
-    rows = conn.execute(  # type: ignore[union-attr]
+    rows = conn.execute(  # type: ignore[attr-defined]
         "SELECT strongs_id FROM interlinear "
         "WHERE strongs_id IS NOT NULL "
         "GROUP BY strongs_id ORDER BY COUNT(*) DESC LIMIT ?",
@@ -49,7 +50,7 @@ def _enrich_strongs(conn: object, strongs_ids: list[str]) -> dict[str, dict]:
     if not strongs_ids:
         return {}
     placeholders = ",".join(["?"] * len(strongs_ids))
-    rows = conn.execute(  # type: ignore[union-attr]
+    rows = conn.execute(  # type: ignore[attr-defined]
         f"SELECT strongs_id, transliteration, short_definition, language "
         f"FROM strongs_lexicon WHERE strongs_id IN ({placeholders})",
         strongs_ids,
@@ -68,6 +69,7 @@ def _enrich_strongs(conn: object, strongs_ids: list[str]) -> dict[str, dict]:
 # ---------------------------------------------------------------------------
 # 1. GET /explorer/search — Unified concept search
 # ---------------------------------------------------------------------------
+
 
 @router.get("/explorer/search")
 def explorer_search(
@@ -182,21 +184,28 @@ def explorer_search(
         # Parameter order must match the placeholders above exactly.
         params: list[object] = [
             # strongs CASE: exact (transliteration, original)
-            q, q,
+            q,
+            q,
             # strongs CASE: starts-with (transliteration, original)
-            starts, starts,
+            starts,
+            starts,
             # strongs WHERE: ILIKE for definition, transliteration, original
-            pattern, pattern, pattern,
+            pattern,
+            pattern,
+            pattern,
             # topics CASE: exact, starts-with
-            q, starts,
+            q,
+            starts,
             # topics WHERE
             pattern,
             # people CASE: exact, starts-with
-            q, starts,
+            q,
+            starts,
             # people WHERE
             pattern,
             # places CASE: exact, starts-with
-            q, starts,
+            q,
+            starts,
             # places WHERE
             pattern,
             # LIMIT
@@ -219,13 +228,15 @@ def explorer_search(
             if r[9]:  # meta_place_type
                 meta["place_type"] = r[9]
 
-            results.append({
-                "type": r[0],
-                "id": r[1],
-                "label": r[2],
-                "secondary_label": r[3],
-                "meta": meta,
-            })
+            results.append(
+                {
+                    "type": r[0],
+                    "id": r[1],
+                    "label": r[2],
+                    "secondary_label": r[3],
+                    "meta": meta,
+                }
+            )
 
         return {"results": results}
     finally:
@@ -236,11 +247,10 @@ def explorer_search(
 # 2. GET /explorer/expand — Multi-layer node expansion
 # ---------------------------------------------------------------------------
 
+
 @router.get("/explorer/expand")
 def explorer_expand(
-    node_type: str = Query(
-        ..., description="Node type: strongs, topic, person, or place"
-    ),
+    node_type: str = Query(..., description="Node type: strongs, topic, person, or place"),
     node_id: str = Query(..., description="Node identifier"),
     layers: str = Query(
         "lexical,topics",
@@ -272,17 +282,31 @@ def explorer_expand(
 
         if "lexical" in active_layers and node_type == "strongs":
             _expand_lexical(
-                conn, node_id.upper(), exclude_ids, per_layer_limit, nodes, edges,
+                conn,
+                node_id.upper(),
+                exclude_ids,
+                per_layer_limit,
+                nodes,
+                edges,
             )
 
         if "topics" in active_layers:
             if node_type == "strongs":
                 _expand_topics_for_strongs(
-                    conn, node_id.upper(), per_layer_limit, nodes, edges,
+                    conn,
+                    node_id.upper(),
+                    per_layer_limit,
+                    nodes,
+                    edges,
                 )
             elif node_type == "topic":
                 _expand_strongs_for_topic(
-                    conn, center["id"], exclude_ids, per_layer_limit, nodes, edges,
+                    conn,
+                    center["id"],
+                    exclude_ids,
+                    per_layer_limit,
+                    nodes,
+                    edges,
                 )
 
         # Trim to overall limit
@@ -300,7 +324,7 @@ def explorer_expand(
 def _build_center_node(conn: object, node_type: str, node_id: str) -> dict:
     """Look up the center node in its source table."""
     if node_type == "strongs":
-        row = conn.execute(  # type: ignore[union-attr]
+        row = conn.execute(  # type: ignore[attr-defined]
             "SELECT strongs_id, transliteration, short_definition, language "
             "FROM strongs_lexicon WHERE strongs_id = ?",
             [node_id.upper()],
@@ -316,13 +340,13 @@ def _build_center_node(conn: object, node_type: str, node_id: str) -> dict:
         }
 
     if node_type == "topic":
-        row = conn.execute(  # type: ignore[union-attr]
+        row = conn.execute(  # type: ignore[attr-defined]
             "SELECT topic_id, name, slug, verse_count FROM topics WHERE topic_id = ?",
             [node_id],
         ).fetchone()
         if row is None:
             # Try by slug as fallback
-            row = conn.execute(  # type: ignore[union-attr]
+            row = conn.execute(  # type: ignore[attr-defined]
                 "SELECT topic_id, name, slug, verse_count FROM topics WHERE slug = ?",
                 [node_id],
             ).fetchone()
@@ -337,7 +361,7 @@ def _build_center_node(conn: object, node_type: str, node_id: str) -> dict:
         }
 
     if node_type == "person":
-        row = conn.execute(  # type: ignore[union-attr]
+        row = conn.execute(  # type: ignore[attr-defined]
             "SELECT person_id, name, slug FROM biblical_people WHERE person_id = ?",
             [node_id],
         ).fetchone()
@@ -346,7 +370,7 @@ def _build_center_node(conn: object, node_type: str, node_id: str) -> dict:
         return {"type": "person", "id": str(row[0]), "label": row[1], "slug": row[2]}
 
     if node_type == "place":
-        row = conn.execute(  # type: ignore[union-attr]
+        row = conn.execute(  # type: ignore[attr-defined]
             "SELECT place_id, name, slug FROM biblical_places WHERE place_id = ?",
             [node_id],
         ).fetchone()
@@ -384,7 +408,7 @@ def _expand_lexical(
         ORDER BY shared DESC
         LIMIT ?
     """
-    rows = conn.execute(query, params).fetchall()  # type: ignore[union-attr]
+    rows = conn.execute(query, params).fetchall()  # type: ignore[attr-defined]
 
     neighbor_ids = [r[0] for r in rows]
     lex_map = _enrich_strongs(conn, neighbor_ids)
@@ -393,20 +417,24 @@ def _expand_lexical(
         nid = r[0]
         shared = int(r[1])
         lex = lex_map.get(nid, {})
-        nodes.append({
-            "type": "strongs",
-            "id": nid,
-            "label": lex.get("transliteration", nid) or nid,
-            "gloss": lex.get("short_definition", "") or "",
-            "language": lex.get("language", "") or "",
-            "shared": shared,
-        })
-        edges.append({
-            "source": f"strongs:{sid}",
-            "target": f"strongs:{nid}",
-            "edge_type": "co-occurrence",
-            "weight": shared,
-        })
+        nodes.append(
+            {
+                "type": "strongs",
+                "id": nid,
+                "label": lex.get("transliteration", nid) or nid,
+                "gloss": lex.get("short_definition", "") or "",
+                "language": lex.get("language", "") or "",
+                "shared": shared,
+            }
+        )
+        edges.append(
+            {
+                "source": f"strongs:{sid}",
+                "target": f"strongs:{nid}",
+                "edge_type": "co-occurrence",
+                "weight": shared,
+            }
+        )
 
 
 def _expand_topics_for_strongs(
@@ -432,25 +460,29 @@ def _expand_topics_for_strongs(
         ORDER BY shared DESC
         LIMIT ?
     """
-    rows = conn.execute(query, [sid, limit]).fetchall()  # type: ignore[union-attr]
+    rows = conn.execute(query, [sid, limit]).fetchall()  # type: ignore[attr-defined]
 
     for r in rows:
         tid = str(r[0])
         shared = int(r[4])
-        nodes.append({
-            "type": "topic",
-            "id": tid,
-            "label": r[1],
-            "slug": r[2],
-            "verse_count": r[3],
-            "shared": shared,
-        })
-        edges.append({
-            "source": f"strongs:{sid}",
-            "target": f"topic:{tid}",
-            "edge_type": "topic_link",
-            "weight": shared,
-        })
+        nodes.append(
+            {
+                "type": "topic",
+                "id": tid,
+                "label": r[1],
+                "slug": r[2],
+                "verse_count": r[3],
+                "shared": shared,
+            }
+        )
+        edges.append(
+            {
+                "source": f"strongs:{sid}",
+                "target": f"topic:{tid}",
+                "edge_type": "topic_link",
+                "weight": shared,
+            }
+        )
 
 
 def _expand_strongs_for_topic(
@@ -480,7 +512,7 @@ def _expand_strongs_for_topic(
         ORDER BY shared DESC
         LIMIT ?
     """
-    rows = conn.execute(query, params).fetchall()  # type: ignore[union-attr]
+    rows = conn.execute(query, params).fetchall()  # type: ignore[attr-defined]
 
     neighbor_ids = [r[0] for r in rows]
     lex_map = _enrich_strongs(conn, neighbor_ids)
@@ -489,25 +521,30 @@ def _expand_strongs_for_topic(
         nid = r[0]
         shared = int(r[1])
         lex = lex_map.get(nid, {})
-        nodes.append({
-            "type": "strongs",
-            "id": nid,
-            "label": lex.get("transliteration", nid) or nid,
-            "gloss": lex.get("short_definition", "") or "",
-            "language": lex.get("language", "") or "",
-            "shared": shared,
-        })
-        edges.append({
-            "source": f"topic:{topic_id}",
-            "target": f"strongs:{nid}",
-            "edge_type": "topic_link",
-            "weight": shared,
-        })
+        nodes.append(
+            {
+                "type": "strongs",
+                "id": nid,
+                "label": lex.get("transliteration", nid) or nid,
+                "gloss": lex.get("short_definition", "") or "",
+                "language": lex.get("language", "") or "",
+                "shared": shared,
+            }
+        )
+        edges.append(
+            {
+                "source": f"topic:{topic_id}",
+                "target": f"strongs:{nid}",
+                "edge_type": "topic_link",
+                "weight": shared,
+            }
+        )
 
 
 # ---------------------------------------------------------------------------
 # 3. GET /explorer/edge-evidence — Verse evidence for a connection
 # ---------------------------------------------------------------------------
+
 
 @router.get("/explorer/edge-evidence")
 def explorer_edge_evidence(
@@ -515,9 +552,7 @@ def explorer_edge_evidence(
     source_id: str = Query(..., description="Source node identifier"),
     target_type: str = Query(..., description="Target node type (strongs, topic)"),
     target_id: str = Query(..., description="Target node identifier"),
-    edge_type: str = Query(
-        ..., description="Edge type: co-occurrence or topic_link"
-    ),
+    edge_type: str = Query(..., description="Edge type: co-occurrence or topic_link"),
     translation: str = Query("kjv", description="Translation for verse text"),
     limit: int = Query(10, ge=1, le=50, description="Max verses to return"),
 ) -> dict:
@@ -645,6 +680,7 @@ def explorer_edge_evidence(
 # ---------------------------------------------------------------------------
 # 4. GET /explorer/presets — Static preset configurations
 # ---------------------------------------------------------------------------
+
 
 @router.get("/explorer/presets")
 def explorer_presets() -> dict:

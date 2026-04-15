@@ -56,20 +56,20 @@ VOICE_CONFIG: dict[str, dict[str, str]] = {
 }
 
 AUDIO_DIR = Path("data/audio")
-RATE_LIMIT_DELAY = 0.05   # 50ms entre requests — bem abaixo do limite da API
+RATE_LIMIT_DELAY = 0.05  # 50ms entre requests — bem abaixo do limite da API
 
 
 # ── Funções de geração ────────────────────────────────────────────────────────
+
 
 def _get_tts_client() -> object:
     """Retorna cliente Google Cloud TTS. Levanta ImportError se não instalado."""
     try:
         from google.cloud import texttospeech  # type: ignore[attr-defined]
+
         return texttospeech.TextToSpeechClient()
     except ImportError as e:
-        raise ImportError(
-            "Google Cloud TTS não instalado. Execute: pip install -e '.[gcp]'"
-        ) from e
+        raise ImportError("Google Cloud TTS não instalado. Execute: pip install -e '.[gcp]'") from e
 
 
 def _get_gcs_bucket() -> object | None:
@@ -79,6 +79,7 @@ def _get_gcs_bucket() -> object | None:
         return None
     try:
         from google.cloud import storage  # type: ignore[attr-defined]
+
         client = storage.Client()
         return client.bucket(bucket_name)
     except Exception as e:
@@ -127,13 +128,13 @@ def generate_single(
     )
     audio_config = texttospeech.AudioConfig(
         audio_encoding=texttospeech.AudioEncoding.MP3,
-        speaking_rate=0.80,     # Um pouco mais devagar — melhor para aprendizado
+        speaking_rate=0.80,  # Um pouco mais devagar — melhor para aprendizado
         pitch=0.0,
         sample_rate_hertz=22050,
     )
 
     try:
-        response = client.synthesize_speech(
+        response = client.synthesize_speech(  # type: ignore[attr-defined]
             input=synthesis_input,
             voice=voice,
             audio_config=audio_config,
@@ -167,7 +168,7 @@ def generate_all(
         Dict com contadores: generated, skipped, failed, uploaded
     """
     from rich.console import Console
-    from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, MofNCompleteColumn
+    from rich.progress import BarColumn, MofNCompleteColumn, Progress, SpinnerColumn, TextColumn
 
     console = Console(highlight=False)
     conn = duckdb.connect(db_path, read_only=True)
@@ -183,11 +184,14 @@ def generate_all(
 
     bucket = _get_gcs_bucket() if upload_gcs else None
     if bucket:
-        console.print(f"[green]☁️  GCS bucket configurado — áudios serão sincronizados[/green]")
+        console.print("[green]☁️  GCS bucket configurado — áudios serão sincronizados[/green]")
     else:
-        console.print("[yellow]⚠️  GCS_BUCKET_NAME não configurado — salvando apenas localmente[/yellow]")
+        console.print(
+            "[yellow]⚠️  GCS_BUCKET_NAME não configurado — salvando apenas localmente[/yellow]"
+        )
 
-    console.print(f"[bold]🎙️  Gerando áudio para {len(rows)} entradas ({language or 'hebraico + grego'})...[/bold]")
+    label = language or "hebraico + grego"
+    console.print(f"[bold]🎙️  Gerando áudio para {len(rows)} entradas ({label})...[/bold]")
 
     stats = {"generated": 0, "skipped": 0, "failed": 0, "uploaded": 0}
 
@@ -203,9 +207,7 @@ def generate_all(
         for strongs_id, lang, original, transliteration in rows:
             progress.update(task, description=f"[cyan]{strongs_id}[/cyan]")
 
-            out_path = generate_single(
-                strongs_id, lang, original, transliteration, force=force
-            )
+            out_path = generate_single(strongs_id, lang, original, transliteration, force=force)
 
             if out_path is None:
                 stats["failed"] += 1
@@ -238,17 +240,18 @@ def generate_all(
 
     # Estimativa de custo
     total_chars = sum(
-        len((orig or trans).strip())
-        for _, _, orig, trans in rows
-        if stats["generated"] > 0
+        len((orig or trans).strip()) for _, _, orig, trans in rows if stats["generated"] > 0
     )
     cost_usd = (total_chars / 1_000_000) * 16  # $16 por 1M chars (Neural2)
-    console.print(f"[dim]💰 Custo estimado: ~${cost_usd:.2f} USD ({total_chars:,} caracteres)[/dim]")
+    console.print(
+        f"[dim]💰 Custo estimado: ~${cost_usd:.2f} USD ({total_chars:,} caracteres)[/dim]"
+    )
 
     return stats
 
 
 # ── URL pública de um áudio ───────────────────────────────────────────────────
+
 
 def audio_url(strongs_id: str, language: str, base_url: str = "") -> str | None:
     """

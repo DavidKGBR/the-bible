@@ -217,14 +217,16 @@ def get_special_passage(
             vref, vnum, wpos, script, translit, gloss, audio_url = row
             if vref not in aramaic_verses:
                 aramaic_verses[vref] = {"verse_ref": vref, "verse_number": vnum, "words": []}
-            aramaic_verses[vref]["words"].append({
-                "word_position": wpos,
-                "script": script,
-                "transliteration": translit,
-                "gloss": gloss,
-                "audio_url": audio_url,
-                "strongs_id": None,
-            })
+            aramaic_verses[vref]["words"].append(
+                {
+                    "word_position": wpos,
+                    "script": script,
+                    "transliteration": translit,
+                    "gloss": gloss,
+                    "audio_url": audio_url,
+                    "strongs_id": None,
+                }
+            )
 
         aramaic_sorted = sorted(aramaic_verses.values(), key=lambda v: v["verse_number"])
         m = _LAYER_META["aramaic"]
@@ -259,14 +261,16 @@ def get_special_passage(
         vnum = int(vref.split(".")[-1])
         if vref not in orig_verses:
             orig_verses[vref] = {"verse_ref": vref, "verse_number": vnum, "words": []}
-        orig_verses[vref]["words"].append({
-            "word_position": wpos,
-            "script": script,
-            "transliteration": translit,
-            "gloss": gloss,
-            "audio_url": None,
-            "strongs_id": strongs_id,
-        })
+        orig_verses[vref]["words"].append(
+            {
+                "word_position": wpos,
+                "script": script,
+                "transliteration": translit,
+                "gloss": gloss,
+                "audio_url": None,
+                "strongs_id": strongs_id,
+            }
+        )
 
     orig_sorted = sorted(orig_verses.values(), key=lambda v: v["verse_number"])
     m = _LAYER_META[orig_lang]

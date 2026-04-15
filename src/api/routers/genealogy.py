@@ -31,21 +31,21 @@ if _GENEALOGY_PATH.exists():
 _CONCEPT_INDEX: dict[str, dict] = {c["id"]: c for c in _CONCEPTS}
 
 
-def _enrich_node(node: dict, db) -> dict:
+def _enrich_node(node: dict, db: object) -> dict:
     """Add occurrence count and top books from the interlinear table."""
     strongs_id = node.get("strongs_id", "")
     enriched = dict(node)
 
     try:
         # Occurrence count in interlinear
-        count_row = db.execute(
+        count_row = db.execute(  # type: ignore[attr-defined]
             "SELECT COUNT(*) FROM interlinear WHERE strongs_id = ?",
             [strongs_id],
         ).fetchone()
         enriched["occurrence_count"] = int(count_row[0]) if count_row else 0
 
         # Top 5 books by frequency
-        top_rows = db.execute(
+        top_rows = db.execute(  # type: ignore[attr-defined]
             """
             SELECT SPLIT_PART(verse_id, '.', 1) AS book_id, COUNT(*) AS cnt
             FROM   interlinear
@@ -59,8 +59,9 @@ def _enrich_node(node: dict, db) -> dict:
         enriched["top_books"] = [{"book_id": r[0], "count": int(r[1])} for r in top_rows]
 
         # Short definition from lexicon (if present)
-        lex_row = db.execute(
-            "SELECT short_definition, transliteration, original FROM strongs_lexicon WHERE strongs_id = ?",
+        lex_row = db.execute(  # type: ignore[attr-defined]
+            "SELECT short_definition, transliteration, original "
+            "FROM strongs_lexicon WHERE strongs_id = ?",
             [strongs_id],
         ).fetchone()
         if lex_row:
@@ -108,7 +109,7 @@ def get_concept(concept_id: str) -> dict:
         raise HTTPException(
             status_code=404,
             detail=f"Conceito '{concept_id}' não encontrado. "
-                   f"Disponíveis: {list(_CONCEPT_INDEX.keys())}",
+            f"Disponíveis: {list(_CONCEPT_INDEX.keys())}",
         )
 
     db = get_db()

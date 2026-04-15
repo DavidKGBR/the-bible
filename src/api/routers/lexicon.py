@@ -5,8 +5,6 @@ Endpoints for Strong's entries, original texts, and interlinear data.
 
 from __future__ import annotations
 
-import os
-
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from src.api.dependencies import get_db

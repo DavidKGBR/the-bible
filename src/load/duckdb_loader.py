@@ -679,9 +679,7 @@ class DuckDBLoader:
             return 0
         self._ensure_aramaic_verses_table()
         logger.info(f"📜 Loading {len(df)} Aramaic words for '{passage_id}'...")
-        self.conn.execute(
-            "DELETE FROM aramaic_verses WHERE passage_id = ?;", [passage_id]
-        )
+        self.conn.execute("DELETE FROM aramaic_verses WHERE passage_id = ?;", [passage_id])
         self.conn.execute("""
             INSERT INTO aramaic_verses (
                 passage_id, verse_ref, verse_number, word_position,

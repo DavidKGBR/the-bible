@@ -34,17 +34,19 @@ def load_passage(json_path: Path, db_path: str = DEFAULT_DB) -> int:
     rows: list[dict[str, object]] = []
     for verse in data["verses"]:
         for word in verse["words"]:
-            rows.append({
-                "passage_id": passage_id,
-                "verse_ref": verse["verse_ref"],
-                "verse_number": verse["verse_number"],
-                "word_position": word["word_position"],
-                "script": word["script"],
-                "transliteration": word.get("transliteration"),
-                "gloss": word.get("gloss"),
-                "audio_url": word.get("audio_url"),
-                "source": source,
-            })
+            rows.append(
+                {
+                    "passage_id": passage_id,
+                    "verse_ref": verse["verse_ref"],
+                    "verse_number": verse["verse_number"],
+                    "word_position": word["word_position"],
+                    "script": word["script"],
+                    "transliteration": word.get("transliteration"),
+                    "gloss": word.get("gloss"),
+                    "audio_url": word.get("audio_url"),
+                    "source": source,
+                }
+            )
 
     df = pd.DataFrame(rows)
     with DuckDBLoader() as loader:
@@ -57,7 +59,7 @@ def load_passage(json_path: Path, db_path: str = DEFAULT_DB) -> int:
 def load_all(db_path: str = DEFAULT_DB) -> None:
     """Carrega todos os JSONs de passagens aramaicas em data/static/."""
     static_dir = STATIC_DIR
-    json_files = [f for f in static_dir.glob("aramaic_*.json")]
+    json_files = list(static_dir.glob("aramaic_*.json"))
     if not json_files:
         logger.warning("Nenhum arquivo aramaic_*.json encontrado em data/static/")
         return
