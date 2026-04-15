@@ -76,6 +76,38 @@ _PASSAGE_VERSES: dict[str, dict[str, object]] = {
         "original_language": "hebrew",
         "has_aramaic": False,
     },
+    "isaiah_53": {
+        "book_id": "ISA",
+        "chapter": 53,
+        "verse_start": 1,
+        "verse_end": 6,
+        "original_language": "hebrew",
+        "has_aramaic": False,
+    },
+    "romans_8": {
+        "book_id": "ROM",
+        "chapter": 8,
+        "verse_start": 35,
+        "verse_end": 39,
+        "original_language": "greek",
+        "has_aramaic": False,
+    },
+    "corinthians_13": {
+        "book_id": "1CO",
+        "chapter": 13,
+        "verse_start": 1,
+        "verse_end": 13,
+        "original_language": "greek",
+        "has_aramaic": False,
+    },
+    "revelation_1": {
+        "book_id": "REV",
+        "chapter": 1,
+        "verse_start": 4,
+        "verse_end": 8,
+        "original_language": "greek",
+        "has_aramaic": False,
+    },
 }
 
 # Translation sets

@@ -57,6 +57,62 @@
         "portuguese": "Tradução portuguesa moderna",
         "english": "Tradução inglesa clássica"
       }
+    },
+    {
+      "id": "isaiah_53",
+      "title": "O Servo Sofredor",
+      "title_en": "The Suffering Servant",
+      "reference": "Isaías 53:1-6",
+      "badge": "Profecia",
+      "description": "A profecia mais citada da Bíblia — \"Ele foi ferido por nossas transgressões\" — no Hebraico original de Isaías.",
+      "layers": ["hebrew", "portuguese", "english"],
+      "layer_notes": {
+        "hebrew": "WLC — Hebraico Bíblico clássico do período do exílio (séc. VIII a.C.)",
+        "portuguese": "Tradução portuguesa moderna",
+        "english": "Tradução inglesa clássica"
+      }
+    },
+    {
+      "id": "romans_8",
+      "title": "Nada Nos Separará",
+      "title_en": "Nothing Shall Separate Us",
+      "reference": "Romanos 8:35-39",
+      "badge": "Consolação",
+      "description": "\"Quem nos separará do amor de Cristo?\" — a declaração mais poderosa de Paulo sobre o amor incondicional de Deus.",
+      "layers": ["greek", "portuguese", "english"],
+      "layer_notes": {
+        "greek": "SBLGNT — Grego Koiné de Paulo (séc. I d.C.)",
+        "portuguese": "Tradução portuguesa moderna",
+        "english": "Tradução inglesa clássica"
+      }
+    },
+    {
+      "id": "corinthians_13",
+      "title": "O Hino do Amor",
+      "title_en": "The Love Chapter",
+      "reference": "1 Coríntios 13:1-13",
+      "badge": "Hino",
+      "description": "\"O amor é paciente, o amor é bondoso\" — o mais célebre poema da história, no Grego Koiné de Paulo.",
+      "layers": ["greek", "portuguese", "english"],
+      "layer_notes": {
+        "greek": "SBLGNT — ἀγάπη (agápē), o amor incondicional em Grego Koiné",
+        "portuguese": "Tradução portuguesa moderna",
+        "english": "Tradução inglesa clássica"
+      }
+    },
+    {
+      "id": "revelation_1",
+      "title": "O Alfa e o Ômega",
+      "title_en": "The Alpha and the Omega",
+      "reference": "Apocalipse 1:4-8",
+      "badge": "Apocalipse",
+      "description": "\"Eu sou o Alfa e o Ômega\" — a revelação de Cristo como princípio e fim de todas as coisas.",
+      "layers": ["greek", "portuguese", "english"],
+      "layer_notes": {
+        "greek": "SBLGNT — τὸ Ἄλφα καὶ τὸ Ὦ (to Alpha kai to O), em Grego Koiné",
+        "portuguese": "Tradução portuguesa moderna",
+        "english": "Tradução inglesa clássica"
+      }
     }
   ]
 }
