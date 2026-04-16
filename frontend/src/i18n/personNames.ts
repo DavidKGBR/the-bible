@@ -229,6 +229,127 @@ const PERSONS: Record<string, PersonEntry> = {
   terah_2841: { pt: "Terá", es: "Taré" },
   nahor_2142: { pt: "Naor", es: "Nacor" },
   hagar_1330: { pt: "Agar", es: "Agar" },
+
+  // ─── Coverage fill for canonical events (participants referenced by the
+  // ~120 events translated in timelineEvents.ts) ─────────────────────────────
+
+  // OT narrative
+  ham_1359: { pt: "Cam", es: "Cam" },
+  japheth_726: { pt: "Jafé", es: "Jafet" },
+  nimrod_2206: { pt: "Nimrode", es: "Nimrod" },
+  enoch_1192: { pt: "Enoque (pai de Matusalém)", es: "Enoc (padre de Matusalén)" },
+  daughter_of_lot_older_985: { pt: "Filha mais velha de Ló", es: "Hija mayor de Lot" },
+  daughter_of_lot_younger_984: { pt: "Filha mais nova de Ló", es: "Hija menor de Lot" },
+  pharaoh_2328: { pt: "Faraó (na jornada de Abraão)", es: "Faraón (en el viaje de Abraham)" },
+
+  // Judges
+  othniel_2259: { pt: "Otniel", es: "Otoniel" },
+  "chushan-rishathaim_944": { pt: "Cusã-Risataim", es: "Cusán-Risataim" },
+  eglon_1037: { pt: "Eglom", es: "Eglón" },
+  ehud_1039: { pt: "Eúde", es: "Aod" },
+  jabin_677: { pt: "Jabim (rei de Hazor)", es: "Jabín (rey de Hazor)" },
+  barak_401: { pt: "Baraque", es: "Barac" },
+  deborah_997: { pt: "Débora", es: "Débora" },
+  tola_2879: { pt: "Tola", es: "Tola" },
+  jair_709: { pt: "Jair", es: "Jair" },
+  ibzan_1588: { pt: "Ibsã", es: "Ibzán" },
+  elon_1184: { pt: "Elom", es: "Elón" },
+  abdon_10: { pt: "Abdom", es: "Abdón" },
+
+  // Monarchs/narrative additions
+  goliath_1327: { pt: "Golias", es: "Goliat" },
+
+  // Minor prophets & scribes
+  obadiah_2226: { pt: "Obadias", es: "Abdías" },
+  joel_1660: { pt: "Joel", es: "Joel" },
+  amos_238: { pt: "Amós", es: "Amós" },
+  hosea_1555: { pt: "Oseias", es: "Oseas" },
+  micah_2053: { pt: "Miqueias", es: "Miqueas" },
+  nahum_2145: { pt: "Naum", es: "Nahúm" },
+  habakkuk_1334: { pt: "Habacuque", es: "Habacuc" },
+  zephaniah_3040: { pt: "Sofonias", es: "Sofonías" },
+  haggai_1349: { pt: "Ageu", es: "Hageo" },
+  zechariah_3016: { pt: "Zacarias", es: "Zacarías" },
+  malachi_1899: { pt: "Malaquias", es: "Malaquías" },
+  ezekiel_1237: { pt: "Ezequiel", es: "Ezequiel" },
+
+  // NT — birth narrative & twelve apostles
+  elisabeth_1152: { pt: "Isabel", es: "Isabel" },
+  zacharias_2971: { pt: "Zacarias (pai de João Batista)", es: "Zacarías (padre de Juan el Bautista)" },
+  simeon_2744: { pt: "Simeão (profeta)", es: "Simeón (profeta)" },
+  andrew_264: { pt: "André", es: "Andrés" },
+  james_718: { pt: "Tiago (filho de Alfeu)", es: "Santiago (hijo de Alfeo)" },
+  james_719: { pt: "Tiago (irmão de Jesus)", es: "Santiago (hermano de Jesús)" },
+  philip_2344: { pt: "Filipe, o Apóstolo", es: "Felipe el Apóstol" },
+  bartholomew_405: { pt: "Bartolomeu", es: "Bartolomé" },
+  matthew_1971: { pt: "Mateus", es: "Mateo" },
+  thomas_2851: { pt: "Tomé", es: "Tomás" },
+  alphaeus_192: { pt: "Alfeu", es: "Alfeo" },
+  lebbaeus_1815: { pt: "Lebeu Tadeu", es: "Lebeo Tadeo" },
+  simon_2746: { pt: "Simão Zelote", es: "Simón Zelote" },
+  mother_of_zebedees_children_2112: { pt: "Mãe dos filhos de Zebedeu", es: "Madre de los hijos de Zebedeo" },
+
+  // NT — gospels / passion
+  nicodemus_2204: { pt: "Nicodemos", es: "Nicodemo" },
+  lazarus_1812: { pt: "Lázaro", es: "Lázaro" },
+  mary_1939: { pt: "Maria (irmã de Lázaro)", es: "María (hermana de Lázaro)" },
+  mary_1940: { pt: "Maria (mulher de Cléopas)", es: "María (mujer de Cleofas)" },
+  mary_1943: { pt: "Maria Madalena", es: "María Magdalena" },
+  salome_2464: { pt: "Salomé", es: "Salomé" },
+  barabbas_399: { pt: "Barrabás", es: "Barrabás" },
+  caiaphas_532: { pt: "Caifás", es: "Caifás" },
+  annas_269: { pt: "Anás", es: "Anás" },
+  john_1678: { pt: "João (parente do sumo sacerdote)", es: "Juan (pariente del sumo sacerdote)" },
+  joseph_1716: { pt: "José de Arimateia", es: "José de Arimatea" },
+  simon_2749: { pt: "Simão (Cireneu/outros)", es: "Simón (Cireneo/otros)" },
+  simon_2753: { pt: "Simão, o curtidor", es: "Simón el curtidor" },
+
+  // NT — Herod family
+  herod_1504: { pt: "Herodes (o Grande)", es: "Herodes (el Grande)" },
+  herod_1506: { pt: "Herodes Agripa I", es: "Herodes Agripa I" },
+
+  // Acts — apostolic era
+  matthias_1972: { pt: "Matias", es: "Matías" },
+  stephen_2802: { pt: "Estêvão", es: "Esteban" },
+  ananias_258: { pt: "Ananias (marido de Safira)", es: "Ananías (marido de Safira)" },
+  sapphira_2472: { pt: "Safira", es: "Safira" },
+  nicanor_2203: { pt: "Nicanor", es: "Nicanor" },
+  prochorus_2371: { pt: "Prócoro", es: "Prócoro" },
+  timon_2862: { pt: "Timão", es: "Timón" },
+  parmenas_2272: { pt: "Parmenas", es: "Pármenas" },
+  nicolas_2205: { pt: "Nicolau", es: "Nicolás" },
+  ananias_259: { pt: "Ananias (discípulo de Damasco)", es: "Ananías (discípulo de Damasco)" },
+  cornelius_956: { pt: "Cornélio", es: "Cornelio" },
+  candace_916: { pt: "Candace", es: "Candace" },
+  simon_2752: { pt: "Simão, o mágico", es: "Simón el mago" },
+  rhoda_2439: { pt: "Rode", es: "Rode" },
+  mary_1941: { pt: "Maria (mãe de João Marcos)", es: "María (madre de Juan Marcos)" },
+  mark_1679: { pt: "João Marcos", es: "Juan Marcos" },
+  agabus_107: { pt: "Ágabo", es: "Ágabo" },
+  manaen_1926: { pt: "Manaém", es: "Manaén" },
+  lucius_1833: { pt: "Lúcio", es: "Lucio" },
+  barsabas_1720: { pt: "Barsabás Justo", es: "Barsabás Justo" },
+  judas_1759: { pt: "Judas Barsabás", es: "Judas Barsabás" },
+  jason_742: { pt: "Jasom", es: "Jasón" },
+
+  // Paul's journeys — companions & encounters
+  luke_1836: { pt: "Lucas", es: "Lucas" },
+  aquila_279: { pt: "Áquila", es: "Aquila" },
+  priscilla_2370: { pt: "Priscila", es: "Priscila" },
+  lydia_1837: { pt: "Lídia", es: "Lidia" },
+  dionysius_1013: { pt: "Dionísio", es: "Dionisio" },
+  damaris_972: { pt: "Dâmaris", es: "Dámaris" },
+  demas_1006: { pt: "Demas", es: "Demas" },
+  demetrius_1007: { pt: "Demétrio", es: "Demetrio" },
+  alexander_187: { pt: "Alexandre (filho de Simão)", es: "Alejandro (hijo de Simón)" },
+  alexander_188: { pt: "Alexandre (judeu de Éfeso)", es: "Alejandro (judío de Éfeso)" },
+  aristarchus_306: { pt: "Aristarco", es: "Aristarco" },
+  trophimus_2880: { pt: "Trófimo", es: "Trófimo" },
+  epaphras_1195: { pt: "Epafras", es: "Epafras" },
+  gaius_1269: { pt: "Gaio (da Macedônia)", es: "Gayo (de Macedonia)" },
+  julius_1763: { pt: "Júlio", es: "Julio" },
+  publius_2374: { pt: "Públio", es: "Publio" },
+  portius_2367: { pt: "Pórcio Festo", es: "Porcio Festo" },
 };
 
 // ─── Helper functions ────────────────────────────────────────────────────────
