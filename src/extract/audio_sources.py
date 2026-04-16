@@ -63,6 +63,21 @@ VOICE_CONFIG: dict[str, dict[str, str]] = {
     },
 }
 
+# ── Overrides fonéticos (Hebraico) ────────────────────────────────────────────
+# A voz Chirp3-HD israelense é treinada na convenção judaica de NÃO pronunciar
+# o Tetragrama: ao ver יְהֹוָה (ketib YHWH com niqqud do Adonai) o modelo elide
+# os heh e devolve algo como "iavô". Para uso pedagógico cristão/acadêmico
+# queremos a leitura literal "Ye-ho-vah". Quebramos o padrão litúrgico
+# substituindo vav→bet (mantém som "v") e shewa→segol (força "ye" inicial).
+#
+# Adicione novos verbetes aqui se notar o mesmo problema. Após editar:
+#   1. delete os MP3s afetados em data/audio/hebrew/
+#   2. rode `python -m src.extract.audio_sources --language hebrew`
+HEBREW_TTS_OVERRIDES: dict[str, str] = {
+    "H3068": "יֶהוֹבָה",  # Yᵉhôvâh — Tetragrama lido pleno
+    "H3069": "יֶהוֹבִה",  # Yᵉhôvih — variante com hireq
+}
+
 AUDIO_DIR = Path("data/audio")
 RATE_LIMIT_DELAY = 0.05  # 50ms entre requests — bem abaixo do limite da API
 
@@ -126,8 +141,13 @@ def generate_single(
     client = _get_tts_client()
     cfg = VOICE_CONFIG[language]
 
-    # Texto a sintetizar: palavra original se tiver conteúdo, senão transliteração
-    text = original.strip() if original and original.strip() else transliteration
+    # Texto a sintetizar: override fonético > original > transliteração
+    if language == "hebrew" and strongs_id in HEBREW_TTS_OVERRIDES:
+        text = HEBREW_TTS_OVERRIDES[strongs_id]
+    elif original and original.strip():
+        text = original.strip()
+    else:
+        text = transliteration
 
     synthesis_input = texttospeech.SynthesisInput(text=text)
     voice = texttospeech.VoiceSelectionParams(

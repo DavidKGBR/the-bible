@@ -135,6 +135,31 @@ def _pick_translation(requested: str, available: set[str], fallback: str) -> str
     return requested if requested in available else fallback
 
 
+def _audio_url_for(strongs_id: str | None, language: str) -> str | None:
+    """Return the pre-recorded Chirp3-HD MP3 URL for a given Strong's ID.
+
+    Files live at  data/audio/{language}/{strongs_id}.mp3
+    and are served by FastAPI's StaticFiles mount at  /audio/...
+    """
+    if not strongs_id:
+        return None
+    folder = "hebrew" if language == "hebrew" else "greek"
+    return f"/audio/{folder}/{strongs_id}.mp3"
+
+
+def _clean_script(text: str | None) -> str | None:
+    """Remove STEPBible morpheme separators (/) from interlinear script text.
+
+    STEPBible WLC / SBLGNT encode morpheme boundaries with forward-slash, e.g.
+    "בְּ/רֵאשִׁית" or "δια/κονος".  Stripping the slash yields the correct
+    continuous script as it appears in the manuscript, which is what we want
+    to display in the word-tile UI.
+    """
+    if not text:
+        return text
+    return text.replace("/", "")
+
+
 # ── Layer metadata by language ─────────────────────────────────────────────────
 _LAYER_META: dict[str, dict[str, str | None]] = {
     "aramaic": {
@@ -266,10 +291,10 @@ def get_special_passage(
         orig_verses[vref]["words"].append(
             {
                 "word_position": wpos,
-                "script": script,
+                "script": _clean_script(script),
                 "transliteration": translit,
                 "gloss": gloss,
-                "audio_url": None,
+                "audio_url": _audio_url_for(strongs_id, orig_lang),
                 "strongs_id": strongs_id,
             }
         )
