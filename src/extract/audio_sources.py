@@ -74,7 +74,7 @@ VOICE_CONFIG: dict[str, dict[str, str]] = {
 #   1. delete os MP3s afetados em data/audio/hebrew/
 #   2. rode `python -m src.extract.audio_sources --language hebrew`
 HEBREW_TTS_OVERRIDES: dict[str, str] = {
-    "H3068": "יֶהוֹבָה",  # Yᵉhôvâh — Tetragrama lido pleno
+    "H3068": "יֶהוֹבַה",  # Yᵉhôvâh — patach (ַ) em vez de qamatz: força "va" claro
     "H3069": "יֶהוֹבִה",  # Yᵉhôvih — variante com hireq
 }
 

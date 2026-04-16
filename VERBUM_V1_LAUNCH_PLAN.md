@@ -1,15 +1,15 @@
 # 🚀 VERBUM v1 — Plano de Lançamento
 
 > **Status:** Construção essencialmente completa (35/38 tarefas do `VERBUM_PLAN.md`).
-> **Falta:** sair do localhost para o mundo.
-> **Janela:** Abril–Maio 2026.
+> **Falta:** sair do localhost para o mundo — **mas só depois da REVISION atingir 100% de cobertura** (ver `VERBUM_REVISION_PLAN.md` + `feedback_complete_coverage.md`).
+> **Janela:** Janela pré-launch ampliada em 15 abr 2026 após decisão de **cobertura 100%** (sem top-N em R3, R3.6, R7). Janela revisada: ~13-15 meses de labeling + sessões base. Custo $0 (Claude MAX). Qualidade > pressa.
 > **Stack de deploy:** Firebase Hosting (frontend) + Cloud Run (backend) + BigQuery (dataset público).
 > **URL inicial:** `https://verbum-app-bible.web.app` (subdomínio default — o Firebase atribui sempre `<projectId>.web.app`). Na sessão #6, tentar reservar `verbum.web.app` como custom Firebase subdomain — se disponível, vira a URL pública principal e o `verbum-app-bible.web.app` continua redirecionando.
 > **Analytics:** GA4 via Firebase — gratuito, ilimitado, integração nativa.
 >
 > **Progresso pré-launch até 15 abr 2026:**
-> - ✅ **Sessão 1** — Áudio hebraico Chirp3-HD (8674 MP3, 0 falhas; 100% Strong's HE)
-> - Em paralelo: `VERBUM_REVISION_PLAN.md` → R1 ✅, R2 ✅, R3 em fila
+> - ✅ **Sessão 1** — Áudio hebraico Chirp3-HD (8674 MP3, 0 falhas; 100% Strong's HE — precedente pra cobertura 100%)
+> - Em paralelo: `VERBUM_REVISION_PLAN.md` → R1 ✅, R2 ✅, R3.a ✅ (primeira passagem), R3.b-e em fila (~9.300 entradas de lookup restantes)
 
 ---
 

@@ -3,11 +3,11 @@
 > **Status:** Bloqueador do `VERBUM_V1_LAUNCH_PLAN.md`.
 > **Origem:** Auditoria visual do David em 14 abril 2026 — 14 bugs reportados em ~10 superfícies diferentes.
 > **Diagnóstico:** A i18n da Fase 5 cobriu o **chrome do app** (632 chaves: botões, labels, navegação). Os **dados de domínio** (nomes próprios, descrições, eventos curados, jornadas, comparisons, devotional themes) continuam em inglês porque vivem em JSONs estáticos e tabelas DuckDB que nunca foram processadas pela passagem de i18n.
-> **Janela:** ~9 sessões bloqueantes + batches incrementais antes do início do `VERBUM_V1_LAUNCH_PLAN.md` (sessão #2 do launch plan passa a ser pós-revisão).
 >
 > **Decisões já tomadas com o David (15 abril 2026):**
 > - **Emojis nos cards** (Semantic Explorer, etc.): substituir por **SVGs do design system** (mesma família visual da Home), não manter os emojis.
 > - **Conteúdo longo nos JSONs estáticos** (`semantic_genealogy.json`, `open_questions.json`, etc.): usar **arquivos paralelos** `*_pt.json` / `*_es.json` em vez de campos `_pt`/`_es` no original. Mantém arquivos legíveis e diff limpo por idioma.
+> - **🔑 Cobertura = 100%, sem top-N.** (Decisão 15 abr 2026, registrada em `feedback_complete_coverage.md`): se o dataset tem 10.000 registros, traduzimos 10.000. Nunca "top-N por frequência". Launch é *gated by coverage*, não por uma meta pré-launch arbitrária. Isso transformou R3/R3.6/R7: os cortes "top 150", "top 2.000 pré + 12K pós", "Salmos+Evangelhos pré + 60 livros pós" foram eliminados. Tudo é pré-launch, em cadência sustentável de muitas sessões. Custo $0 (tokens Claude MAX), qualidade prevalece sobre velocidade.
 
 ---
 
@@ -73,21 +73,18 @@ Quando o conteúdo for muito longo (e.g. `narrative` em `semantic_genealogy.json
 
 **Páginas afetadas:** `/people`, `/places`, `/timeline`, `/topics`, `/map`, `/word-study/*`
 
-**Estratégia (escolher uma, não as duas):**
+**Estratégia (decidida 15 abr 2026 — cobertura 100%):**
 
-**Opção 1: Tradução pré-computada das top-N entidades** (recomendada)
-- 100-150 pessoas mais visíveis (figuras principais + relacionadas direto)
-- 50-80 lugares mais visíveis
-- Todos os ~30 events da timeline canônica
-- Tudo em arquivo i18n no frontend (`personNames.ts`, `placeNames.ts`, `timelineEvents.ts`)
-- Fallback: nome em inglês quando não houver tradução
+**Lookup tables no frontend (`personNames.ts`, `placeNames.ts`, `timelineEvents.ts`, `topicNames.ts`)** com helpers `personName(slug, locale, fallback)` e afins. Coberturas-alvo:
 
-**Opção 2: Colunas multilíngues no DuckDB** (mais ambicioso)
-- Adicionar `description_pt`, `description_es` nas tabelas `people`, `places`, `topics`
-- Pipeline ETL ou tradução assistida via Gemini para popular
-- Routers retornam campo via header `Accept-Language` ou query `?lang=pt`
+- **3.067 pessoas** (todas as entradas Theographic com `verse_count >= 0`)
+- **1.814 lugares** (todo o dataset OpenBible Geocoding)
+- **450 eventos** da linha do tempo canônica (todos — incluindo os "Lifetime of X" / "Birth of X" via patterns compostos com `personName()`)
+- **4.673 tópicos** de Nave's Topical Bible
 
-**Decisão recomendada para v1:** Opção 1. É 1 sessão de tradução manual, cobre 90% do tráfego visível, e não exige refactor de schema/router. Opção 2 vira backlog v1.5 quando demanda real aparecer.
+Distribuído em ~20 sessões de batches (~300-500 entradas por sessão, nomes próprios são rápidos). Cada batch = commit com ledger visível (`batch N/M, K/total covered`). Coverage script (`scripts/lookup_coverage.py`) valida progresso.
+
+**Por quê não Opção 2 (colunas multilíngues no DuckDB):** refactor de schema + router + ETL é caminho mais longo e introduz duplicação com as static JSONs. Lookup tables no frontend dão performance (sem round-trip extra), fallback gracioso, diff limpo por idioma e são auditáveis num único commit.
 
 ---
 
@@ -220,29 +217,49 @@ Reportados na 2ª rodada de auditoria. Mais profundos que F porque envolvem visu
 
 ---
 
-### Sessão R3 — Frontend lookup tables (personNames, placeNames, timelineEvents)
+### Sessão R3 — Frontend lookup tables (personNames, placeNames, timelineEvents, topicNames) — **cobertura 100%**
 
-**Entrega:** Nomes próprios bíblicos traduzidos para PT/ES nas top-N entidades.
+**Entrega:** Nomes próprios bíblicos traduzidos para PT/ES de **todas** as entidades do DB. Zero top-N.
 
-**Tarefas:**
-- Criar `frontend/src/i18n/personNames.ts`:
-  - Top 150 pessoas: figuras principais (Jesus, David, Moses, Paul, etc.) + relacionados próximos
-  - Cada entrada: `{ en: "Moses", pt: "Moisés", es: "Moisés" }`
-  - Mais um campo opcional `descriptionShort` com descrição curta traduzida (e.g. "Profeta & Legislador")
-  - Helper `personName(id, locale)` + `personDescription(id, locale)`
-- Criar `frontend/src/i18n/placeNames.ts`:
-  - Top 80 lugares (Egypt → Egito/Egipto, Jerusalem → Jerusalém/Jerusalén, etc.)
-  - Helpers análogos
-- Criar `frontend/src/i18n/timelineEvents.ts`:
-  - Todos os ~30-50 eventos canônicos da timeline
-  - Cada um: `name_pt`, `name_es`, `description_pt`, `description_es`
-- Páginas consumindo: `PeoplePage`, `PlacesPage`, `MapPage`, `TimelinePage`, `WordStudyPage` (que mostra ocorrências de palavras), `BibleReader` (links de pessoas/lugares)
+**Escopo total (princípio "no top-N", feedback_complete_coverage.md):**
 
-**Critério de done:**
-- `/people` em PT mostra "Moisés · Profeta e Legislador" no card
-- `/places` em PT mostra "Egito"
-- `/timeline` em PT mostra "Nascimento de Terá · Patriarcas"
-- `/map` em PT mostra "Jornada de Abraão"
+| Lookup | Total | Nota |
+|---|---|---|
+| `personNames.ts` | **3.067** pessoas | Theographic completo (todas as entradas com `verse_count >= 0`) |
+| `placeNames.ts` | **1.814** lugares | OpenBible Geocoding completo |
+| `timelineEvents.ts` | **450** eventos + templates Birth/Death/Lifetime/Reign + 6 eras | Inclui os 268 eventos "Specific" restantes que não entraram na primeira passagem |
+| `topicNames.ts` | **4.673** tópicos | Nave's Topical Bible completo |
+| **Total** | **~10.000 entradas de tradução** | |
+
+**Status atual (pós-R3 "primeira passagem" + patch de cobertura 15 abr 2026):**
+- `personNames.ts` — 277/3.067 cobertas (9%)
+- `placeNames.ts` — 182/1.814 cobertas (10%)
+- `timelineEvents.ts` — 182/450 específicas cobertas (40%, + patterns cobrem os 164 Birth/Death/Lifetime/Reign)
+- `topicNames.ts` — 80/4.673 cobertas (2%)
+
+**Gap até fechar:** ~2.790 pessoas + 1.632 lugares + 268 eventos específicos + 4.593 tópicos = **~9.300 entradas**.
+
+**Cadência de batches (estimativa):**
+
+| Sub-sessão | Escopo | Entradas | Esforço |
+|---|---|---|---|
+| R3.a (✅) | First pass: top-visíveis + eventos canônicos + cobertura 100% dos participantes/lugares dos eventos traduzidos | ~720 | 1 sessão (feito) |
+| R3.b | Pessoas batches 1-6 (500 por batch) | 2.790 | 6 sessões |
+| R3.c | Lugares batches 1-3 (~550 por batch) | 1.632 | 3 sessões |
+| R3.d | Eventos específicos restantes | 268 | 1 sessão |
+| R3.e | Tópicos batches 1-10 (~460 por batch) | 4.593 | 10 sessões |
+| **Total** | | **~9.300** | **~20 sessões** |
+
+**Tarefas (cada batch):**
+- Gerar o recorte via `scripts/export_untranslated_lookup.py --type people --offset N --limit 500` → TSV com `slug | name_en | verse_count | hint`
+- Traduzir inline no TS durante a sessão (Claude em chat, PT + ES juntos)
+- Commit: `feat(i18n R3.b): people batch 3/6 (1.500/3.067 covered)`
+- `scripts/lookup_coverage.py` atualiza snapshot de cobertura em `data/processed/lookup_coverage/coverage.json`
+
+**Critério de done (R3 completa):**
+- `scripts/lookup_coverage.py` mostra `100% pessoas, lugares, eventos, tópicos PT` e `100% ES`
+- Zero slug cru em qualquer página (audit de `/timeline`, `/people`, `/places`, `/topics` em PT/ES)
+- `/people?q=Nethaniah` mostra "Netanias · Sacerdote" (long-tail), não "Nethaniah"
 
 ---
 
@@ -276,39 +293,30 @@ Reportados na 2ª rodada de auditoria. Mais profundos que F porque envolvem visu
 
 ---
 
-### Sessão R3.6 — Strong's Lexicon multilingual (fluxo humano-LLM batches)
+### Sessão R3.6 — Strong's Lexicon multilingual (humano-LLM batches, **100% pré-launch**)
 
-**Entrega:** Colunas `short_definition_pt/_es` e `long_definition_pt/_es` na tabela `strongs_lexicon_multilang`, eliminando a discrepância de ver `DEFINIÇÃO: kindness; by implication (towards God) piety; rarely (by opposition) reproof...` em PT-BR.
+**Entrega:** Colunas `short_definition_pt/_es` e `long_definition_pt/_es` populadas para **todas** as 14.178 entradas Strong's (8.674 HE + 5.504 GR) × PT + ES. Zero "top-N pré, resto pós-launch" — princípio de cobertura 100% (feedback_complete_coverage.md).
 
 **Contexto técnico:**
 Hoje `strongs_lexicon.short_definition` e `.long_definition` são populados uma única vez pelo `openscriptures/strongs` — em inglês. Qualquer usuário PT/ES vê definição EN crua, o que quebra a experiência em `/word-study`, `/semantic-explorer` DetailPanel, Interlinear Reader word panel, etc.
 
 **Por que Claude Opus 4.6 1M (MAX) em vez de Gemini API:**
 
-Decisão David (15 abr 2026): mesma lógica do R7 sentiment. Claude Opus 4.6 1M context no plano MAX = custo direto $0, qualidade contextual superior (pode aplicar conhecimento teológico, preservar siglas como YHWH/ELOHIM, manter consistência entre entries cognatas), e auditável (JSONL versionado por batch).
+Decisão David (15 abr 2026): Claude Opus 4.6 1M context no plano MAX = custo direto $0, qualidade contextual superior (pode aplicar conhecimento teológico, preservar siglas como YHWH/ELOHIM, manter consistência entre entries cognatas), e auditável (JSONL versionado por batch).
 
-**Volume:**
+**Volume total:**
 - 14.178 entradas (8.674 HE + 5.504 GR)
 - 2 línguas (PT, ES)
-- **28.356 definições totais** (cada uma short + long)
+- **28.356 definições totais** (short + long por entrada × 2 línguas; na prática trabalhamos short_def + long_def juntas por entrada)
 
-**Estratégia em duas fases:**
-
-**Pré-launch (~4 batches, BLOQUEANTE mínimo):**
-- Top 2.000 Strong's por frequência (cobertura ~85% dos cliques esperados)
-  - Pra calcular: `SELECT strongs_id FROM interlinear GROUP BY strongs_id ORDER BY COUNT(*) DESC LIMIT 2000`
-- 2.000 × 2 línguas = 4.000 definições
-- Batches de ~1.000 definições cada (com 1M context cabe, mas limita-se a 1.000 pra manter qualidade)
-- ~4 batches = ~4 sessões dedicadas
-
-**Pós-launch (incremental, ~3 meses):**
-- Restantes 12.178 entradas × 2 línguas = 24.356 definições
-- ~24 batches em cadência 2-3/semana
-- Dashboard CLI rastreia `% coberto` por idioma
+**Cadência única (sem divisão pré/pós):**
+- Batches de ~1.000 entradas (= 2.000 traduções PT+ES por sessão, com 1M context isso cabe confortável mantendo qualidade)
+- **~28 sessões dedicadas** para fechar 100% HE + GR × PT + ES
+- David signou off no timeline: "foco não é pressa, é precisão"
 
 ---
 
-#### R3.6.0 — Setup infraestrutural (1 sessão, BLOQUEANTE pré-launch)
+#### R3.6.0 — Setup infraestrutural (1 sessão, bloqueante para os batches seguintes)
 
 **Tarefas:**
 - Schema migration: nova tabela `strongs_lexicon_multilang`:
@@ -324,33 +332,39 @@ Decisão David (15 abr 2026): mesma lógica do R7 sentiment. Claude Opus 4.6 1M 
       PRIMARY KEY (strongs_id, language)
   );
   ```
-- `scripts/prep_strongs_batch.py`: gera TSV de input com colunas `strongs_id | language | original | transliteration | short_def_en | long_def_en | top_books_hint`. Parametrizado por `--language hebrew|greek`, `--start H1`, `--end H500`, ou `--top-frequency 2000`.
+- `scripts/prep_strongs_batch.py`: gera TSV de input com colunas `strongs_id | language | original | transliteration | short_def_en | long_def_en | top_books_hint`. Parametrizado por `--language hebrew|greek`, `--start H1`, `--end H500`.
 - `scripts/load_strongs_batch.py`: carrega JSONL, valida schema (pydantic), idempotente (UPSERT por PK).
-- `scripts/strongs_coverage.py`: dashboard CLI com `% coberto por language + livro com maior gap`. Salva snapshot em `data/processed/strongs_multilang/coverage.json`.
-- Backend `lexicon.py`: queries aceitam `?lang=pt` ou `?lang=es`, retornam definições do `strongs_lexicon_multilang` com JOIN fallback pro `strongs_lexicon` (EN) quando não existir. Flag de resposta `is_translated: bool` + `translation_confidence?: float`.
+- `scripts/strongs_coverage.py`: dashboard CLI com `% coberto por language`. Salva snapshot em `data/processed/strongs_multilang/coverage.json`.
+- Backend `lexicon.py`: queries aceitam `?lang=pt` ou `?lang=es`, retornam definições do `strongs_lexicon_multilang` com JOIN fallback pro `strongs_lexicon` (EN) quando não existir. Flag de resposta `is_translated: bool`.
 - Frontend `DetailPanel.tsx` (Explorer) e `WordDetailPanel.tsx` (Reader): renderizam indicador discreto `"*Definição original em inglês · tradução em refinamento"` quando `is_translated=false`. Quando `true`, mostra definição PT/ES direto.
-- Frontend `i18n/sentimentCoverage.ts` pattern → `i18n/strongsCoverage.ts` com map `{"H1": true, "H2": false, ...}` se quiser fino-grão (opcional pra v1).
 
 **Critério de done:**
 - Schema criado, 0 rows
-- Scripts roda em entradas fake e valida round-trip
+- Scripts rodam em entradas fake e validam round-trip
 - `/lexicon/H2617?lang=pt` retorna `is_translated: false` com short/long ainda em EN (fallback)
-- Explorer DetailPanel mostra o indicador discreto abaixo da definição EN
 
 ---
 
-#### R3.6.1–4 — Labeling pré-launch (top 2.000 Strong's × 2 línguas)
+#### R3.6.1 → R3.6.28 — Labeling 100% (batches de ~1.000 entradas)
 
-**Cadência:** 1 batch por sessão dedicada. Cada batch = ~1.000 definições traduzidas.
+**Ordem sugerida** (prioriza frequência real, mas todas entram):
 
-- **R3.6.1** — Top 1000 HE (PT + ES em paralelo) = ~2.000 definições
-- **R3.6.2** — Top 500 HE + top 500 GR (PT + ES) = ~2.000 definições
-- **R3.6.3** — Top 500 GR remaining (PT + ES) = ~2.000 definições
-- **R3.6.4** — Buffer/spot-check + recalibragem + labeling das divergências flagadas
+| Bloco | Entradas | Batches |
+|---|---|---|
+| HE top-frequência 1-1000 | 1.000 | R3.6.1 |
+| HE 1001-2000 | 1.000 | R3.6.2 |
+| HE 2001-3000 | 1.000 | R3.6.3 |
+| HE 3001-5000 | 2.000 | R3.6.4–5 |
+| HE 5001-8674 | 3.674 | R3.6.6–9 |
+| GR top-frequência 1-1000 | 1.000 | R3.6.10 |
+| GR 1001-2000 | 1.000 | R3.6.11 |
+| GR 2001-3000 | 1.000 | R3.6.12 |
+| GR 3001-5000 | 2.000 | R3.6.13–14 |
+| GR 5001-5504 | 504 | R3.6.15 |
+| PT/ES pass 2 (spot-check + fix) | — | R3.6.16–28 |
+| **Total** | **14.178** | **~28 sessões** |
 
-**Rubrica de labeling:**
-
-Claude Opus 4.6 vai gerar `short_definition_pt/es` e `long_definition_pt/es` seguindo:
+**Rubrica de labeling (inalterada):**
 
 1. **Preservar** nomes originais (ELOHIM, YHWH, Adonai, agapē, chesed — transliterações universais)
 2. **Traduzir** conceitos teológicos usando vocabulário consagrado em PT-BR e ES-LATAM:
@@ -364,23 +378,12 @@ Claude Opus 4.6 vai gerar `short_definition_pt/es` e `long_definition_pt/es` seg
 
 **Spot-check:** David revisa 20 amostras aleatórias após cada batch. Se concordar com >90%, rubrica calibrada; senão, ajusta antes de seguir.
 
-**Critério de done pré-launch:**
-- 2.000 Strong's top-frequência 100% labelados PT + ES e carregados
-- `strongs_coverage.py` mostra `% cobertura PT ≥ 85%` no léxico real usado (weighted por frequência de ocorrência)
-- `/word-study/H2617` em PT-BR: definição em português, sem indicador de "em refinamento"
-
----
-
-#### R3.6.5+ — Labeling pós-launch (12K restantes)
-
-Mesma mecânica, cadência 2-3 batches/semana. Dashboard rastreia progresso. A cada livro ou bloco fechado, commit `feat: strongs PT-BR batch NNN`.
-
-Duração estimada: ~3 meses até 100% cobertura PT-BR. ES pode seguir no ritmo ou ficar em backlog v1.5.
-
-**Critério de done final:**
+**Critério de done R3.6 completo:**
 - 14.178 entradas × 2 línguas = 28.356 definições labeladas
 - `strongs_coverage.py` mostra `100% PT + 100% ES`
-- Frontend sem nenhum indicador "em refinamento" para usuários em PT ou ES
+- Zero indicador "em refinamento" para usuários PT ou ES
+- `/word-study/H2617` em PT-BR: definição em português sem fallback
+- Commit final: `feat(i18n R3.6): Strong's multilang 100% coverage (14178 entries × 2 languages)`
 
 ---
 
@@ -471,39 +474,28 @@ A versão original do plano propunha chamar Gemini Flash via API. Reavaliando: C
 3. **Sentiment EN como ancoragem** — em ~60% dos casos é endorse direto, batch flui rápido
 4. **Auditável** — cada batch é JSONL versionado, sem caixa preta
 
-**Escopo final (decisão David, 15 abr 2026): Bíblia NVI completa — 66 livros, ~31.000 versos.**
+**Escopo final (decisão David, 15 abr 2026 — cobertura 100%): Bíblia NVI completa — 66 livros, ~31.000 versos, tudo pré-launch.**
 
-Estratégia em duas fases:
+Sem divisão pré/pós-launch. Princípio "no top-N" (feedback_complete_coverage.md): Salmos + Evangelhos como "coverage mínima para lançar" seria o mesmo erro de top-N. Fazemos tudo antes de lançar.
 
-**Pré-launch (BLOQUEANTE para R7 estar "minimamente entregue"):**
-- **Salmos completo (2.461 versos / ~9 batches)** — feature primária do `/emotional`
-- **4 Evangelhos (3.779 versos / ~13 batches)** — sentiment secundário relevante, alto tráfego
-- **Total mínimo pré-launch: ~22 batches / ~6.240 versos**
+**Ordem sugerida dos livros (prioridade decrescente por relevância no `/emotional`):**
 
-**Pós-launch (rotina contínua, ~6-9 meses até fim):**
-- Os 60 livros restantes (~24.860 versos / ~90 batches)
-- Cadência sugerida: **2-3 batches por semana** = sessão dedicada cada 2-3 dias
-- O indicador "refinamento em breve" do frontend desaparece automaticamente livro a livro conforme batches são carregados
-- ES como segundo idioma após PT-BR fechar (escopo backlog v2)
+| Ordem | Livros | Versos aprox | Batches |
+|---|---|---|---|
+| 1 | **Salmos** | 2.461 | 9 |
+| 2 | **Mateus, Marcos, Lucas, João** | 3.779 | 13 |
+| 3 | Provérbios + Eclesiastes + Cântico | 1.135 | 4 |
+| 4 | Gênesis + Êxodo | 2.746 | 10 |
+| 5 | Romanos + Cartas Paulinas (Gl-Hb) | 2.067 | 7 |
+| 6 | Atos | 1.006 | 4 |
+| 7 | Cartas Gerais (Tg-Jd) + Apocalipse | 1.000 | 4 |
+| 8 | Profetas Maiores (Is, Jr, Lm, Ez, Dn) | 4.110 | 14 |
+| 9 | Profetas Menores (12 livros) | 1.041 | 4 |
+| 10 | Históricos (Js, Jz, Rt, 1-2Sm, 1-2Rs, 1-2Cr, Ed, Ne, Et) | 6.476 | 22 |
+| 11 | Levítico + Números + Deuteronômio | 2.677 | 9 |
+| | **Total** | **~31.000** | **~113** |
 
-**Ordem sugerida dos livros (prioridade decrescente):**
-
-| Ordem | Livros | Versos aprox | Batches | Quando |
-|---|---|---|---|---|
-| 1 | **Salmos** | 2.461 | 9 | Pré-launch |
-| 2 | **Mateus, Marcos, Lucas, João** | 3.779 | 13 | Pré-launch |
-| 3 | Provérbios + Eclesiastes + Cântico | 1.135 | 4 | Pós-launch S1-S2 |
-| 4 | Gênesis + Êxodo | 2.746 | 10 | Pós-launch S2-S4 |
-| 5 | Romanos + Cartas Paulinas (Gl-Hb) | 2.067 | 7 | Pós-launch S4-S6 |
-| 6 | Atos | 1.006 | 4 | Pós-launch S6 |
-| 7 | Cartas Gerais (Tg-Jd) + Apocalipse | 1.000 | 4 | Pós-launch S7 |
-| 8 | Profetas Maiores (Is, Jr, Lm, Ez, Dn) | 4.110 | 14 | Pós-launch S8-S11 |
-| 9 | Profetas Menores (12 livros) | 1.041 | 4 | Pós-launch S12 |
-| 10 | Históricos (Js, Jz, Rt, 1-2Sm, 1-2Rs, 1-2Cr, Ed, Ne, Et) | 6.476 | 22 | Pós-launch S13-S18 |
-| 11 | Levítico + Números + Deuteronômio | 2.677 | 9 | Pós-launch S19-S21 |
-| | **Total** | **~31.000** | **~113** | |
-
-Cada livro fechado = `frontend/src/i18n/sentimentCoverage.ts` atualizado, indicador sumindo daquele livro automaticamente.
+Cada livro fechado = `frontend/src/i18n/sentimentCoverage.ts` atualizado, indicador sumindo daquele livro automaticamente. A página `/emotional` começa renderizando "em refinamento" para 100% e vai limpando conforme batches são carregados — funciona desde o primeiro batch sem quebrar nada.
 
 **Mecânica em 3 etapas:**
 
@@ -547,24 +539,17 @@ python scripts/load_sentiment_batch.py data/processed/sentiment_pt/PSA/batch_001
 - Backend `emotional.py`: refactor das queries para usar JOIN com `verses_sentiment_multilang` quando `?lang=pt`, fallback para coluna existente quando não houver
 - Frontend `EmotionalLandscapePage.tsx`: marca visual quando sentiment é fallback EN ("Sentiment original em inglês — refinamento em breve") + esconde marca quando o livro está 100% coberto via `sentimentCoverage.ts`
 
-**Tarefas (labeling — N sessões dedicadas após setup):**
-- **Pré-launch:** Salmos batches 1–9 + Evangelhos batches 10–22 (~22 sessões)
-- **Pós-launch:** os 91 batches restantes na ordem da tabela acima, em cadência sustentável
-- Cada batch fecha com commit `feat: sentiment PT-BR {livro} batch {NNN} ({M} versos)`
+**Tarefas (labeling — ~113 sessões dedicadas após setup):**
+- Todos os batches na ordem da tabela acima, em cadência sustentável (2-3 batches/semana)
+- Cada batch fecha com commit `feat: sentiment PT-BR {livro} batch {NNN} ({M} versos, X/31000 covered)`
 - A cada livro fechado, commit `feat: sentiment PT-BR {livro} 100% coberto` que regenera `sentimentCoverage.ts`
 
-**Critério de done (mínimo pré-launch):**
+**Critério de done R7 completa (bloqueante para launch):**
 - Infraestrutura (schema + scripts + backend + frontend marker + dashboard) entregue na sessão R7.0
-- Salmos 100% labelado e carregado
-- 4 Evangelhos 100% labelados e carregados
-- `/emotional` em PT-BR + Salmos OU Evangelhos: texto NVI + número PT calculado por humano-LLM
-- Demais 60 livros: indicador discreto "refinamento em breve"
-
-**Critério de "R7 totalmente done" (pós-launch, ~6-9 meses):**
-- 66 livros NVI completos, ~31K versos labelados
-- `/emotional` sem indicador "refinamento" em nenhum livro PT-BR
+- **Todos os 66 livros NVI** 100% labelados e carregados (~31K versos)
+- `/emotional` em PT-BR sem nenhum indicador "em refinamento"
 - Coverage 100% PT-BR registrado em `coverage.json` + `sentimentCoverage.ts`
-- ES entra como projeto separado backlog v2
+- ES entra depois do PT fechar (decisão David: PT primeiro, ES sequencial, ambos pré-launch se janela permitir — senão ES vira launch mediato pós-PT)
 
 ---
 
@@ -576,22 +561,24 @@ Quando as 7 sessões R1–R7 estiverem ✅:
 - A próxima sessão é a **Sessão #2 do `VERBUM_V1_LAUNCH_PLAN.md`** (README de produto + assets de marca) — porque a Sessão #1 (áudio hebraico) já é independente e pode ter terminado em paralelo
 - O resto do `VERBUM_V1_LAUNCH_PLAN.md` segue como escrito — deploy GCP, BigQuery, Firebase, polish, observability, CI/CD, launch week
 
-**Ordem total revisada:**
+**Ordem total revisada (cobertura 100%, pós-decisão "no top-N" de 15 abr 2026):**
 
 ```
 ✅ Áudio HE concluído (15 abr 2026) — 8674 arquivos, 0 falhas (paralelo)
 ✅ R1 — Trocador + synoptic parallels + explorer presets + localized helper
 ✅ R2 — Static JSONs restantes (devotional, special passages, genealogy, …)
-Sessão R3 — personNames + placeNames + timelineEvents + topicNames (lookup tables FE)
-Sessão R3.5 — Semantic Explorer UX polish (G3.b/c/d/e/f/g — sem dataset novo)
+⏳ R3 — Lookup tables FE (persons 3067 + places 1814 + events 450 + topics 4673)
+       ✅ R3.a primeira passagem (~720 entradas traduzidas)
+       ⏳ R3.b-e (~9.300 entradas restantes, ~20 sessões)
+Sessão R3.5 — Semantic Explorer UX polish (G3.b-g — sem dataset novo)
 Sessão R3.6.0 — Strong's multilingual setup (schema + scripts + backend + indicator)
-Sessões R3.6.1-4 — Strong's labeling pré-launch (top 2.000 × 2 línguas = ~4 batches)
-Sessão R4 — Bugs F1–F6 + G1/G2 imediatos (intertextuality interatividade, emotional flow vazio)
+Sessões R3.6.1-28 — Strong's labeling 100% (14.178 × 2 línguas = ~28 batches)
+Sessão R4 — Bugs F1-F6 + G1/G2 imediatos (intertextuality interatividade, emotional flow vazio)
 Sessão R5 — Limpeza strings cruas + IDs resolvidos
 Sessão R6 — Audit trilíngue final
 Sessão R7.0 — Sentiment multilingual setup (schema + scripts + frontend marker)
-Sessões R7.1-22 — Sentiment labeling pré-launch (Salmos + Evangelhos = ~22 batches)
-─────────── REVISION CLOSED ───────────
+Sessões R7.1-113 — Sentiment labeling 100% PT-BR (66 livros NVI = ~113 batches)
+─────────── REVISION CLOSED (100% cobertura atingida) ───────────
 Sessão L2 — README de produto
 Sessão L3 — GCP backend
 Sessão L4 — BigQuery
@@ -602,27 +589,33 @@ Sessão L8 — Observabilidade
 Sessão L9 — CI/CD
 Sessão L10 — Custom domain (opcional)
 Sessão L11 — Launch week
-─────────── POS-LAUNCH INCREMENTAL ───────────
-R3.6.5+ — Strong's 12.178 restantes × 2 línguas (~24 batches, ~3 meses em cadência 2-3/semana)
-R7.23+ — Sentiment 60 livros restantes × PT-BR (~91 batches, ~6-9 meses em cadência 2-3/semana)
 ```
 
+**Não existe mais "Pós-launch incremental".** A divisão "top-N pré + resto pós" foi eliminada em 15 abr 2026 (ver `feedback_complete_coverage.md`). Launch é *gated by 100%*, em todas as dimensões.
+
 **Totais:**
-- **Pré-launch:** ✅ R1 + ✅ R2 + R3 + R3.5 + R3.6.0 + R3.6.1-4 (4 batches) + R4 + R5 + R6 + R7.0 + R7.1-22 (22 batches) + L2-L11 (9 launch) = **~9 sessões base + ~26 batches + 9 launch = ~44 sessões** até produto lançado. Em cadência sessão-a-sessão, ~8-10 semanas.
-- **Entregue até agora (paralelo ao planejamento):** áudio HE (8674 MP3, 0 falhas), áudio GR (5504 MP3 pré-existente) — Sessão 1 do `VERBUM_V1_LAUNCH_PLAN.md` concluída.
-- **Pós-launch incremental:**
-  - **R3.6.5+** — Strong's 12.178 restantes × 2 línguas ≈ **~24 batches** (~3 meses em cadência 2-3/semana)
-  - **R7.23+** — Sentiment 60 livros restantes NVI ≈ **~91 batches** (~6-9 meses em cadência 2-3/semana)
-  - Total: ~115 batches em ~6-9 meses até cobertura completa PT-BR (Strong's + sentiment). ES fica como backlog separado, ritmo a decidir pós-launch.
 
-**Nota sobre R7:** R7 tem três momentos:
-- **R7.0 — Setup infra** (1 sessão, BLOQUEANTE pré-launch): schema, scripts, backend, frontend marker
-- **R7.1–R7.22 — Labeling pré-launch** (Salmos + Evangelhos = ~22 sessões): cobertura mínima de qualidade visível
-- **R7.23+ — Labeling pós-launch** (60 livros restantes = ~91 sessões): rotina contínua de manutenção, sem bloquear nada
+| Fase | Sessões base | Batches de labeling |
+|---|---|---|
+| ✅ Pré-launch feito | R1 + R2 | 0 |
+| ⏳ R3 (lookup FE) | — | ~20 batches |
+| ⏳ R3.5, R3.6.0, R4, R5, R6, R7.0 | 6 | 0 |
+| ⏳ R3.6 (Strong's) | — | ~28 batches |
+| ⏳ R7 (Sentiment PT-BR) | — | ~113 batches |
+| ⏳ L2-L11 (launch) | 10 | 0 |
+| **Total pré-launch** | **18 sessões base** | **~161 batches** |
 
-Se a janela pré-launch apertar, escopo pré-launch pode ser reduzido a "Salmos completo" (~9 batches) ou até "Salmos parcial + indicador". Lançar nunca depende de R7.23+.
+Em cadência sustentável (~2-3 batches/semana), ~161 batches = ~13-15 meses de trabalho pré-launch. É o custo do princípio — e o David signou off: o custo é $0 (tokens Claude MAX), a qualidade importa mais que a janela.
+
+**Entregue até agora:**
+- ✅ Áudio HE (8674 MP3, 0 falhas) + GR (5504 MP3 pré-existente) — Sessão 1 do `VERBUM_V1_LAUNCH_PLAN.md`
+- ✅ R1 (switcher + synoptic parallels + explorer presets + helper)
+- ✅ R2 (13 JSONs estáticos + aramaic glosses DuckDB)
+- ✅ R3.a (primeira passagem dos 4 lookups: ~720 entradas, 100% eventos canônicos resolvidos)
 
 **Custo:** $0 (sem API externa). Tokens consumidos do plano Claude MAX do David — sem custo marginal.
+
+**ES vs PT-BR em R7:** PT-BR primeiro (próximo ano se necessário, cadência sustentável). ES entra em sequência após PT-BR fechar. Se a janela entre "PT fechado" e "launch pronto pra ES" for curta, lançamos em PT + ES simultâneos; se não, launch em PT e ES vira sprint pós-launch **imediato** (não backlog indefinido).
 
 ---
 
