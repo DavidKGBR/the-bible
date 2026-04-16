@@ -8,9 +8,10 @@ import {
   type TopicDetail,
 } from "../services/api";
 import { useI18n } from "../i18n/i18nContext";
+import { topicName } from "../i18n/topicNames";
 
 export default function TopicsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -116,7 +117,7 @@ export default function TopicsPage() {
                 className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-gold)]/30
                            hover:bg-[var(--color-gold)]/10 transition text-[var(--color-gold-dark)]"
               >
-                {topic.name}{" "}
+                {topicName(topic.slug, locale, topic.name)}{" "}
                 <span className="opacity-40">({topic.verse_count})</span>
               </button>
             ))}
@@ -128,18 +129,25 @@ export default function TopicsPage() {
         <div className="rounded-lg border border-dashed border-[var(--color-gold-dark)]/30 p-8 text-center">
           <p className="opacity-60 mb-3">{t("topics.typeHint")}</p>
           <div className="flex flex-wrap justify-center gap-2">
-            {["FAITH", "LOVE", "PRAYER", "FORGIVENESS", "SALVATION", "GRACE", "HOPE", "SIN"].map(
-              (w) => (
-                <button
-                  key={w}
-                  onClick={() => setQuery(w)}
-                  className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-gold)]/30
-                             hover:bg-[var(--color-gold)]/10 transition text-[var(--color-gold-dark)]"
-                >
-                  {w}
-                </button>
-              )
-            )}
+            {[
+              { slug: "faith", en: "FAITH" },
+              { slug: "love", en: "LOVE" },
+              { slug: "prayer", en: "PRAYER" },
+              { slug: "forgiveness", en: "FORGIVENESS" },
+              { slug: "salvation", en: "SALVATION" },
+              { slug: "grace", en: "GRACE" },
+              { slug: "hope", en: "HOPE" },
+              { slug: "sin-1", en: "SIN" },
+            ].map((w) => (
+              <button
+                key={w.slug}
+                onClick={() => setQuery(w.en)}
+                className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-gold)]/30
+                           hover:bg-[var(--color-gold)]/10 transition text-[var(--color-gold-dark)]"
+              >
+                {topicName(w.slug, locale, w.en)}
+              </button>
+            ))}
           </div>
         </div>
       )}
@@ -166,7 +174,7 @@ export default function TopicsPage() {
               >
                 <div className="min-w-0">
                   <h3 className="font-display font-bold text-[var(--color-ink)]">
-                    {topic.name}
+                    {topicName(topic.slug, locale, topic.name)}
                   </h3>
                   <p className="text-xs opacity-50 mt-0.5">
                     {(topic.verse_count === 1 ? t("topics.verseRef") : t("topics.verseRefs")).replace("{n}", String(topic.verse_count))}

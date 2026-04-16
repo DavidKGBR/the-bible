@@ -4,6 +4,8 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useI18n } from "../i18n/i18nContext";
+import { placeName } from "../i18n/placeNames";
+import { localized } from "../i18n/localized";
 
 const BASE = "/api/v1";
 
@@ -36,7 +38,11 @@ interface RouteWaypoint {
 interface BibleRoute {
   id: string;
   name: string;
+  name_pt?: string;
+  name_es?: string;
   description: string;
+  description_pt?: string;
+  description_es?: string;
   era: string;
   color: string;
   waypoints: RouteWaypoint[];
@@ -66,7 +72,7 @@ const smallIcon = new L.Icon({
 // ── Zoom-aware marker layer ────────────────────────────────────────────────
 
 function MarkerLayer({ features }: { features: GeoFeature[] }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const map = useMap();
   const [zoom, setZoom] = useState(map.getZoom());
 
@@ -83,45 +89,48 @@ function MarkerLayer({ features }: { features: GeoFeature[] }) {
 
   return (
     <>
-      {visible.map((f) => (
-        <Marker
-          key={f.properties.slug}
-          position={[f.geometry.coordinates[1], f.geometry.coordinates[0]]}
-          icon={icon}
-        >
-          <Popup>
-            <div className="text-sm min-w-[140px]">
-              {f.properties.thumbnail_url && (
-                <img
-                  src={f.properties.thumbnail_url}
-                  alt={f.properties.name}
-                  className="w-full h-24 object-cover rounded mb-1.5"
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              )}
-              <strong>{f.properties.name}</strong>
-              {f.properties.place_type && (
-                <span className="ml-1 text-xs opacity-60">({f.properties.place_type})</span>
-              )}
-              <br />
-              <span className="text-xs opacity-60">
-                {(f.properties.verse_count === 1 ? t("map.verseCountSingular") : t("map.verseCount"))
-                  .replace("{n}", String(f.properties.verse_count))}
-              </span>
-              <br />
-              <Link
-                to={`/places?q=${encodeURIComponent(f.properties.name)}`}
-                className="text-xs text-blue-600 hover:underline"
-              >
-                {t("map.viewDetails")}
-              </Link>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+      {visible.map((f) => {
+        const localizedName = placeName(f.properties.slug, locale, f.properties.name);
+        return (
+          <Marker
+            key={f.properties.slug}
+            position={[f.geometry.coordinates[1], f.geometry.coordinates[0]]}
+            icon={icon}
+          >
+            <Popup>
+              <div className="text-sm min-w-[140px]">
+                {f.properties.thumbnail_url && (
+                  <img
+                    src={f.properties.thumbnail_url}
+                    alt={localizedName}
+                    className="w-full h-24 object-cover rounded mb-1.5"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                )}
+                <strong>{localizedName}</strong>
+                {f.properties.place_type && (
+                  <span className="ml-1 text-xs opacity-60">({f.properties.place_type})</span>
+                )}
+                <br />
+                <span className="text-xs opacity-60">
+                  {(f.properties.verse_count === 1 ? t("map.verseCountSingular") : t("map.verseCount"))
+                    .replace("{n}", String(f.properties.verse_count))}
+                </span>
+                <br />
+                <Link
+                  to={`/places?q=${encodeURIComponent(f.properties.name)}`}
+                  className="text-xs text-blue-600 hover:underline"
+                >
+                  {t("map.viewDetails")}
+                </Link>
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
     </>
   );
 }
@@ -129,7 +138,7 @@ function MarkerLayer({ features }: { features: GeoFeature[] }) {
 // ── Main Map Page ──────────────────────────────────────────────────────────
 
 export default function MapPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [geojson, setGeojson] = useState<GeoJSON | null>(null);
   const [routes, setRoutes] = useState<BibleRoute[]>([]);
   const [activeRoutes, setActiveRoutes] = useState<Set<string>>(new Set());
@@ -222,10 +231,12 @@ export default function MapPage() {
                           className="w-3 h-0.5 rounded shrink-0"
                           style={{ backgroundColor: route.color }}
                         />
-                        <span className="font-medium text-xs">{route.name}</span>
+                        <span className="font-medium text-xs">
+                          {localized(route, locale, "name")}
+                        </span>
                       </div>
                       <p className="text-[10px] opacity-50 mt-0.5 line-clamp-2">
-                        {route.description}
+                        {localized(route, locale, "description")}
                       </p>
                     </div>
                   </label>
@@ -248,7 +259,7 @@ export default function MapPage() {
                           className="w-4 h-0.5 rounded"
                           style={{ backgroundColor: route.color }}
                         />
-                        {route.name}
+                        {localized(route, locale, "name")}
                       </div>
                       <div className="text-[10px] opacity-40 ml-5.5 mt-0.5">
                         {t("map.waypoints").replace("{n}", String(route.waypoints.length))}
@@ -298,9 +309,9 @@ export default function MapPage() {
                   }}
                 >
                   <Popup>
-                    <strong>{route.name}</strong>
+                    <strong>{localized(route, locale, "name")}</strong>
                     <br />
-                    <span className="text-xs">{route.description}</span>
+                    <span className="text-xs">{localized(route, locale, "description")}</span>
                   </Popup>
                 </Polyline>
               ))}

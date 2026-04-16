@@ -9,6 +9,9 @@ import {
   type PersonEvent,
 } from "../services/api";
 import { useI18n } from "../i18n/i18nContext";
+import { personName, personOccupationKey } from "../i18n/personNames";
+import { placeName } from "../i18n/placeNames";
+import { eventTitle, eraName } from "../i18n/timelineEvents";
 
 const RELATION_ORDER = ["father", "mother", "spouse", "sibling", "half_sibling", "child"];
 
@@ -67,7 +70,7 @@ function cleanDescription(raw: string): string {
 // ── Main Component ───────────────────────────────────────────────────────────
 
 export default function PeoplePage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
   const [people, setPeople] = useState<BiblicalPerson[]>([]);
@@ -233,7 +236,7 @@ export default function PeoplePage() {
               >
                 <div className="font-display font-bold text-sm text-[var(--color-ink)]
                                group-hover:text-[var(--color-gold-dark)] transition">
-                  {fp.name}
+                  {personName(fp.slug, locale, fp.name)}
                 </div>
                 <div className="text-[10px] opacity-50 mt-0.5">{t(fp.occupationKey)}</div>
                 <div className="text-[10px] mt-1">
@@ -244,14 +247,21 @@ export default function PeoplePage() {
             ))}
           </div>
           <div className="flex flex-wrap justify-center gap-2 mt-4">
-            {["Ruth", "Solomon", "Peter", "Elijah", "Sarah", "Samson"].map((w) => (
+            {[
+              { slug: "ruth_2450", en: "Ruth" },
+              { slug: "solomon_2762", en: "Solomon" },
+              { slug: "peter_2745", en: "Peter" },
+              { slug: "elijah_1131", en: "Elijah" },
+              { slug: "sarah_2473", en: "Sarah" },
+              { slug: "samson_2468", en: "Samson" },
+            ].map((w) => (
               <button
-                key={w}
-                onClick={() => setQuery(w)}
+                key={w.slug}
+                onClick={() => setQuery(w.en)}
                 className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-gold)]/30
                            hover:bg-[var(--color-gold)]/10 transition text-[var(--color-gold-dark)]"
               >
-                {w}
+                {personName(w.slug, locale, w.en)}
               </button>
             ))}
           </div>
@@ -279,7 +289,7 @@ export default function PeoplePage() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-display font-bold text-[var(--color-ink)]">
-                      {person.name}
+                      {personName(person.slug, locale, person.name)}
                     </h3>
                     {person.gender && (
                       <span className={`text-[9px] px-1.5 py-0.5 rounded ${
@@ -307,7 +317,12 @@ export default function PeoplePage() {
                   )}
                   <p className="text-xs opacity-50 mt-0.5">
                     {person.verse_count} {person.verse_count !== 1 ? t("people.verses") : t("people.verse")}
-                    {person.occupation && ` · ${person.occupation}`}
+                    {(() => {
+                      const occKey = personOccupationKey(person.slug);
+                      if (occKey) return ` · ${t(occKey)}`;
+                      if (person.occupation) return ` · ${person.occupation}`;
+                      return "";
+                    })()}
                     {person.birth_year && ` · ${yearLabel(person.birth_year, t)}`}
                   </p>
                 </div>
@@ -377,7 +392,7 @@ export default function PeoplePage() {
                                              hover:bg-[var(--color-gold)]/10 transition
                                              text-[var(--color-gold-dark)]"
                                 >
-                                  {member.name || member.slug}
+                                  {personName(member.slug, locale, member.name || member.slug)}
                                 </button>
                               ))}
                             </div>
@@ -466,7 +481,7 @@ function LifespanBar({ person }: { person: BiblicalPerson }) {
 // ── Events Timeline ──────────────────────────────────────────────────────────
 
 function EventsTimeline({ events }: { events: PersonEvent[] }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [showAll, setShowAll] = useState(false);
   const visible = showAll ? events : events.slice(0, 6);
 
@@ -488,7 +503,7 @@ function EventsTimeline({ events }: { events: PersonEvent[] }) {
               <div>
                 <div className="flex items-baseline gap-2 flex-wrap">
                   <span className="text-sm font-medium text-[var(--color-ink)]">
-                    {evt.title}
+                    {eventTitle(evt.event_id, evt.title, locale)}
                   </span>
                   {evt.start_year != null && (
                     <span className="text-[10px] font-bold text-[var(--color-gold-dark)]">
@@ -497,7 +512,7 @@ function EventsTimeline({ events }: { events: PersonEvent[] }) {
                   )}
                   {evt.era && (
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 opacity-60">
-                      {evt.era}
+                      {eraName(evt.era, locale, evt.era)}
                     </span>
                   )}
                 </div>
@@ -510,7 +525,7 @@ function EventsTimeline({ events }: { events: PersonEvent[] }) {
                         key={loc}
                         className="text-[10px] px-1.5 py-0.5 rounded bg-orange-50 text-orange-700"
                       >
-                        {loc.replace(/_/g, " ")}
+                        {placeName(loc, locale, loc.replace(/_/g, " "))}
                       </span>
                     ))}
                   </div>

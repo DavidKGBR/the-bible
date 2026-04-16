@@ -6,6 +6,9 @@ import {
   type TimelineEra,
 } from "../services/api";
 import { useI18n } from "../i18n/i18nContext";
+import { personName } from "../i18n/personNames";
+import { placeName } from "../i18n/placeNames";
+import { eventTitle, eraName } from "../i18n/timelineEvents";
 
 function yearLabel(year: number, t: (k: string) => string): string {
   const bc = t("common.bc");
@@ -24,7 +27,7 @@ function EraBar({
   yearMin: number;
   yearMax: number;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const span = yearMax - yearMin;
   return (
     <div className="relative h-6 rounded-full overflow-hidden bg-gray-100 mb-6">
@@ -32,6 +35,7 @@ function EraBar({
         const left = Math.max(0, ((era.start - yearMin) / span) * 100);
         const width = Math.min(100 - left, ((era.end - era.start) / span) * 100);
         if (width <= 0) return null;
+        const label = eraName(era.id, locale, era.name);
         return (
           <div
             key={era.id}
@@ -42,9 +46,9 @@ function EraBar({
               backgroundColor: era.color,
               opacity: 0.8,
             }}
-            title={`${era.name} (${yearLabel(era.start, t)} – ${yearLabel(era.end, t)})`}
+            title={`${label} (${yearLabel(era.start, t)} – ${yearLabel(era.end, t)})`}
           >
-            {width > 8 && era.name}
+            {width > 8 && label}
           </div>
         );
       })}
@@ -65,10 +69,11 @@ function EventDot({
   onClick: () => void;
   isSelected: boolean;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const span = yearMax - yearMin;
   const left = ((event.year - yearMin) / span) * 100;
   const isBiblical = event.type === "biblical";
+  const displayTitle = isBiblical ? eventTitle(event.id, event.title, locale) : event.title;
 
   return (
     <button
@@ -77,7 +82,7 @@ function EventDot({
         isSelected ? "scale-150 z-20" : "z-10"
       }`}
       style={{ left: `${left}%`, top: isBiblical ? "20%" : "60%" }}
-      title={`${event.title} (${yearLabel(event.year, t)})`}
+      title={`${displayTitle} (${yearLabel(event.year, t)})`}
     >
       <div
         className={`w-2.5 h-2.5 rounded-full border-2 ${
@@ -91,7 +96,7 @@ function EventDot({
 }
 
 export default function TimelinePage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [data, setData] = useState<CombinedTimeline | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
@@ -233,14 +238,18 @@ export default function TimelinePage() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-display font-bold text-[var(--color-ink)]">
-                      {selectedEvent.title}
+                      {selectedEvent.type === "biblical"
+                        ? eventTitle(selectedEvent.id, selectedEvent.title, locale)
+                        : selectedEvent.title}
                     </h3>
                     <span className={`text-[9px] px-1.5 py-0.5 rounded ${
                       selectedEvent.type === "biblical"
                         ? "bg-[var(--color-gold)]/10 text-[var(--color-gold-dark)]"
                         : "bg-gray-100 text-gray-600"
                     }`}>
-                      {selectedEvent.type === "biblical" ? selectedEvent.era : selectedEvent.category}
+                      {selectedEvent.type === "biblical"
+                        ? eraName(selectedEvent.era, locale, selectedEvent.era ?? "")
+                        : selectedEvent.category}
                     </span>
                   </div>
                   <p className="text-sm opacity-60">{yearLabel(selectedEvent.year, t)}</p>
@@ -262,14 +271,22 @@ export default function TimelinePage() {
               {selectedEvent.participants && selectedEvent.participants.length > 0 && (
                 <div className="mt-2">
                   <span className="text-[9px] uppercase tracking-wider opacity-50">{t("timeline.participants")} </span>
-                  <span className="text-xs">{selectedEvent.participants.join(", ")}</span>
+                  <span className="text-xs">
+                    {selectedEvent.participants
+                      .map((slug) => personName(slug, locale, slug))
+                      .join(", ")}
+                  </span>
                 </div>
               )}
 
               {selectedEvent.locations && selectedEvent.locations.length > 0 && (
                 <div className="mt-1">
                   <span className="text-[9px] uppercase tracking-wider opacity-50">{t("timeline.locations")} </span>
-                  <span className="text-xs">{selectedEvent.locations.join(", ")}</span>
+                  <span className="text-xs">
+                    {selectedEvent.locations
+                      .map((slug) => placeName(slug, locale, slug))
+                      .join(", ")}
+                  </span>
                 </div>
               )}
             </div>
@@ -297,7 +314,9 @@ export default function TimelinePage() {
                         : "border-[var(--color-gold-dark)]/10 hover:bg-[var(--color-gold)]/5"
                     }`}
                   >
-                    <span className="font-medium">{evt.title}</span>
+                    <span className="font-medium">
+                      {evt.type === "biblical" ? eventTitle(evt.id, evt.title, locale) : evt.title}
+                    </span>
                     <span className="opacity-40 ml-1">{yearLabel(evt.year, t)}</span>
                     <span className={`ml-1 text-[8px] px-1 rounded ${
                       evt.type === "biblical"

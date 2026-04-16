@@ -9,6 +9,8 @@ import {
   type PlaceTypeCount,
 } from "../services/api";
 import { useI18n } from "../i18n/i18nContext";
+import { placeName } from "../i18n/placeNames";
+import { eventTitle, eraName } from "../i18n/timelineEvents";
 
 /* ── Lightbox overlay for full-res image ─────────────────────────────────── */
 
@@ -87,7 +89,8 @@ function Lightbox({
 /* ── Expanded place detail card ──────────────────────────────────────────── */
 
 function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const displayName = placeName(detail.slug, locale, detail.name);
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<PlaceImage | null>(null);
 
@@ -145,7 +148,7 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
           <div className="absolute bottom-2 left-3 right-3 flex items-end justify-between">
             <div>
               <h2 className="text-white font-display text-xl font-bold drop-shadow-lg">
-                {detail.name}
+                {displayName}
               </h2>
               {detail.place_type && (
                 <span className="text-white/70 text-xs">{detail.place_type}</span>
@@ -234,9 +237,9 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
               {visibleEvents.map((evt) => (
                 <div key={evt.event_id} className="text-sm flex items-center gap-2">
                   <span className="text-[8px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 shrink-0 min-w-[4rem] text-center">
-                    {evt.era || t("places.eraOther")}
+                    {evt.era ? eraName(evt.era, locale, evt.era) : t("places.eraOther")}
                   </span>
-                  <span className="truncate">{evt.title}</span>
+                  <span className="truncate">{eventTitle(evt.event_id, evt.title, locale)}</span>
                   {evt.start_year != null && (
                     <span className="text-[10px] opacity-30 shrink-0">
                       {Math.abs(evt.start_year)} {evt.start_year < 0 ? t("common.bc") : t("common.ad")}
@@ -258,12 +261,12 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
               {eraOrder.map((era) => (
                 <div key={era}>
                   <h5 className="text-[9px] uppercase tracking-wider text-blue-600 font-bold mb-1">
-                    {era} ({eventsByEra[era].length})
+                    {eraName(era, locale, era)} ({eventsByEra[era].length})
                   </h5>
                   <div className="space-y-0.5 ml-2 border-l-2 border-blue-100 pl-3">
                     {eventsByEra[era].map((evt) => (
                       <div key={evt.event_id} className="text-sm flex items-center gap-2">
-                        <span className="truncate">{evt.title}</span>
+                        <span className="truncate">{eventTitle(evt.event_id, evt.title, locale)}</span>
                         {evt.start_year != null && (
                           <span className="text-[10px] opacity-30 shrink-0">
                             {Math.abs(evt.start_year)} {evt.start_year < 0 ? t("common.bc") : t("common.ad")}
@@ -315,7 +318,7 @@ function PlaceDetail({ detail }: { detail: BiblicalPlace }) {
 /* ── Main Page ───────────────────────────────────────────────────────────── */
 
 export default function PlacesPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
   const [places, setPlaces] = useState<BiblicalPlace[]>([]);
@@ -448,18 +451,25 @@ export default function PlacesPage() {
         <div className="rounded-lg border border-dashed border-[var(--color-gold-dark)]/30 p-8 text-center">
           <p className="opacity-60 mb-3">{t("places.browsePrompt")}</p>
           <div className="flex flex-wrap justify-center gap-2">
-            {["Jerusalem", "Bethlehem", "Egypt", "Babylon", "Sinai", "Galilee", "Nazareth", "Rome"].map(
-              (w) => (
-                <button
-                  key={w}
-                  onClick={() => setQuery(w)}
-                  className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-gold)]/30
-                             hover:bg-[var(--color-gold)]/10 transition text-[var(--color-gold-dark)]"
-                >
-                  {w}
-                </button>
-              )
-            )}
+            {[
+              { slug: "jerusalem_636", en: "Jerusalem" },
+              { slug: "bethlehem_218", en: "Bethlehem" },
+              { slug: "egypt_362", en: "Egypt" },
+              { slug: "babylon_151", en: "Babylon" },
+              { slug: "sinai_1098", en: "Sinai" },
+              { slug: "galilee_433", en: "Galilee" },
+              { slug: "nazareth_878", en: "Nazareth" },
+              { slug: "rome_1009", en: "Rome" },
+            ].map((w) => (
+              <button
+                key={w.slug}
+                onClick={() => setQuery(w.en)}
+                className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-gold)]/30
+                           hover:bg-[var(--color-gold)]/10 transition text-[var(--color-gold-dark)]"
+              >
+                {placeName(w.slug, locale, w.en)}
+              </button>
+            ))}
           </div>
         </div>
       )}
@@ -513,7 +523,7 @@ export default function PlacesPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-display font-bold text-[var(--color-ink)]">
-                        {place.name}
+                        {placeName(place.slug, locale, place.name)}
                       </h3>
                       {place.place_type && (
                         <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">
